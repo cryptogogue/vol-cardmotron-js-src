@@ -145,9 +145,7 @@ export const EditorScreen = observer (( props ) => {
                             <div style = {{ flex: 1 }}>
                                 <InventoryView
                                     key         = { `${ controller.sortMode } ${ controller.zoom }` }
-                                    inventory   = { controller.inventory }
-                                    assetArray  = { controller.sortedAssets }
-                                    scale       = { controller.zoom }
+                                    controller  = { controller }
                                 />
                             </div>
                         </Otherwise>

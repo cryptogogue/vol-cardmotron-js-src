@@ -39,9 +39,24 @@ export class InventoryViewController extends Service {
 
         extendObservable ( this, {
             layoutName:     consts.WEB_LAYOUT,
+            selection:      {},
             sortMode:       consts.SORT_MODE.ALPHA_ATOZ,
             zoom:          consts.DEFAULT_ZOOM,
         });
+    }
+
+    //----------------------------------------------------------------//
+    @action
+    deselectAsset ( asset ) {
+
+        delete this.selection [ asset.assetID ];
+    }
+
+    //----------------------------------------------------------------//
+    @computed
+    get hasSelection () {
+
+        return Object.keys ( this.selection ).length !== 0;
     }
 
     //----------------------------------------------------------------//
@@ -57,6 +72,19 @@ export class InventoryViewController extends Service {
         assetArray.sort (( asset0, asset1 ) => this.compareForSort ( asset0, asset1 ));
         return assetArray;
     }
+
+    //----------------------------------------------------------------//
+    isSelected ( asset ) {
+        return _.has ( this.selection, asset.assetID );
+    }
+
+    //----------------------------------------------------------------//
+    @action
+    selectAsset ( asset ) {
+
+        this.selection [ asset.assetID ] = asset;
+    }
+
 
     //----------------------------------------------------------------//
     @action
