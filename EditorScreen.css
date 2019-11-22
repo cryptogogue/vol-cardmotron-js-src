@@ -1,0 +1,51 @@
+@page {
+    size:   auto;
+    margin: 0mm 0mm 0mm 0mm;
+}
+
+@media print {
+    .asset-wrapper {
+        display: block !important;
+    }
+    .no-print,
+    .no-print * {
+        display: none !important;
+    }
+    .page-break {
+        display: block;
+        margin: 0;
+        overflow: hidden;
+        position: relative;
+        box-sizing: border-box;
+        page-break-after: always;
+    }
+}
+
+.ui.card {
+    float:      left;
+    margin:     1em;
+    padding:    5px;
+    width:      auto;
+}
+
+.ui.card .clicked {
+    border:     1px solid red;
+}
+
+.ui.card:first-child {
+    margin-top: 1em;
+}
+
+.ui.card:last-child {
+    margin-bottom: auto;
+}
+
+.asset-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.AutoSizerWrapper {
+    height: 100vh;
+}
