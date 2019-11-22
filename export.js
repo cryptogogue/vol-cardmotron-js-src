@@ -5,9 +5,7 @@ module.exports = {
     // bitmapToPaths:      require ( './bitmapToPaths.js' ),
     // color:              require ( './color.js' ),
     // crypto:             require ( './crypto.js' ),
-    // debug: {
-    //     SchemaScreen:           require ( './debug/SchemaScreen.js' ).SchemaScreen,
-    // },
+    
     // dom:                require ( './dom.js' ),
     // excel:              require ( './excel.js' ),
     // pdf417:             require ( './pdf417.js' ),
@@ -21,5 +19,9 @@ module.exports = {
     // util:               require ( './util.js' ),
 
     // InventoryService:               require ( './InventoryService.js' ).InventoryService,
-    EditorScreen:                   require ( './EditorScreen.js' ).EditorScreen,
+    Binding:                    require ( './schema/Binding.js' ).Binding,
+    EditorScreen:               require ( './EditorScreen.js' ).EditorScreen,
+    Schema:                     require ( './schema/Schema.js' ).Schema,
+
+    LAYOUT_COMMAND:             require ( './schema/SchemaBuilder.js' ).LAYOUT_COMMAND,
 };
