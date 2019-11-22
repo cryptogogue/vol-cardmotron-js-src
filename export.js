@@ -18,9 +18,15 @@ module.exports = {
     // textStyle:          require ( './textStyle.js' ),
     // util:               require ( './util.js' ),
 
-    // InventoryService:               require ( './InventoryService.js' ).InventoryService,
+    AssetLayout:                require ( './AssetLayout.js' ).AssetLayout,
+    AssetView:                  require ( './AssetView.js' ).AssetView,
     Binding:                    require ( './schema/Binding.js' ).Binding,
     EditorScreen:               require ( './EditorScreen.js' ).EditorScreen,
+    inventoryMenuItems:         require ( './inventoryMenuItems.js' ),
+    InventoryPrintView:         require ( './InventoryPrintView.js' ).InventoryPrintView,
+    InventoryService:           require ( './InventoryService.js' ).InventoryService,
+    InventoryView:              require ( './InventoryView.js' ).InventoryView,
+    InventoryViewController:    require ( './InventoryViewController.js' ).InventoryViewController,
     Schema:                     require ( './schema/Schema.js' ).Schema,
 
     LAYOUT_COMMAND:             require ( './schema/SchemaBuilder.js' ).LAYOUT_COMMAND,

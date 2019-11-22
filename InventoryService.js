@@ -46,12 +46,8 @@ export class InventoryService extends Service {
     }
 
     //----------------------------------------------------------------//
-    constructor ( onProgress ) {
+    constructor ( onProgress, nodeURL, accountID ) {
         super ();
-
-        // extendObservable ( this, {
-        //     appState:   appState,
-        // });
 
         this.onProgress = onProgress || (( message ) => { console.log ( message )});
         this.templates = {};
@@ -62,9 +58,9 @@ export class InventoryService extends Service {
         this.maxWidthInInches = 0;
         this.maxHeightInInches = 0;
 
-        // if ( appState ) {
-        //     this.fetchInventory ( appState.accountID, appState.node );
-        // }
+        if ( accountID && nodeURL ) {
+            this.fetchInventory ( nodeURL, accountID );
+        }
 
         // if ( appState ) {
         //     observe ( appState, 'assetsUtilized', ( change ) => {
@@ -75,17 +71,19 @@ export class InventoryService extends Service {
     }
 
     //----------------------------------------------------------------//
-    async fetchInventory ( accountID, minerURL ) {
+    async fetchInventory ( nodeURL, accountID ) {
 
         try {
-            console.log ( 'FETCH INVENTORY', accountID, minerURL );
+            console.log ( 'FETCH INVENTORY', nodeURL, accountID );
+
+            this.setLoading ( true );
 
             this.onProgress ( 'Fetching Schema' );
-            const schemaJSON        = await this.revocableFetchJSON ( minerURL + '/schemas', null, 20000 );
+            const schemaJSON        = await this.revocableFetchJSON ( nodeURL + '/schemas', null, 20000 );
             console.log ( schemaJSON );
 
             this.onProgress ( 'Fetching Inventory' );
-            const inventoryJSON     = await this.revocableFetchJSON ( minerURL + '/accounts/' + accountID + '/inventory', null, 20000 );
+            const inventoryJSON     = await this.revocableFetchJSON ( nodeURL + '/accounts/' + accountID + '/inventory', null, 20000 );
             console.log ( inventoryJSON );
 
             let assets = {};
@@ -97,13 +95,7 @@ export class InventoryService extends Service {
         catch ( error ) {
             console.log ( error );
         }
-        this.finishLoading ();
-    }
-
-    //----------------------------------------------------------------//
-    @action
-    finishLoading () {
-        this.loading = false;
+        this.setLoading ( false );
     }
 
     //----------------------------------------------------------------//
@@ -125,6 +117,7 @@ export class InventoryService extends Service {
     @computed
     get availableAssetsArray () {
 
+        // TODO: get rid of appState
         const assetsUtilized = this.appState ? this.appState.assetsUtilized : [];
 
         let assets = [];
@@ -140,6 +133,7 @@ export class InventoryService extends Service {
     @computed
     get availableAssetsByID () {
 
+        // TODO: get rid of appState
         const assetsUtilized = this.appState ? this.appState.assetsUtilized : [];
 
         let assets = {};
@@ -207,6 +201,12 @@ export class InventoryService extends Service {
         if ( template ) {
             this.update ([ template ]);
         }
+    }
+
+    //----------------------------------------------------------------//
+    @action
+    setLoading ( loading ) {
+        this.loading = loading || false;
     }
 
     //----------------------------------------------------------------//
@@ -316,7 +316,7 @@ export class InventoryService extends Service {
         this.onProgress ( 'Refreshing Binding' );
         this.refreshBinding ( schema, assetsWithLayouts );
         this.refreshAssetLayouts ();
-        this.finishLoading ();
+        this.setLoading ( false );
     }
 
     //----------------------------------------------------------------//
