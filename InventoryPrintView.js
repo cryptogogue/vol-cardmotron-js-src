@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Cryptogogue, Inc. All Rights Reserved.
 
-import { assert, util } from 'fgc/export';
+import { assert, util } from 'fgc';
 
 import * as consts                                          from './consts';
 import { AssetView }                                        from './AssetView';

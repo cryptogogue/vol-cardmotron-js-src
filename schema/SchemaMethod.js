@@ -1,6 +1,6 @@
 /* eslint-disable no-whitespace-before-property */
 
-import { assert, excel, Service, SingleColumnContainerView, useService, util } from 'fgc/export';
+import { assert, excel, Service, SingleColumnContainerView, useService, util } from 'fgc';
 import { MultiCounter }     from './MultiCounter';
 import * as squap           from './Squap';
 

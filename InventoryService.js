@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Cryptogogue, Inc. All Rights Reserved.
 
-import { assert, InfiniteScrollView, Service, util } from 'fgc/export';
+import { assert, InfiniteScrollView, Service, util } from 'fgc';
 
 import { AssetLayout }                          from './AssetLayout';
 import { action, computed, extendObservable, observable, observe, runInAction } from 'mobx';
