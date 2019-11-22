@@ -11,6 +11,10 @@ import React, { useState }                                  from 'react';
 import { Link }                                             from 'react-router-dom';
 import { Dropdown, Grid, Icon, List, Menu, Card, Group, Modal, Divider } from 'semantic-ui-react';
 
+import zoom from './assets/zoom.png';
+
+import './InventoryView.css';
+
 //================================================================//
 // InventoryView
 //================================================================//
@@ -72,6 +76,9 @@ export const InventoryView = observer (( props ) => {
                             </Modal.Content>
                         </Modal>
                     }
+                    <Icon name = 'circle' />
+                    <Icon name = 'ellipsis horizontal'/>
+                    <img className = 'zoom' src = { zoom } onClick = {( e ) => onClickZoom ( asset, e )} />
                 </Card>
             );
         }
