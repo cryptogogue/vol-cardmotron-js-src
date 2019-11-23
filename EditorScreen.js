@@ -154,7 +154,7 @@ export const EditorScreen = observer (( props ) => {
 
                 <Otherwise>
                     <img 
-                        src = { './cardmotron.png' }
+                        src = { './cardmotron-png8.png' }
                         style = {{
                             width: '100%',
                             height: 'auto',
