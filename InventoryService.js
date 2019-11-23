@@ -3,6 +3,7 @@
 import { assert, InfiniteScrollView, Service, util } from 'fgc';
 
 import { AssetLayout }                          from './AssetLayout';
+import * as consts                              from './consts';
 import { action, computed, extendObservable, observable, observe, runInAction } from 'mobx';
 import { Binding }                              from './schema/Binding';
 import { Schema }                               from './schema/Schema';
@@ -228,9 +229,35 @@ export class InventoryService extends Service {
                 },
             };
 
-            const response  = await this.revocableFetch ( url, fetchOptions );
-            const buffer    = await response.arrayBuffer ();
-            return opentype.parse ( buffer );
+            // TODO: all this can be a bit smarter.
+            // TODO: handle non-CORS HTTP error responses (400, 500)
+            // TODO: use HEAD/OPTIONS to check for CORS?
+
+            try {
+                const response  = await this.revocableFetch ( url, fetchOptions );
+                const buffer    = await response.arrayBuffer ();
+                return opentype.parse ( buffer );
+            }
+            catch ( error ) {
+                console.log ( 'FONT FETCH FAILED!', error );
+                console.log ( 'Retrying with CORS proxy...' );
+            }
+
+            try {
+
+                // TODO: warn if CORS proxy used (and worked)
+
+                const response  = await this.revocableFetch ( consts.CORS_PROXY + url, fetchOptions );
+                const buffer    = await response.arrayBuffer ();
+                return opentype.parse ( buffer );
+            }
+            catch ( error ) {
+                console.log ( 'FONT FETCH FAILED AGAIN!', error );
+            }
+
+            // TODO: report missing font
+
+            return false;
         }
 
         const COMPILE_OPTIONS = {

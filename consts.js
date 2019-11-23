@@ -1,5 +1,7 @@
 // Copyright (c) 2019 Cryptogogue, Inc. All Rights Reserved.
 
+export const CORS_PROXY = 'https://www.cardmotron.com/cors/';
+
 export const DEFAULT_ZOOM = 1.00;
 
 export const MM_TO_IN = 0.03937007874;

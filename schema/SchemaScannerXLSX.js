@@ -189,8 +189,8 @@ export class SchemaScannerXLSX {
             this.schemaBuilder.italic ( params.italic );
         }
 
-        if ( params.bolditalic ) {
-            this.schemaBuilder.bolditalic ( params.bolditalic );
+        if ( params.boldItalic ) {
+            this.schemaBuilder.boldItalic ( params.boldItalic );
         }
     }
 
