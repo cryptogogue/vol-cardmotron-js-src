@@ -17,13 +17,6 @@ const COMPILE_OPTIONS = {
 //================================================================//
 
 //----------------------------------------------------------------//
-function escapeDefinitionName ( name ) {
-
-    name = name || '';
-    return name.replace ( /\s+/g, '-' ).toLowerCase ();
-}
-
-//----------------------------------------------------------------//
 export function makeSchemaTransaction ( schema, accountName, keyName, gratuity, nonce ) {
 
     return {
@@ -88,11 +81,27 @@ export class SchemaScannerXLSX {
         this.macros     = {};
         this.errors     = [];
         this.warnings   = [];
+        this.inventory  = {};
 
-        this.readSheet ( book, 'layouts' );
-        this.readSheet ( book, 0 );
+        this.book = book;
+        this.readSheet ( 0 );
+        delete ( this.book );
 
         this.schema = this.schemaBuilder.done ();
+    }
+
+    //----------------------------------------------------------------//
+    escapeDefinitionType ( name ) {
+
+        const baseName = ( name || '' ).toLowerCase ().replace ( /[^a-z0-9]+/g, '-' );
+
+        let postfix = 0;
+        name = baseName;
+        
+        while ( _.has ( this.inventory, name )) {
+            name = `${ baseName }-${ postfix++ }`;
+        }
+        return name;
     }
 
     //----------------------------------------------------------------//
@@ -106,10 +115,24 @@ export class SchemaScannerXLSX {
 
         // read in the field definitions
         const fieldDefs = {};
-        for ( let col = 2; col < sheet.width; ++col ) {
+        for ( let col = 1; col < sheet.width; ++col ) {
 
             const name = sheet.getValueByCoord ( col, row, false );
-            const type = sheet.getValueByCoord ( col, row + 1, false );
+            let type = false;
+
+            switch ( name ) {
+                case '*':
+                    type = 'number';
+                    break;
+
+                case '@':
+                    type = 'string';
+                    break;
+
+                default:
+                    type = sheet.getValueByCoord ( col, row + 1, 'string' );
+                    break;
+            };
 
             if ( name && type ) {
                 fieldDefs [ col ] = {
@@ -122,15 +145,15 @@ export class SchemaScannerXLSX {
         // skip the field definitions
         row += 2;
 
-        for ( let row = 0; row < sheet.height; ++row ) {
+        for ( ; row < sheet.height; ++row ) {
 
-            const cardNumber = parseInt ( sheet.getValueByCoord ( 1, row ));
-            if ( !cardNumber ) continue;
+            const nextDirective = sheet.getValueByCoord ( 0, row, false );
+            if ( nextDirective ) break;
 
             let definition = {};
             let fieldCount = 0;
 
-            for ( let col = 2; col < sheet.width; ++col ) {
+            for ( let col = 1; col < sheet.width; ++col ) {
 
                 const fieldDef = fieldDefs [ col ];
                 if ( !fieldDef ) continue;
@@ -155,13 +178,25 @@ export class SchemaScannerXLSX {
                 definition [ fieldDef.name ] = value;
                 fieldCount++;
             }
+            
+            // if there's a count column, use the value there. if not, default count is 1.
+            const definitionCount = _.has ( definition, '*' ) ? ( definition [ '*' ] || 0 ): 1;
 
-            const name = escapeDefinitionName ( definition.name );
+            // type column could be '@' or 'name'. prefer '@'.
+            const typeColumnName = _.has ( definition, '@' ) ? '@' : 'name';
+            const hasTypeColumn = _.has ( definition, typeColumnName );
 
-            if ( name.length > 0 ) {
+            // if there's a name column, use the value there. if not, default name is 'definition'.
+            let definitionType = hasTypeColumn ? ( definition [ typeColumnName ] || false ):  'definition';
 
-                this.schemaBuilder.definition ( name );
+            if ( definitionType && ( definitionCount > 0 ) && ( fieldCount > 0 )) {
+
+                definitionType = this.escapeDefinitionType ( definitionType );
+                this.inventory [ definitionType ] = definitionCount;
+
+                this.schemaBuilder.definition ( definitionType );
                 for ( let fieldName in definition ) {
+                    if (( fieldName === '*' ) || ( fieldName === '@' )) continue; // ignore control fields
                     this.schemaBuilder.field ( fieldName, definition [ fieldName ]);
                 }
             }
@@ -459,14 +494,15 @@ export class SchemaScannerXLSX {
     }
 
     //----------------------------------------------------------------//
-    readSheet ( book, sheetName ) {
+    readSheet ( sheetName ) {
 
-        const sheet = book.getSheet ( sheetName );
+        const sheet = this.book.getSheet ( sheetName );
         if ( !sheet ) return;
 
         let handlers = {
             FONTS:          ( name, row, paramNames ) => { this.readFonts       ( sheet, name, row, paramNames )},
             ICONS:          ( name, row, paramNames ) => { this.readIcons       ( sheet, name, row, paramNames )},
+            INCLUDES:       ( name, row, paramNames ) => { this.readSheet       ( name )},
             LAYOUTS:        ( name, row, paramNames ) => { this.readLayouts     ( sheet, name, row, paramNames )},
             MACROS:         ( name, row, paramNames ) => { this.readMacros      ( this.macros, sheet, name, row, paramNames )},
         }

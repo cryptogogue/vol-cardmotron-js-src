@@ -189,18 +189,17 @@ export class InventoryService extends Service {
         this.assets = assets || this.assets;
 
         const availableAssetsByID = this.availableAssetsByID;
-        console.log ( 'REFRESH BINDING:', availableAssetsByID );
         this.binding = this.schema.generateBinding ( availableAssetsByID );
     }
 
     //----------------------------------------------------------------//
     @action
-    reset ( template ) {
+    reset ( template, assets, inventory ) {
 
         this.loading = true;
 
         if ( template ) {
-            this.update ([ template ]);
+            this.update ([ template ], assets, inventory );
         }
     }
 
@@ -218,7 +217,7 @@ export class InventoryService extends Service {
     }
 
     //----------------------------------------------------------------//
-    async update ( templates, assets ) {
+    async update ( templates, assets, inventory ) {
 
         const fetchFont = async ( url ) => {
             if ( !url ) return false;
@@ -307,27 +306,33 @@ export class InventoryService extends Service {
             this.onProgress ( 'Fetching Fonts' );
             for ( let name in template.fonts ) {
 
-                try {
-                    const fontDesc = template.fonts [ name ];
-                    const faces = {};
+                const fontDesc = template.fonts [ name ];
+                const faces = {};
 
-                    for ( let face in fontDesc ) {
-                        const url = fontDesc [ face ];
-                        console.log ( 'FETCHING FONT', name, face, url );
-                        faces [ face ] = await fetchFont ( url );
-                    }
-                    this.fonts [ name ] = faces;
+                for ( let face in fontDesc ) {
+                    const url = fontDesc [ face ];
+                    console.log ( 'FETCHING FONT', name, face, url );
+                    faces [ face ] = await fetchFont ( url );
                 }
-                catch ( error ) {
-                    console.log ( error );
-                }
+                this.fonts [ name ] = faces;
             }
         }
 
-        if ( !assets ) {
-            assets = {};
+        if ( !( assets || inventory )) {
+            inventory = {};
             for ( let typeName in schema.definitions ) {
-                schema.addTestAsset ( assets, typeName );
+                inventory [ typeName ] = 1;
+            }
+        }
+
+        assets = assets || {};
+        
+        if ( inventory ) {
+            for ( let typeName in inventory ) {
+                const count = Number ( inventory [ typeName ]) || 0;
+                for ( let i = 0; i < count; ++i ) {
+                    schema.addTestAsset ( assets, typeName );
+                }
             }
         }
 
@@ -340,9 +345,10 @@ export class InventoryService extends Service {
             }
         }
 
+        this.refreshAssetLayouts ();
+
         this.onProgress ( 'Refreshing Binding' );
         this.refreshBinding ( schema, assetsWithLayouts );
-        this.refreshAssetLayouts ();
         this.setLoading ( false );
     }
 
