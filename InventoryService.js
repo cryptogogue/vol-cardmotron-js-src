@@ -27,7 +27,9 @@ export class InventoryService extends Service {
     //----------------------------------------------------------------//
     composeAssetContext ( asset, filters, overrideContext ) {
 
-        let context = {};
+        let context = {
+            [ '@' ]: asset.type,
+        };
 
         for ( let fieldName in asset.fields ) {
 

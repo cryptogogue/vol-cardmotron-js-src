@@ -80,6 +80,7 @@ export const EditorScreen = observer (( props ) => {
                 const scanner = new SchemaScannerXLSX ( book );
                 const schema = scanner.schema;
                 inventory.reset ( schema, {}, scanner.inventory );
+                controller.setRankDefinitions ( scanner.rankDefinitions );
                 if ( scanner.hasMessages ) {
                     setScanner ( scanner );
                 }

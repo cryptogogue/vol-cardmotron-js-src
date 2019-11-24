@@ -22,8 +22,37 @@ import { assert, excel, Service, SingleColumnContainerView, useService, util } f
 //================================================================//
 export class InventoryViewController extends Service {
 
+    @observable layoutName          = consts.WEB_LAYOUT;
+    @observable selection           = {};
+    @observable sortMode            = consts.SORT_MODE.RANK_DEFINITIONS;
+    @observable rankDefinitions     = false;
+    @observable zoom                = consts.DEFAULT_ZOOM; 
+
     //----------------------------------------------------------------//
     compareForSort ( asset0, asset1 ) {
+
+        switch ( this.sortMode ) {
+
+            case consts.SORT_MODE.RANK_DEFINITIONS:
+
+                if ( this.rankDefinitions ) {
+
+                    const sort0 = this.rankDefinitions [ asset0.type ];
+                    const sort1 = this.rankDefinitions [ asset1.type ];
+
+                    if ( sort0 !== sort1 ) {
+                        return sort0 < sort1 ? -1 : 1;
+                    }
+                }
+                return asset0.type.localeCompare ( asset1.type );
+
+            case consts.SORT_MODE.ALPHA_ZTOA:
+                return asset1.type.localeCompare ( asset0.type );
+
+            default:
+            case consts.SORT_MODE.ALPHA_ATOZ:
+                return asset0.type.localeCompare ( asset1.type );
+        }
 
         if ( this.sortMode === consts.SORT_MODE.ALPHA_ATOZ ) {
             return asset0.type.localeCompare ( asset1.type );
@@ -36,13 +65,6 @@ export class InventoryViewController extends Service {
         super ();
 
         this.inventory = inventory;
-
-        extendObservable ( this, {
-            layoutName:     consts.WEB_LAYOUT,
-            selection:      {},
-            sortMode:       consts.SORT_MODE.ALPHA_ATOZ,
-            zoom:          consts.DEFAULT_ZOOM,
-        });
     }
 
     //----------------------------------------------------------------//
@@ -95,9 +117,16 @@ export class InventoryViewController extends Service {
 
     //----------------------------------------------------------------//
     @action
+    setRankDefinitions ( rankDefinitions ) {
+
+        this.rankDefinitions = rankDefinitions || {};
+    }
+
+    //----------------------------------------------------------------//
+    @action
     setSortMode ( sortMode ) {
 
-        this.sortMode = sortMode;
+        this.sortMode = ( this.sortMode === sortMode ) ? consts.SORT_MODE.RANK_DEFINITIONS : sortMode;
     }
 
     //----------------------------------------------------------------//

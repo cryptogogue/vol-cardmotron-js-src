@@ -16,8 +16,9 @@ export const PAGE_TYPE = {
 };
 
 export const SORT_MODE = {
-    ALPHA_ATOZ:     'ALPHA_ATOZ',
-    ALPHA_ZTOA:     'ALPHA_ZTOA',
+    ALPHA_ATOZ:         'ALPHA_ATOZ',
+    ALPHA_ZTOA:         'ALPHA_ZTOA',
+    RANK_DEFINITIONS:   'RANK_DEFINITIONS',
 };
 
 export const WEB_LAYOUT = 'WEB';

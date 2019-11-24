@@ -98,7 +98,7 @@ const InventoryPageView = ( props ) => {
 
             assets.push (
                 <g key = { i }>
-                    <AssetView x = { x } y = { y } inventory = { inventory } assetId = { assetIDs [ i ]}/>
+                    <AssetView x = { x } y = { y } inventory = { inventory } assetId = { assetIDs [ i ]} dpi = { DPI }/>
                     <rect x = { x } y = { y } width = { assetWidthInPoints } height = { assetHeightInPoints } style = { ASSET_FRAME_STYLE }/>
                 </g>
             );

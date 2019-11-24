@@ -26,7 +26,7 @@ export const InventoryView = observer (( props ) => {
     const controller    = props.controller;
     const inventory     = controller.inventory;
     const assetArray    = controller.sortedAssets || inventory.availableAssetsArray;
-    const scale         = controller.scale || 1;
+    const zoom          = controller.zoom || 1;
 
     const onClickCard = ( asset ) => {
 
@@ -64,7 +64,7 @@ export const InventoryView = observer (( props ) => {
                         assetId = { asset.assetID }
                         inventory = { inventory }
                         inches = { true }
-                        scale = { scale }
+                        scale = { zoom }
                     />
                     <Modal
                         style = {{ height : 'auto' }}

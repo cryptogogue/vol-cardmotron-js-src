@@ -78,10 +78,11 @@ export class SchemaScannerXLSX {
     constructor ( book ) {
 
         this.schemaBuilder = buildSchema ( 'TEST_SCHEMA' );
-        this.macros     = {};
-        this.errors     = [];
-        this.warnings   = [];
-        this.inventory  = {};
+        this.macros             = {};
+        this.errors             = [];
+        this.warnings           = [];
+        this.inventory          = {};
+        this.rankDefinitions    = {};
 
         this.book = book;
         this.readSheet ( 0 );
@@ -192,6 +193,7 @@ export class SchemaScannerXLSX {
             if ( definitionType && ( definitionCount > 0 ) && ( fieldCount > 0 )) {
 
                 definitionType = this.escapeDefinitionType ( definitionType );
+                this.rankDefinitions [ definitionType ] = Object.keys ( this.inventory ).length;
                 this.inventory [ definitionType ] = definitionCount;
 
                 this.schemaBuilder.definition ( definitionType );
@@ -271,6 +273,9 @@ export class SchemaScannerXLSX {
         this.schemaBuilder.layout ( name, docWidth, docHeight, params.dpi, params.svg );
 
         for ( ; row < sheet.height; ++row ) {
+
+            if ( sheet.getValueByCoord ( 0, row, false ) !== false ) break;
+            if ( sheet.getValueByCoord ( paramNames.name, row, false ) !== false ) break;
 
             const draw = util.toStringOrFalse ( sheet.getValueByCoord ( paramNames.draw, row ));
             if ( !draw ) break;
@@ -516,6 +521,7 @@ export class SchemaScannerXLSX {
 
             if ( nextMode === 'DEFINITIONS' ) {
                 this.readDefinitions  ( this.macros, sheet, name, row );
+                paramNames = false;
             }
             else {
                 if ( nextMode ) {
