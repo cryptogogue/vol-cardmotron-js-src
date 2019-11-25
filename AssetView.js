@@ -10,10 +10,10 @@ import React                        from 'react';
 //================================================================//
 export const AssetView = ( props ) => {
 
-    const { inventory, assetId, inches } = props;
+    const { inventory, assetID, inches } = props;
     const dpi = props.dpi || 300;
 
-    const layout        = inventory.getAssetLayout ( assetId );
+    const layout        = inventory.getAssetLayout ( assetID );
 
     const dpiScale      = dpi / layout.dpi;
 
@@ -24,15 +24,17 @@ export const AssetView = ( props ) => {
     const docY          = props.y || 0;
     const scale         = props.scale || 1;
 
-    const docWidth      = inventory.maxWidthInInches * dpi;
-    const docHeight     = inventory.maxHeightInInches * dpi;
+    const docWidthInInches      = ( layout.width * scale ) / layout.dpi;
+    const docHeightInInches     = ( layout.height * scale ) / layout.dpi;
+
+    console.log ( assetWidth, assetHeight, docWidthInInches, docHeightInInches );
 
     return (
         <svg
             x = { docX }
             y = { docY }
-            width = { inches ? `${( docWidth * scale ) / dpi }in` : docWidth * scale }
-            height = { inches ? `${( docHeight * scale ) / dpi }in` : docHeight * scale }
+            width = { inches ? `${ docWidthInInches }in` : ( docWidthInInches * dpi )}
+            height = { inches ? `${ docHeightInInches }in` : ( docHeightInInches * dpi )}
             viewBox = { `0 0 ${ assetWidth } ${ assetHeight }` }
             preserveAspectRatio = 'xMidYMid meet'
         >

@@ -154,8 +154,6 @@ export class SchemaScannerXLSX {
 
         for ( ; scanMore ( sheet, row ); ++row ) {
 
-            console.log ( 'SCAN DEFINITION', row );
-
             let definition = {};
             let fieldCount = 0;
 
@@ -200,8 +198,6 @@ export class SchemaScannerXLSX {
                 definitionType = this.escapeDefinitionType ( definitionType );
                 this.rankDefinitions [ definitionType ] = Object.keys ( this.inventory ).length;
                 this.inventory [ definitionType ] = definitionCount;
-
-                console.log ( 'DEFINITION:', definitionType );
 
                 this.schemaBuilder.definition ( definitionType );
                 for ( let fieldName in definition ) {
@@ -284,6 +280,8 @@ export class SchemaScannerXLSX {
     //----------------------------------------------------------------//
     readLayouts ( sheet, row ) {
 
+        console.log ( 'READ LAYOUTS!' );
+
         const paramNames = this.readParamNames ( sheet, row++ );
 
         const H_JUSTIFY = {
@@ -304,6 +302,7 @@ export class SchemaScannerXLSX {
         for ( ; scanMore ( sheet, row ); ++row ) {
 
             const name = util.toStringOrFalse ( sheet.getValueByCoord ( paramNames.name, row ));
+            console.log ( 'LAYOUT NAME', name );
 
             if ( name ) {
                 const layoutParams = this.readParams ( sheet, row, paramNames, [
@@ -571,7 +570,6 @@ export class SchemaScannerXLSX {
 
             const directive = util.toStringOrFalse ( sheet.getValueByCoord ( 0, row ));
             if ( directive && _.has ( handlers, directive )) {
-                console.log ( 'DIRECTIVE', row, directive );
                 handlers [ directive ]( sheet, row );
             }
         }

@@ -12,10 +12,10 @@ const { TextFitter, JUSTIFY } = textLayout;
 export class AssetLayout {
 
     //----------------------------------------------------------------//
-    constructor ( inventory, assetID, filters ) {
+    constructor ( inventory, assetID ) {
 
         const asset     = inventory.assets [ assetID ];
-        const context   = inventory.composeAssetContext ( asset, filters, {[ '$' ]: assetID });
+        const context   = inventory.composeAssetContext ( asset, {[ '$' ]: assetID });
 
         const resources = {
             fonts:      inventory.fonts,
@@ -26,8 +26,6 @@ export class AssetLayout {
         this.height     = 0;
         this.dpi        = false;
         this.context    = context;
-
-        // this.context    = context;
 
         const layoutNameList = inventory.getAssetField ( asset, 'layout', '' );
         this.svg = this.layoutList ( layoutNameList, context, inventory, []);
@@ -57,7 +55,6 @@ export class AssetLayout {
         if ( stack.includes ( layoutName )) return;
         stack.push ( layoutName );
         
-
         this.width      = Math.max ( this.width, layout.width );
         this.height     = Math.max ( this.height, layout.height );
         this.dpi        = layout.dpi;

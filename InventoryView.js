@@ -3,6 +3,7 @@
 import { assert, InfiniteScrollView, Service, util } from 'fgc';
 
 import { AssetView }                                        from './AssetView';
+import { AssetSizer }                                       from './AssetSizer';
 import { InventoryService }                                 from './InventoryService';
 import handlebars                                           from 'handlebars';
 import { action, computed, extendObservable, observable }   from 'mobx';
@@ -21,7 +22,6 @@ import './InventoryView.css';
 export const InventoryView = observer (( props ) => {
 
     const [ zoomedAsset, setZoomedAsset ]   = useState ( false );
-
 
     const controller    = props.controller;
     const inventory     = controller.inventory;
@@ -43,8 +43,25 @@ export const InventoryView = observer (( props ) => {
         e.stopPropagation ();
     }
 
+    const sizers = {};
+    for ( let docSizeName in inventory.docSizes ) {
+        sizers [ docSizeName ] = (
+            <AssetSizer
+                inventory = { inventory }
+                docSizeName = { docSizeName }
+                scale = { zoom }
+            />
+        ); 
+    }
+
+    const getSizerName = ( i ) => {
+        const assetID = assetArray [ i ].assetID;
+        const metrics = inventory.getAssetMetrics ( assetID );
+        return metrics.docSizeName;
+    }
+
     const assetLayoutCache = [];
-    const getAsset = ( i, targetRef ) => {
+    const getAsset = ( i ) => {
         
         if ( !assetLayoutCache.includes ( i )) {
             
@@ -61,7 +78,7 @@ export const InventoryView = observer (( props ) => {
                     onClick = {() => { onClickCard ( asset )}}
                 >
                     <AssetView
-                        assetId = { asset.assetID }
+                        assetID = { asset.assetID }
                         inventory = { inventory }
                         inches = { true }
                         scale = { zoom }
@@ -77,7 +94,7 @@ export const InventoryView = observer (( props ) => {
                                 <h3>Card Info</h3>
                                 <Divider/>
                                 <AssetView
-                                    assetId = { asset.assetID }
+                                    assetID = { asset.assetID }
                                     inventory = { inventory }
                                     inches = 'true'
                                     scale = '1.3'
@@ -99,8 +116,10 @@ export const InventoryView = observer (( props ) => {
         <Fragment>
             <div key = { Object.keys (controller.selection).length } style = {{ display: 'none' }}/>
             <InfiniteScrollView 
-                onGetAsset  = { getAsset }
-                totalCards  = { assetArray.length }
+                onGetCard       = { getAsset }
+                sizers          = { sizers }
+                onGetSizerName  = { getSizerName }
+                totalCards      = { assetArray.length }
             />
         </Fragment>
     );

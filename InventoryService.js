@@ -3,6 +3,7 @@
 import { assert, InfiniteScrollView, Service, util } from 'fgc';
 
 import { AssetLayout }                          from './AssetLayout';
+import { AssetMetrics }                         from './AssetMetrics';
 import * as consts                              from './consts';
 import { action, computed, extendObservable, observable, observe, runInAction } from 'mobx';
 import { Binding }                              from './schema/Binding';
@@ -20,12 +21,17 @@ export class InventoryService extends Service {
     @observable loading         = false;
 
     @observable assets          = {};
-    @observable assetLayouts    = {};
     @observable schema          = new Schema (); // empty schema
     @observable binding         = new Binding (); // empty binding
 
+    @observable filters         = [ 'EN', 'RGB' ];
+
+    @observable layoutCache     = {};
+    @observable metrics         = {};
+    @observable docSizes        = {}; // common doc sizes in inches; used to generate sizers
+
     //----------------------------------------------------------------//
-    composeAssetContext ( asset, filters, overrideContext ) {
+    composeAssetContext ( asset, overrideContext ) {
 
         let context = {
             [ '@' ]: asset.type,
@@ -38,8 +44,8 @@ export class InventoryService extends Service {
 
             context [ fieldName ] = field.value;
 
-            for ( let i in filters ) {
-                const filter = filters [ i ];
+            for ( let i in this.filters ) {
+                const filter = this.filters [ i ];
                 if ( _.has ( alternates, filter )) {
                     context [ fieldName ] = alternates [ filter ];
                 }
@@ -53,13 +59,10 @@ export class InventoryService extends Service {
         super ();
 
         this.onProgress = onProgress || (( message ) => { console.log ( message )});
-        this.templates = {};
+
         this.layouts = {};
         this.fonts = {};
         this.icons = {};
-
-        this.maxWidthInInches = 0;
-        this.maxHeightInInches = 0;
 
         if ( accountID && nodeURL ) {
             this.fetchInventory ( nodeURL, accountID );
@@ -68,7 +71,7 @@ export class InventoryService extends Service {
         // if ( appState ) {
         //     observe ( appState, 'assetsUtilized', ( change ) => {
         //         console.log ( 'ASSETS UTILIZED DID CHANGE' );
-        //         this.refreshBinding ();
+        //         this.setAssets ();
         //     });
         // }
     }
@@ -110,10 +113,16 @@ export class InventoryService extends Service {
     //----------------------------------------------------------------//
     @action
     getAssetLayout ( assetID ) {
-        if ( !_.has ( this.assetLayouts, assetID )) {
-            this.assetLayouts [ assetID ] = new AssetLayout ( this, assetID, [ 'EN', 'RGB' ]);
+        if ( !_.has ( this.layoutCache, assetID )) {
+            this.layoutCache [ assetID ] = new AssetLayout ( this, assetID, this.filters );
         }
-        return this.assetLayouts [ assetID ];
+        return this.layoutCache [ assetID ];
+    }
+
+    //----------------------------------------------------------------//
+    getAssetMetrics ( assetID ) {
+
+        return this.metrics [ assetID ];
     }
 
     //----------------------------------------------------------------//
@@ -179,29 +188,58 @@ export class InventoryService extends Service {
 
     //----------------------------------------------------------------//
     @action
-    refreshAssetLayouts () {
-        this.assetLayouts = {};
+    reset ( template, assets, inventory ) {
+
+        if ( !template ) return;
+
+        this.loading = true;
+
+        this.layouts = {};
+        this.fonts = {};
+        this.icons = {};
+
+        this.update ([ template ], assets, inventory );
     }
 
     //----------------------------------------------------------------//
     @action
-    refreshBinding ( schema, assets ) {
+    setAssets ( schema, assets ) {
+
+        assets = assets || {};
+
+        // TODO: properly handle layout field alternatives; doing this here is a big, fat hack
+        let assetsWithLayouts = {};
+        for ( let assetID in assets ) {
+            const asset = assets [ assetID ];
+            if ( this.hasLayoutsForAsset ( asset )) {
+                assetsWithLayouts [ assetID ] = asset;
+            }
+        }
+        assets = assetsWithLayouts;
 
         this.schema = schema || this.schema;
         this.assets = assets || this.assets;
 
         const availableAssetsByID = this.availableAssetsByID;
         this.binding = this.schema.generateBinding ( availableAssetsByID );
-    }
 
-    //----------------------------------------------------------------//
-    @action
-    reset ( template, assets, inventory ) {
+        // empty the layout and metrics caches
+        this.layoutCache = {};
+        this.metricsCahe = {};
 
-        this.loading = true;
+        // rebuild the docSizes and metrics
+        this.docSizes = {};
 
-        if ( template ) {
-            this.update ([ template ], assets, inventory );
+        for ( let assetID in this.assets ) {
+            const metrics = new AssetMetrics ( this, assetID );
+            this.metrics [ assetID ] = metrics;
+            const docSizeName = metrics.docSizeName;
+
+            console.log ( 'METRICS', assetID, metrics.docSizeName );
+
+            if ( !_.has ( this.docSizes, docSizeName )) {
+                this.docSizes [ docSizeName ] = metrics.docSize;
+            }
         }
     }
 
@@ -267,9 +305,6 @@ export class InventoryService extends Service {
 
         let schema = new Schema ();
 
-        this.maxWidthInInches = 0;
-        this.maxHeightInInches = 0;
-
         for ( let template of templates ) {
 
             this.onProgress ( 'Applying Template' );
@@ -279,12 +314,6 @@ export class InventoryService extends Service {
             for ( let layoutName in template.layouts ) {
                 
                 const layout = _.cloneDeep ( template.layouts [ layoutName ]);
-
-                const widthInInches = layout.width / layout.dpi;
-                const heightInInches = layout.height / layout.dpi;
-
-                this.maxWidthInInches = ( this.maxWidthInInches > widthInInches ) ? this.maxWidthInInches : widthInInches;
-                this.maxHeightInInches = ( this.maxHeightInInches > heightInInches ) ? this.maxHeightInInches : heightInInches;
 
                 for ( let command of layout.commands ) {
                     if ( command.type === LAYOUT_COMMAND.DRAW_TEXT_BOX ) {
@@ -338,19 +367,8 @@ export class InventoryService extends Service {
             }
         }
 
-        // TODO: properly handle layout field alternatives; doing this here is a big, fat hack
-        let assetsWithLayouts = {};
-        for ( let assetID in assets ) {
-            const asset = assets [ assetID ];
-            if ( this.hasLayoutsForAsset ( asset )) {
-                assetsWithLayouts [ assetID ] = asset;
-            }
-        }
-
-        this.refreshAssetLayouts ();
-
         this.onProgress ( 'Refreshing Binding' );
-        this.refreshBinding ( schema, assetsWithLayouts );
+        this.setAssets ( schema, assets );
         this.setLoading ( false );
     }
 
