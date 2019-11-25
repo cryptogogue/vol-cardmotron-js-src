@@ -26,7 +26,8 @@ export class InventoryViewController extends Service {
     @observable selection           = {};
     @observable sortMode            = consts.SORT_MODE.RANK_DEFINITIONS;
     @observable rankDefinitions     = false;
-    @observable zoom                = consts.DEFAULT_ZOOM; 
+    @observable zoom                = consts.DEFAULT_ZOOM;
+    @observable enableSelecting     = false;
 
     //----------------------------------------------------------------//
     compareForSort ( asset0, asset1 ) {

@@ -28,19 +28,25 @@ export const InventoryView = observer (( props ) => {
     const assetArray    = controller.sortedAssets || inventory.availableAssetsArray;
     const zoom          = controller.zoom || 1;
 
-    const onClickCard = ( asset ) => {
-
-        if ( controller.isSelected ( asset ) ) {
-            controller.deselectAsset ( asset );
-        }
-        else {
-            controller.selectAsset ( asset );
-        }
+    const onClickZoom = ( asset, event ) => {
+        setZoomedAsset ( asset );
+        event.stopPropagation ();
     }
 
-    const onClickZoom = ( asset, e ) => {
-        setZoomedAsset ( asset );
-        e.stopPropagation ();
+    const onClickCard = ( asset, event ) => {
+
+        if ( controller.enableSelecting ) {
+
+            if ( controller.isSelected ( asset ) ) {
+                controller.deselectAsset ( asset );
+            }
+            else {
+                controller.selectAsset ( asset );
+            }
+        }
+        else {
+            onClickZoom ( asset, event );
+        }
     }
 
     const sizers = {};
@@ -75,7 +81,7 @@ export const InventoryView = observer (( props ) => {
                         border: `2px solid ${ color }`,
                         width: 'auto',
                     }}
-                    onClick = {() => { onClickCard ( asset )}}
+                    onClick = {( event ) => { onClickCard ( asset, event )}}
                 >
                     <AssetView
                         assetID = { asset.assetID }
@@ -103,9 +109,11 @@ export const InventoryView = observer (( props ) => {
                             </center>
                         </Modal.Content>
                     </Modal>
-                    <Icon name = 'circle' />
-                    <Icon name = 'ellipsis horizontal'/>
-                    <img className = 'zoom' src = { zoom } onClick = {( e ) => onClickZoom ( asset, e )}/>
+                    <If condition = { controller.enableSelecting }>
+                        <Icon name = 'circle' />
+                        <Icon name = 'ellipsis horizontal'/>
+                        <img className = 'zoom' src = { zoom } onClick = {( e ) => onClickZoom ( asset, e )}/>
+                    </If>
                 </Card>
             );
         }

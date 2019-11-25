@@ -69,9 +69,11 @@ export const EditorMenu = observer (( props ) => {
             <inventoryMenuItems.LayoutOptionsDropdown controller = { controller }/>
             <inventoryMenuItems.ZoomOptionsDropdown controller = { controller }/>
 
-            <Menu.Item>
-                <Icon name = 'tags' disabled = { !controller.hasSelection }/>
-            </Menu.Item>
+            <If condition = { controller.enableSelecting }>
+                <Menu.Item>
+                    <Icon name = 'tags' disabled = { !controller.hasSelection }/>
+                </Menu.Item>
+            </If>
 
             <Menu.Menu position = "right">
                 <Menu.Item
