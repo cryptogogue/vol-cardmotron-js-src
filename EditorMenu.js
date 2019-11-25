@@ -83,6 +83,12 @@ export const EditorMenu = observer (( props ) => {
                 >
                     <Icon name = 'print'/>
                 </Menu.Item>
+                <Menu.Item
+                    href = 'https://github.com/cryptogogue/vol-cardmotron-js#cardmotron'
+                    target = '_blank'
+                >
+                    Help
+                </Menu.Item>
             </Menu.Menu>
         </Menu>
     );
