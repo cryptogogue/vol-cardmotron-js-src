@@ -235,8 +235,6 @@ export class InventoryService extends Service {
             this.metrics [ assetID ] = metrics;
             const docSizeName = metrics.docSizeName;
 
-            console.log ( 'METRICS', assetID, metrics.docSizeName );
-
             if ( !_.has ( this.docSizes, docSizeName )) {
                 this.docSizes [ docSizeName ] = metrics.docSize;
             }

@@ -26,6 +26,7 @@ export const EditorMenu = observer (( props ) => {
     const filePickerRef                     = useRef ();
 
     const onFilePickerChange = ( event ) => {
+        event.stopPropagation ();
         const picked = event.target.files.length > 0 ? event.target.files [ 0 ] : false;
         if ( picked ) {
             setFile ( picked );

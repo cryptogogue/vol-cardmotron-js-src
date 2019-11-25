@@ -280,8 +280,6 @@ export class SchemaScannerXLSX {
     //----------------------------------------------------------------//
     readLayouts ( sheet, row ) {
 
-        console.log ( 'READ LAYOUTS!' );
-
         const paramNames = this.readParamNames ( sheet, row++ );
 
         const H_JUSTIFY = {
@@ -302,7 +300,6 @@ export class SchemaScannerXLSX {
         for ( ; scanMore ( sheet, row ); ++row ) {
 
             const name = util.toStringOrFalse ( sheet.getValueByCoord ( paramNames.name, row ));
-            console.log ( 'LAYOUT NAME', name );
 
             if ( name ) {
                 const layoutParams = this.readParams ( sheet, row, paramNames, [

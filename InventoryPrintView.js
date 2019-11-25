@@ -29,29 +29,39 @@ const GUIDE_LINE_STYLE = {
 //----------------------------------------------------------------//
 function getPageMetrics ( pageType, assetMetrics ) {
 
-    let { width, height } = consts.getInchesForPage ( pageType );
+    const initMetrics = ( width, height, rotate90 ) => {
 
-    width = width - PAGE_MARGIN_IN_INCHES;
-    height = height - PAGE_MARGIN_IN_INCHES;
+        const xScale = ( width < assetMetrics.width ) ? ( width / assetMetrics.width ) : 1;
+        const yScale = ( height < assetMetrics.height ) ? ( height / assetMetrics.height ) : 1;
 
-    const initMetrics = ( pageWidth, pageHeight ) => {
+        const scale = Math.min ( xScale, yScale );
 
-        const cols = Math.floor ( pageWidth / assetMetrics.width );
-        const rows = Math.floor ( pageHeight / assetMetrics.height );
+        const cols = Math.floor ( width / ( assetMetrics.width * scale ));
+        const rows = Math.floor ( height / ( assetMetrics.height * scale ));
 
         return {
-            width:      pageWidth,
-            height:     pageHeight,
+            width:      width,
+            height:     height,
             cols:       cols,
             rows:       rows,
             step:       cols * rows,
+            scale:      scale,
+            rotate90:   rotate90 || false,
         };
     }
 
-    const metrics0 = initMetrics ( width, height );
-    const metrics1 = initMetrics ( height, width );
+    let { width, height } = consts.getInchesForPage ( pageType );
 
-    return metrics0.step >= metrics1.step ? metrics0 : metrics1;
+    width   = width - PAGE_MARGIN_IN_INCHES;
+    height  = height - PAGE_MARGIN_IN_INCHES;
+
+    const metrics0 = initMetrics ( width, height );
+    const metrics1 = initMetrics ( height, width, true );
+
+    if ( metrics0.scale === metrics1.scale ) {
+        return metrics0.step >= metrics1.step ? metrics0 : metrics1;
+    }
+    return metrics0.scale >= metrics1.scale ? metrics0 : metrics1;
 }
 
 //================================================================//
@@ -61,8 +71,11 @@ const InventoryPageView = ( props ) => {
 
     const { assetIDs, inventory, assetMetrics, pageMetrics } = props;
 
-    const assetWidthInPoints    = assetMetrics.width * DPI;
-    const assetHeightInPoints   = assetMetrics.height * DPI;
+    const assetScale            = props.assetScale || 1;
+    const rotate90              = props.rotate90 || false;
+
+    const assetWidthInPoints    = assetMetrics.width * DPI * assetScale;
+    const assetHeightInPoints   = assetMetrics.height * DPI * assetScale;
 
     const pageWidthInPoints     = pageMetrics.width * DPI;
     const pageHeightInPoints    = pageMetrics.height * DPI;
@@ -97,29 +110,38 @@ const InventoryPageView = ( props ) => {
             let y = yOff + ( row * assetHeightInPoints );
 
             assets.push (
-                <g key = { i }>
-                    <AssetView x = { x } y = { y } inventory = { inventory } assetID = { assetIDs [ i ]} dpi = { DPI }/>
-                    <rect x = { x } y = { y } width = { assetWidthInPoints } height = { assetHeightInPoints } style = { ASSET_FRAME_STYLE }/>
+                <g
+                    key = { i }
+                    transform = { `translate ( ${ x }, ${ y }) scale ( ${ assetScale } ${ assetScale })` } 
+                >
+                    <AssetView inventory = { inventory } assetID = { assetIDs [ i ]} dpi = { DPI }/>
+                    <rect width = { assetMetrics.width * DPI } height = { assetMetrics.height * DPI } style = { ASSET_FRAME_STYLE }/>
                 </g>
             );
         }
     }
 
+    const docWidth      = rotate90 ? pageMetrics.height : pageMetrics.width;
+    const docHeight     = rotate90 ? pageMetrics.width : pageMetrics.height;
+    const transform     = rotate90 ? `translate ( 0 ${ docHeight * DPI }) rotate ( -90 )` : ``;
+    
     return (
         <svg
             version = "1.1"
             baseProfile = "basic"
             xmlns = "http://www.w3.org/2000/svg"
             xmlnsXlink = "http://www.w3.org/1999/xlink"
-            width = { `${ pageMetrics.width }in` }
-            height = { `${ pageMetrics.height }in` }
-            viewBox = { `0 0 ${ pageWidthInPoints } ${ pageHeightInPoints }` }
-            preserveAspectRatio = "none"
+            width = { `${ docWidth }in` }
+            height = { `${ docHeight }in` }
+            viewBox = { `0 0 ${ docWidth * DPI } ${ docHeight * DPI }` }
+            preserveAspectRatio = "xMidYMid meet"
         >
-            <g style = { GUIDE_LINE_STYLE }>
-                { guidelines }
+            <g transform = { transform }>
+                <g style = { GUIDE_LINE_STYLE }>
+                    { guidelines }
+                </g>
+                { assets }
             </g>
-            { assets }
         </svg>
     );
 }
@@ -133,43 +155,74 @@ export const InventoryPrintView = observer (( props ) => {
     const inventory     = props.inventory;
     const assetArray    = props.assetArray || inventory.availableAssetsArray;
 
-    let assetLayouts = [];
+    const batches = [];
+    const batchesByName = {};
 
-    const assetMetrics = {
-        width:      inventory.maxWidthInInches,
-        height:     inventory.maxHeightInInches,
-    }
+    for ( let asset of assetArray ) {
 
-    const pageMetrics = getPageMetrics ( layoutName, assetMetrics, assetMetrics );
-    
-    for ( let i = 0; i < assetArray.length; i += pageMetrics.step ) {
+        const metrics = inventory.getAssetMetrics ( asset.assetID );
+        let batch = batchesByName [ metrics.docSizeName ];
 
-        let pageAssetIDs = [];
+        if ( !batch ) {
 
-        for ( let j = 0; ( j < pageMetrics.step ) && (( i + j ) < assetArray.length ); ++j ) {
-            pageAssetIDs.push ( assetArray [ i + j ].assetID );
+            const assetMetrics = {
+                width:      metrics.docSize.widthInInches,
+                height:     metrics.docSize.heightInInches,
+            }
+
+            batch = {
+                assets:         [],
+                assetMetrics:   assetMetrics,
+            };
+
+            batchesByName [ metrics.docSizeName ] = batch;
+            batches.push ( batch );
         }
+        batch.assets.push ( asset );
+    }
+    
+    let pages = [];
 
-        if ( pageAssetIDs.length > 0 ) {
-            assetLayouts.push (
-                <div
-                    className = 'page-break'
-                    key = { i }
-                >
-                    <InventoryPageView
-                        assetIDs = { pageAssetIDs }
-                        inventory = { inventory }
-                        assetMetrics = { assetMetrics }
-                        pageMetrics = { pageMetrics }
-                    />
-                </div>
-            );
+    for ( let batch of batches ) {
+
+        const pageNumber = pages.length;
+
+        const assetMetrics = batch.assetMetrics;
+        const pageMetrics = getPageMetrics ( layoutName, assetMetrics );
+        
+        const batchAssetArray = batch.assets;
+
+        for ( let i = 0; i < batchAssetArray.length; i += pageMetrics.step ) {
+
+            let pageAssetIDs = [];
+
+            for ( let j = 0; ( j < pageMetrics.step ) && (( i + j ) < batchAssetArray.length ); ++j ) {
+                pageAssetIDs.push ( batchAssetArray [ i + j ].assetID );
+            }
+
+            if ( pageAssetIDs.length > 0 ) {
+                pages.push (
+                    <div
+                        className = 'page-break'
+                        key = { `${ pageNumber }-${ i }` }
+                    >
+                        <InventoryPageView
+                            assetIDs = { pageAssetIDs }
+                            inventory = { inventory }
+                            assetMetrics = { assetMetrics }
+                            assetScale = { pageMetrics.scale }
+                            pageMetrics = { pageMetrics }
+                            rotate90 = { pageMetrics.rotate90 }
+                        />
+                    </div>
+                );
+            }
         }
     }
 
     return (
         <div className = "asset-wrapper">
-            { assetLayouts }
+            { pages }
         </div>
     );
 });

@@ -27,8 +27,6 @@ export const AssetView = ( props ) => {
     const docWidthInInches      = ( layout.width * scale ) / layout.dpi;
     const docHeightInInches     = ( layout.height * scale ) / layout.dpi;
 
-    console.log ( assetWidth, assetHeight, docWidthInInches, docHeightInInches );
-
     return (
         <svg
             x = { docX }
