@@ -42,6 +42,12 @@ function numberParam ( name, fallback ) {
 }
 
 //----------------------------------------------------------------//
+function scanMore ( sheet, row ) {
+
+    return (( row < sheet.height ) && ( sheet.getValueByCoord ( 0, row, false ) === false ));
+}
+
+//----------------------------------------------------------------//
 function stringParam ( name, fallback ) {
     return {
         type:       'string',
@@ -78,11 +84,11 @@ export class SchemaScannerXLSX {
     constructor ( book ) {
 
         this.schemaBuilder = buildSchema ( 'TEST_SCHEMA' );
-        this.macros             = {};
-        this.errors             = [];
-        this.warnings           = [];
-        this.inventory          = {};
-        this.rankDefinitions    = {};
+        this.macros                 = {};
+        this.errors                 = [];
+        this.warnings               = [];
+        this.inventory              = {};
+        this.rankDefinitions        = {};
 
         this.book = book;
         this.readSheet ( 0 );
@@ -112,7 +118,7 @@ export class SchemaScannerXLSX {
     }
 
     //----------------------------------------------------------------//
-    readDefinitions ( macros, sheet, name, row ) {
+    readDefinitions ( sheet, row ) {
 
         // read in the field definitions
         const fieldDefs = {};
@@ -146,10 +152,9 @@ export class SchemaScannerXLSX {
         // skip the field definitions
         row += 2;
 
-        for ( ; row < sheet.height; ++row ) {
+        for ( ; scanMore ( sheet, row ); ++row ) {
 
-            const nextDirective = sheet.getValueByCoord ( 0, row, false );
-            if ( nextDirective ) break;
+            console.log ( 'SCAN DEFINITION', row );
 
             let definition = {};
             let fieldCount = 0;
@@ -170,7 +175,7 @@ export class SchemaScannerXLSX {
                     case 'string':
                         value = String ( raw );
                         if ( typeof ( value ) !== fieldDef.type ) continue;
-                        value = handlebars.compile ( value, COMPILE_OPTIONS )( macros );
+                        value = handlebars.compile ( value, COMPILE_OPTIONS )( this.macros );
                         break;
                     default:
                         continue;
@@ -196,6 +201,8 @@ export class SchemaScannerXLSX {
                 this.rankDefinitions [ definitionType ] = Object.keys ( this.inventory ).length;
                 this.inventory [ definitionType ] = definitionCount;
 
+                console.log ( 'DEFINITION:', definitionType );
+
                 this.schemaBuilder.definition ( definitionType );
                 for ( let fieldName in definition ) {
                     if (( fieldName === '*' ) || ( fieldName === '@' )) continue; // ignore control fields
@@ -206,46 +213,78 @@ export class SchemaScannerXLSX {
     }
 
     //----------------------------------------------------------------//
-    readFonts ( sheet, name, row, paramNames ) {
+    readFonts ( sheet, row ) {
 
-        const params = this.readParams ( sheet, row++, paramNames, [
-            stringParam ( 'name' ),
-            stringParam ( 'regular' ),
-            stringParam ( 'bold', false ),
-            stringParam ( 'italic', false ),
-            stringParam ( 'boldItalic', false ),
-        ]);
+        const paramNames = this.readParamNames ( sheet, row++ );
 
-        this.schemaBuilder.font ( name, params.regular );
+        for ( ; scanMore ( sheet, row ); ++row ) {
 
-        if ( params.bold ) {
-            this.schemaBuilder.bold ( params.bold );
-        }
+            const name = util.toStringOrFalse ( sheet.getValueByCoord ( paramNames.name, row ));
+            if ( !name ) continue;
 
-        if ( params.italic ) {
-            this.schemaBuilder.italic ( params.italic );
-        }
+            const params = this.readParams ( sheet, row, paramNames, [
+                stringParam ( 'name' ),
+                stringParam ( 'regular' ),
+                stringParam ( 'bold', false ),
+                stringParam ( 'italic', false ),
+                stringParam ( 'boldItalic', false ),
+            ]);
 
-        if ( params.boldItalic ) {
-            this.schemaBuilder.boldItalic ( params.boldItalic );
+            this.schemaBuilder.font ( name, params.regular );
+
+            if ( params.bold ) {
+                this.schemaBuilder.bold ( params.bold );
+            }
+
+            if ( params.italic ) {
+                this.schemaBuilder.italic ( params.italic );
+            }
+
+            if ( params.boldItalic ) {
+                this.schemaBuilder.boldItalic ( params.boldItalic );
+            }
         }
     }
 
     //----------------------------------------------------------------//
-    readIcons ( sheet, name, row, paramNames ) {
+    readIcons ( sheet, row ) {
 
-        const params = this.readParams ( sheet, row++, paramNames, [
-            stringParam ( 'name' ),
-            numberParam ( 'width' ),
-            numberParam ( 'height' ),
-            stringParam ( 'svg' ),
-        ]);
+        const paramNames = this.readParamNames ( sheet, row++ );
 
-        this.schemaBuilder.icon ( name, params.width, params.height, params.svg );
+        for ( ; scanMore ( sheet, row ); ++row ) {
+
+            const name = util.toStringOrFalse ( sheet.getValueByCoord ( paramNames.name, row ));
+            if ( !name ) continue;
+
+            const params = this.readParams ( sheet, row, paramNames, [
+                stringParam ( 'name' ),
+                numberParam ( 'width' ),
+                numberParam ( 'height' ),
+                stringParam ( 'svg' ),
+            ]);
+
+            this.schemaBuilder.icon ( name, params.width, params.height, params.svg );
+        }
     }
 
     //----------------------------------------------------------------//
-    readLayouts ( sheet, name, row, paramNames ) {
+    readIncludes ( sheet, row ) {
+
+        const paramNames = this.readParamNames ( sheet, row++ );
+
+        for ( ; scanMore ( sheet, row ); ++row ) {
+
+            const sheetName = util.toStringOrFalse ( sheet.getValueByCoord ( paramNames.sheet, row ));
+            if ( !sheetName ) continue;
+
+            this.readSheet ( sheetName );
+        }
+    }
+
+    //----------------------------------------------------------------//
+    readLayouts ( sheet, row ) {
+
+        const paramNames = this.readParamNames ( sheet, row++ );
 
         const H_JUSTIFY = {
             left:       JUSTIFY.HORIZONTAL.LEFT,
@@ -259,26 +298,31 @@ export class SchemaScannerXLSX {
             top:        JUSTIFY.VERTICAL.TOP,
         };
 
-        const params = this.readParams ( sheet, row++, paramNames, [
-            stringParam ( 'name' ),
-            stringParam ( 'svg', false ),
-            numberParam ( 'width' ),
-            numberParam ( 'height' ),
-            numberParam ( 'dpi' ),
-        ]);
+        let docWidth     = 0;
+        let docHeight    = 0;
 
-        const docWidth     = params.width;
-        const docHeight    = params.height;
+        for ( ; scanMore ( sheet, row ); ++row ) {
 
-        this.schemaBuilder.layout ( name, docWidth, docHeight, params.dpi, params.svg );
+            const name = util.toStringOrFalse ( sheet.getValueByCoord ( paramNames.name, row ));
 
-        for ( ; row < sheet.height; ++row ) {
+            if ( name ) {
+                const layoutParams = this.readParams ( sheet, row, paramNames, [
+                    stringParam ( 'name' ),
+                    stringParam ( 'svg', false ),
+                    numberParam ( 'width' ),
+                    numberParam ( 'height' ),
+                    numberParam ( 'dpi' ),
+                ]);
 
-            if ( sheet.getValueByCoord ( 0, row, false ) !== false ) break;
-            if ( sheet.getValueByCoord ( paramNames.name, row, false ) !== false ) break;
+                docWidth = layoutParams.width;
+                docHeight = layoutParams.height;
+
+                this.schemaBuilder.layout ( name, docWidth, docHeight, layoutParams.dpi, layoutParams.svg );
+                continue;
+            }
 
             const draw = util.toStringOrFalse ( sheet.getValueByCoord ( paramNames.draw, row ));
-            if ( !draw ) break;
+            if ( !draw ) continue;
 
             switch ( draw ) {
 
@@ -428,17 +472,27 @@ export class SchemaScannerXLSX {
     }
 
     //----------------------------------------------------------------//
-    readMacros ( macros, sheet, name, row, paramNames ) {
-        const params = this.readParams ( sheet, row++, paramNames, [
-            stringParam ( 'name' ),
-            stringParam ( 'value', '' ),
-        ]);
-        const val = String ( params.value || '' );
-        macros [ name ] = val;
+    readMacros ( sheet, row ) {
+
+        const paramNames = this.readParamNames ( sheet, row++ );
+
+        for ( ; scanMore ( sheet, row ); ++row ) {
+
+            const name = util.toStringOrFalse ( sheet.getValueByCoord ( paramNames.name, row ));
+            if ( !name ) continue;
+
+            const params = this.readParams ( sheet, row, paramNames, [
+                stringParam ( 'name' ),
+                stringParam ( 'value', '' ),
+            ]);
+            const val = String ( params.value || '' );
+            this.macros [ name ] = val;
+        }
     }
 
     //----------------------------------------------------------------//
     readParamNames ( sheet, row ) {
+
         const paramNames = {};
         for ( let col = 1; col < sheet.width; ++col ) {
             const name = util.toStringOrFalse ( sheet.getValueByCoord ( col, row ));
@@ -505,35 +559,20 @@ export class SchemaScannerXLSX {
         if ( !sheet ) return;
 
         let handlers = {
-            FONTS:          ( name, row, paramNames ) => { this.readFonts       ( sheet, name, row, paramNames )},
-            ICONS:          ( name, row, paramNames ) => { this.readIcons       ( sheet, name, row, paramNames )},
-            INCLUDES:       ( name, row, paramNames ) => { this.readSheet       ( name )},
-            LAYOUTS:        ( name, row, paramNames ) => { this.readLayouts     ( sheet, name, row, paramNames )},
-            MACROS:         ( name, row, paramNames ) => { this.readMacros      ( this.macros, sheet, name, row, paramNames )},
+            DEFINITIONS:    ( name, row ) => { this.readDefinitions     ( sheet, row )},
+            FONTS:          ( name, row ) => { this.readFonts           ( sheet, row )},
+            ICONS:          ( name, row ) => { this.readIcons           ( sheet, row )},
+            INCLUDES:       ( name, row ) => { this.readIncludes        ( sheet, row )},
+            LAYOUTS:        ( name, row ) => { this.readLayouts         ( sheet, row )},
+            MACROS:         ( name, row ) => { this.readMacros          ( sheet, row )},
         }
-
-        let mode = false;
-        let paramNames = false;
 
         for ( let row = 0; row < sheet.height; ++row ) {
 
-            const nextMode = util.toStringOrFalse ( sheet.getValueByCoord ( 0, row ));
-
-            if ( nextMode === 'DEFINITIONS' ) {
-                this.readDefinitions  ( this.macros, sheet, name, row );
-                paramNames = false;
-            }
-            else {
-                if ( nextMode ) {
-                    mode = nextMode;
-                    paramNames = this.readParamNames ( sheet, row );
-                }
-                else if ( paramNames ) {
-                    const name = util.toStringOrFalse ( sheet.getValueByCoord ( paramNames.name, row ));
-                    if ( name ) {
-                        handlers [ mode ]( name, row, paramNames );
-                    }
-                }
+            const directive = util.toStringOrFalse ( sheet.getValueByCoord ( 0, row ));
+            if ( directive && _.has ( handlers, directive )) {
+                console.log ( 'DIRECTIVE', row, directive );
+                handlers [ directive ]( sheet, row );
             }
         }
     }
