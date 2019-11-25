@@ -52,11 +52,19 @@ export const InventoryView = observer (( props ) => {
     const sizers = {};
     for ( let docSizeName in inventory.docSizes ) {
         sizers [ docSizeName ] = (
-            <AssetSizer
-                inventory = { inventory }
-                docSizeName = { docSizeName }
-                scale = { zoom }
-            />
+            <Card
+                style = {{
+                    border:     `2px solid white`,
+                    margin:     '1em',
+                    padding:    '5px',
+                }}
+            >
+                <AssetSizer
+                    inventory = { inventory }
+                    docSizeName = { docSizeName }
+                    scale = { zoom }
+                />
+            </Card>
         ); 
     }
 
@@ -78,8 +86,10 @@ export const InventoryView = observer (( props ) => {
                 <Card
                     key = { asset.assetID }
                     style = {{
-                        border: `2px solid ${ color }`,
-                        width: 'auto',
+                        border:     `2px solid ${ color }`,
+                        margin:     '1em',
+                        padding:    '5px',
+                        width:      'auto',
                     }}
                     onClick = {( event ) => { onClickCard ( asset, event )}}
                 >
