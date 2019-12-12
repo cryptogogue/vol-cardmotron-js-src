@@ -12,7 +12,7 @@ import React, { Fragment, useState }                        from 'react';
 import { Link }                                             from 'react-router-dom';
 import { Dropdown, Grid, Icon, List, Menu, Card, Group, Modal, Divider } from 'semantic-ui-react';
 
-import zoom from './assets/zoom.png';
+import magnifyIcon from './assets/zoom.png';
 
 import './InventoryView.css';
 
@@ -21,31 +21,19 @@ import './InventoryView.css';
 //================================================================//
 export const InventoryView = observer (( props ) => {
 
-    const [ zoomedAsset, setZoomedAsset ]   = useState ( false );
+    const onSelect      = props.onSelect || false;
+    const onMagnify     = props.onMagnify || false;
+    const onEllipsis    = props.onEllipsis || false;
 
     const controller    = props.controller;
     const inventory     = controller.inventory;
     const assetArray    = controller.sortedAssets || inventory.availableAssetsArray;
     const zoom          = controller.zoom || 1;
 
-    const onClickZoom = ( asset, event ) => {
-        setZoomedAsset ( asset );
+    const onAssetEvent = ( handler, asset, event ) => {
         event.stopPropagation ();
-    }
-
-    const onClickCard = ( asset, event ) => {
-
-        if ( controller.enableSelecting ) {
-
-            if ( controller.isSelected ( asset ) ) {
-                controller.deselectAsset ( asset );
-            }
-            else {
-                controller.selectAsset ( asset );
-            }
-        }
-        else {
-            onClickZoom ( asset, event );
+        if ( handler ) {
+            handler ( asset );
         }
     }
 
@@ -91,7 +79,7 @@ export const InventoryView = observer (( props ) => {
                         padding:    '5px',
                         width:      'auto',
                     }}
-                    onClick = {( event ) => { onClickCard ( asset, event )}}
+                    onClick = {( event ) => { onAssetEvent ( onSelect, asset, event )}}
                 >
                     <AssetView
                         assetID = { asset.assetID }
@@ -99,29 +87,12 @@ export const InventoryView = observer (( props ) => {
                         inches = { true }
                         scale = { zoom }
                     />
-                    <Modal
-                        style = {{ height : 'auto' }}
-                        size = 'small'
-                        open = { asset === zoomedAsset }
-                        onClose = {() => setZoomedAsset ( false )}
-                    >
-                        <Modal.Content>
-                            <center>
-                                <h3>Card Info</h3>
-                                <Divider/>
-                                <AssetView
-                                    assetID = { asset.assetID }
-                                    inventory = { inventory }
-                                    inches = 'true'
-                                />
-                                <p>Asset ID: { asset.assetID }</p>
-                            </center>
-                        </Modal.Content>
-                    </Modal>
-                    <If condition = { controller.enableSelecting }>
-                        <Icon name = 'circle' />
+                    <If condition = { onMagnify }>
+                        <img className = 'zoom' src = { magnifyIcon } onClick = {( event ) => { onAssetEvent ( onMagnify, asset, event )}}/>
+                    </If>
+                    <If condition = { onEllipsis }>
+                        <Icon name = 'circle' onClick = {( event ) => { onAssetEvent ( onEllipsis, asset, event )}}/>
                         <Icon name = 'ellipsis horizontal'/>
-                        <img className = 'zoom' src = { zoom } onClick = {( e ) => onClickZoom ( asset, e )}/>
                     </If>
                 </Card>
             );
@@ -131,7 +102,10 @@ export const InventoryView = observer (( props ) => {
 
     return (
         <Fragment>
-            <div key = { Object.keys (controller.selection).length } style = {{ display: 'none' }}/>
+            <div
+                key = { Object.keys ( controller.selection ).length }
+                style = {{ display: 'none' }}
+            />
             <InfiniteScrollView 
                 onGetCard       = { getAsset }
                 sizers          = { sizers }

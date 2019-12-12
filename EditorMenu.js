@@ -79,7 +79,7 @@ export const EditorMenu = observer (( props ) => {
                 <Menu.Item
                     name = "Print"
                     onClick = {() => { window.print ()}}
-                    disabled = { !controller.isPrintLayout ()}
+                    disabled = { !controller.isPrintLayout }
                 >
                     <Icon name = 'print'/>
                 </Menu.Item>

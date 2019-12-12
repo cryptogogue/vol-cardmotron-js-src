@@ -133,7 +133,7 @@ export const EditorScreen = observer (( props ) => {
 
                 <When condition = { hasAssets }>
                     <Choose>
-                        <When condition = { controller.isPrintLayout ()}>
+                        <When condition = { controller.isPrintLayout }>
                             <InventoryPrintView
                                 key             = { controller.sortMode }
                                 inventory       = { controller.inventory }

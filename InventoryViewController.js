@@ -25,9 +25,28 @@ export class InventoryViewController extends Service {
     @observable layoutName          = consts.WEB_LAYOUT;
     @observable selection           = {};
     @observable sortMode            = consts.SORT_MODE.RANK_DEFINITIONS;
+    @observable tags                = { foo: false, bar: false, baz: false };
     @observable rankDefinitions     = false;
     @observable zoom                = consts.DEFAULT_ZOOM;
-    @observable enableSelecting     = false;
+
+    @observable assetTags           = {}; // TODO: this will move to inventory service after refactor
+    @observable filter              = '';
+
+    //----------------------------------------------------------------//
+    @action
+    affirmTag ( tag ) {
+    
+        if (( tag.length > 0 ) && ( !_.has ( this.tags, tag ))) {
+            this.tags [ tag ] = false;
+        }
+    }
+
+    //----------------------------------------------------------------//
+    @action
+    clearSelection () {
+
+        this.selection = {};
+    }
 
     //----------------------------------------------------------------//
     compareForSort ( asset0, asset1 ) {
@@ -69,6 +88,27 @@ export class InventoryViewController extends Service {
     }
 
     //----------------------------------------------------------------//
+    countSelectedAssetsWithTag ( tagName ) {
+
+        let count = 0;
+
+        for ( let assetID in this.selection ) {
+            let tagsForAsset = this.assetTags [ assetID ];
+            if ( tagsForAsset && ( tagsForAsset [ tagName ] === true )) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    //----------------------------------------------------------------//
+    @action
+    deleteTag ( tag ) {
+    
+        delete this.tags [ tag ];
+    }
+
+    //----------------------------------------------------------------//
     @action
     deselectAsset ( asset ) {
 
@@ -83,17 +123,51 @@ export class InventoryViewController extends Service {
     }
 
     //----------------------------------------------------------------//
-    isPrintLayout () {
+    @computed
+    get hasTags () {
+
+        return Object.keys ( this.tags ).length !== 0;
+    }
+
+    //----------------------------------------------------------------//
+    @computed
+    get isPrintLayout () {
         return consts.isPrintLayout ( this.layoutName );
+    }
+
+    //----------------------------------------------------------------//
+    @computed
+    get selectionSize () {
+
+        return Object.keys ( this.selection ).length;
     }
 
     //----------------------------------------------------------------//
     @computed
     get sortedAssets () {
 
-        let assetArray = this.inventory.availableAssetsArray;
+        const availableAssetArray = this.inventory.availableAssetsArray;
+        let assetArray = availableAssetArray;
+
+        if ( this.filter.length > 0 ) {
+
+            assetArray = [];
+
+            for ( let asset of availableAssetArray ) {
+                let tagsForAsset = this.assetTags [ asset.assetID ];
+                if ( tagsForAsset && ( tagsForAsset [ this.filter ] === true )) {
+                    assetArray.push ( asset );
+                }
+            }
+        }
+
         assetArray.sort (( asset0, asset1 ) => this.compareForSort ( asset0, asset1 ));
         return assetArray;
+    }
+
+    //----------------------------------------------------------------//
+    isTagActive ( tagName ) {
+        return this.tags [ tagName ] || false;
     }
 
     //----------------------------------------------------------------//
@@ -108,6 +182,13 @@ export class InventoryViewController extends Service {
         this.selection [ asset.assetID ] = asset;
     }
 
+
+    //----------------------------------------------------------------//
+    @action
+    setFilter ( filter ) {
+
+        this.filter = filter;
+    }
 
     //----------------------------------------------------------------//
     @action
@@ -135,5 +216,44 @@ export class InventoryViewController extends Service {
     setZoom ( zoom ) {
 
         this.zoom = zoom;
+    }
+
+    //----------------------------------------------------------------//
+    @action
+    tagSelection ( tagName, value ) {
+
+        value = value || false;
+
+        console.log ( 'TAG SELECTION', tagName, value );
+
+        for ( let assetID in this.selection ) {
+
+            // do this here to work around mobx
+            if ( !_.has ( this.assetTags, assetID )) {
+                this.assetTags [ assetID ] = {};
+            }
+            this.assetTags [ assetID ][ tagName ] = value;
+        }
+    }
+
+    //----------------------------------------------------------------//
+    @action
+    toggleAssetSelection ( asset ) {
+
+        if ( this.isSelected ( asset ) ) {
+            this.deselectAsset ( asset );
+        }
+        else {
+            this.selectAsset ( asset );
+        }
+    }
+
+    //----------------------------------------------------------------//
+    @action
+    toggleTag ( tagName ) {
+
+        if ( _.has ( this.tags, tagName )) {
+            this.tags [ tagName ] = !this.tags [ tagName ];
+        }
     }
 }
