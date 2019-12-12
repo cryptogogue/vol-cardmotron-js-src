@@ -224,8 +224,6 @@ export class InventoryViewController extends Service {
 
         value = value || false;
 
-        console.log ( 'TAG SELECTION', tagName, value );
-
         for ( let assetID in this.selection ) {
 
             // do this here to work around mobx
