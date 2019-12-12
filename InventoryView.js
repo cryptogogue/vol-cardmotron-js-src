@@ -17,13 +17,74 @@ import magnifyIcon from './assets/zoom.png';
 import './InventoryView.css';
 
 //================================================================//
-// InventoryView
+// InventoryCard
 //================================================================//
-export const InventoryView = observer (( props ) => {
+const InventoryCard = observer (( props ) => {
+
+    const [ toggle, setToggle ] = useState ( false );
+
+    const {
+        asset,
+        controller,
+        zoom,
+    } = props;
+
+    const inventory     = controller.inventory;
 
     const onSelect      = props.onSelect || false;
     const onMagnify     = props.onMagnify || false;
     const onEllipsis    = props.onEllipsis || false;
+
+    const onClickCard = ( event ) => {
+        event.stopPropagation ();
+        setToggle ( !toggle );
+        if ( onSelect ) {
+            onSelect ( asset );
+        }
+    }
+
+    const onClickOverlay = ( handler, event ) => {
+        event.stopPropagation ();
+        if ( handler ) {
+            handler ( asset );
+        }
+    }
+
+    const color = controller.isSelected ( asset ) ? 'cyan' : 'white';
+
+    return (
+        <Card
+            key = { asset.assetID }
+            style = {{
+                border:             `2px solid ${ color }`,
+                margin:             '1em',
+                padding:            '5px',
+                width:              'auto',
+                backgroundColor:    color,
+            }}
+            onClick = { onClickCard }
+        >
+            <AssetView
+                assetID = { asset.assetID }
+                inventory = { inventory }
+                inches = { true }
+                scale = { zoom }
+            />
+            <If condition = { onMagnify }>
+                <img className = 'zoom' src = { magnifyIcon } onClick = {( event ) => { onClickOverlay ( onMagnify, event )}}/>
+            </If>
+            <If condition = { onEllipsis }>
+                <Icon name = 'circle' onClick = {( event ) => { onClickOverlay ( onEllipsis, event )}}/>
+                <Icon name = 'ellipsis horizontal'/>
+            </If>
+        </Card>
+    );
+});
+
+//================================================================//
+// InventoryView
+//================================================================//
+export const InventoryView = observer (( props ) => {
 
     const controller    = props.controller;
     const inventory     = controller.inventory;
@@ -68,33 +129,17 @@ export const InventoryView = observer (( props ) => {
         if ( !assetLayoutCache.includes ( i )) {
             
             const asset = assetArray [ i ];
-            const color = controller.isSelected ( asset ) ? 'red' : 'white';
 
             assetLayoutCache [ i ] = (
-                <Card
-                    key = { asset.assetID }
-                    style = {{
-                        border:     `2px solid ${ color }`,
-                        margin:     '1em',
-                        padding:    '5px',
-                        width:      'auto',
-                    }}
-                    onClick = {( event ) => { onAssetEvent ( onSelect, asset, event )}}
-                >
-                    <AssetView
-                        assetID = { asset.assetID }
-                        inventory = { inventory }
-                        inches = { true }
-                        scale = { zoom }
-                    />
-                    <If condition = { onMagnify }>
-                        <img className = 'zoom' src = { magnifyIcon } onClick = {( event ) => { onAssetEvent ( onMagnify, asset, event )}}/>
-                    </If>
-                    <If condition = { onEllipsis }>
-                        <Icon name = 'circle' onClick = {( event ) => { onAssetEvent ( onEllipsis, asset, event )}}/>
-                        <Icon name = 'ellipsis horizontal'/>
-                    </If>
-                </Card>
+                <InventoryCard
+                    key             = { asset.assetID }
+                    asset           = { asset }
+                    controller      = { controller }
+                    zoom            = { zoom }
+                    onSelect        = { props.onSelect || false }
+                    onMagnify       = { props.onMagnify || false }
+                    onEllipsis      = { props.onEllipsis || false }
+                />
             );
         }
         return assetLayoutCache [ i ];
@@ -102,15 +147,12 @@ export const InventoryView = observer (( props ) => {
 
     return (
         <Fragment>
-            <div
-                key = { Object.keys ( controller.selection ).length }
-                style = {{ display: 'none' }}
-            />
-            <InfiniteScrollView 
+            <InfiniteScrollView
                 onGetCard       = { getAsset }
                 sizers          = { sizers }
                 onGetSizerName  = { getSizerName }
                 totalCards      = { assetArray.length }
+                onClick         = { props.onDeselect }
             />
         </Fragment>
     );
