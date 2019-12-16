@@ -7,7 +7,7 @@ import { observer }                                         from 'mobx-react';
 import React, { Fragment, useState }                        from 'react';
 import { Link }                                             from 'react-router-dom';
 import { Button, Checkbox, Dropdown, Grid, Icon, Input, List, Menu, Modal, Loader } from 'semantic-ui-react';
-import { assert, excel, Service, SingleColumnContainerView, useService, util } from 'fgc';
+import { assert, excel, hooks, Service, SingleColumnContainerView, util } from 'fgc';
 
 //================================================================//
 // SortModeFragment

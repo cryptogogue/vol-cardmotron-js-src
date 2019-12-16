@@ -1,6 +1,6 @@
 /* eslint-disable no-whitespace-before-property */
 
-import { assert, excel, pdf417, qrcode, Service, SingleColumnContainerView, textLayout, useService, util } from 'fgc';
+import { assert, excel, pdf417, qrcode, Service, SingleColumnContainerView, textLayout, util } from 'fgc';
 import fs                       from 'fs';
 
 const { FONT_FACE, JUSTIFY } = textLayout;

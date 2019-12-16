@@ -15,7 +15,7 @@ import { observer }                                         from 'mobx-react';
 import React, { Fragment, useState }                        from 'react';
 import { Link }                                             from 'react-router-dom';
 import { Dropdown, Grid, Icon, List, Menu, Message, Modal, Loader }  from 'semantic-ui-react';
-import { assert, excel, Service, SingleColumnContainerView, useService, util } from 'fgc';
+import { assert, excel, hooks, Service, SingleColumnContainerView, util } from 'fgc';
 
 //================================================================//
 // ScannerReport
@@ -65,8 +65,8 @@ export const EditorScreen = observer (( props ) => {
 
     const [ progressMessage, setProgressMessage ]   = useState ( '' );
     const [ scanner, setScanner ]                   = useState ( false );
-    const inventory                                 = useService (() => new InventoryService ( setProgressMessage ));
-    const controller                                = useService (() => new InventoryViewController ( inventory ));
+    const inventory                                 = hooks.useFinalizable (() => new InventoryService ( setProgressMessage ));
+    const controller                                = hooks.useFinalizable (() => new InventoryViewController ( inventory ));
 
     const loadFile = ( picked ) => {
 
