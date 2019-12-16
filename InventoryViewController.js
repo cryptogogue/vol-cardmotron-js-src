@@ -4,7 +4,6 @@ import { AssetView }                                        from './AssetView';
 import * as consts                                          from './consts';
 // import { NavigationBar }                                    from './NavigationBar';
 // import { AppStateService }                                  from './AppStateService';
-// import { Service, useService }                              from './Service';
 // import { InventoryService }                                 from './InventoryService';
 // import * as util                                            from './util/util';
 // import { InventoryPrintView, PRINT_LAYOUT }                 from './InventoryPrintView';
@@ -15,12 +14,12 @@ import { observer }                                         from 'mobx-react';
 import React, { useState }                                  from 'react';
 // import { Link }                                             from 'react-router-dom';
 // import { Dropdown, Grid, Icon, List, Menu, Loader }         from 'semantic-ui-react';
-import { assert, excel, hooks, Service, SingleColumnContainerView, util } from 'fgc';
+import { assert, excel, hooks, RevocableContext, SingleColumnContainerView, util } from 'fgc';
 
 //================================================================//
 // InventoryViewController
 //================================================================//
-export class InventoryViewController extends Service {
+export class InventoryViewController {
 
     @observable layoutName          = consts.WEB_LAYOUT;
     @observable selection           = {};
@@ -82,7 +81,6 @@ export class InventoryViewController extends Service {
 
     //----------------------------------------------------------------//
     constructor ( inventory ) {
-        super ();
 
         this.inventory = inventory;
     }
@@ -113,6 +111,10 @@ export class InventoryViewController extends Service {
     deselectAsset ( asset ) {
 
         delete this.selection [ asset.assetID ];
+    }
+
+    //----------------------------------------------------------------//
+    finalize () {
     }
 
     //----------------------------------------------------------------//

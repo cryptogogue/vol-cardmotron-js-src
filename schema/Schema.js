@@ -1,6 +1,6 @@
 /* eslint-disable no-whitespace-before-property */
 
-import { assert, excel, hooks, Service, SingleColumnContainerView, util } from 'fgc';
+import { assert, excel, hooks, RevocableContext, SingleColumnContainerView, util } from 'fgc';
 import { Binding }          from './Binding';
 import { SchemaMethod }     from './SchemaMethod';
 import _                    from 'lodash';

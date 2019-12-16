@@ -1,6 +1,6 @@
 /* eslint-disable no-whitespace-before-property */
 
-import { assert, excel, hooks, Service, SingleColumnContainerView, textLayout, util } from 'fgc';
+import { assert, excel, hooks, RevocableContext, SingleColumnContainerView, textLayout, util } from 'fgc';
 import { buildSchema, op }      from './SchemaBuilder';
 import fs                       from 'fs';
 import handlebars               from 'handlebars';

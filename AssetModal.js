@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Cryptogogue, Inc. All Rights Reserved.
 
-import { assert, Service, util } from 'fgc';
+import { assert, util } from 'fgc';
 
 import { AssetView }                                        from './AssetView';
 import { action, computed, extendObservable, observable }   from 'mobx';

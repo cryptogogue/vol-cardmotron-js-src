@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Cryptogogue, Inc. All Rights Reserved.
 
-import { assert, InfiniteScrollView, Service, util } from 'fgc';
+import { assert, InfiniteScrollView, RevocableContext, util } from 'fgc';
 
 import { AssetLayout }                          from './AssetLayout';
 import { AssetMetrics }                         from './AssetMetrics';
@@ -16,7 +16,7 @@ import * as opentype                            from 'opentype.js';
 //================================================================//
 // InventoryService
 //================================================================//
-export class InventoryService extends Service {
+export class InventoryService {
 
     @observable loading         = false;
 
@@ -56,7 +56,8 @@ export class InventoryService extends Service {
 
     //----------------------------------------------------------------//
     constructor ( onProgress, nodeURL, accountID ) {
-        super ();
+
+        this.revocable = new RevocableContext ();
 
         this.onProgress = onProgress || (( message ) => { console.log ( message )});
 
@@ -85,11 +86,11 @@ export class InventoryService extends Service {
             this.setLoading ( true );
 
             this.onProgress ( 'Fetching Schema' );
-            const schemaJSON        = await this.revocableFetchJSON ( nodeURL + '/schemas', null, 20000 );
+            const schemaJSON        = await this.revocable.fetchJSON ( nodeURL + '/schemas', null, 20000 );
             console.log ( schemaJSON );
 
             this.onProgress ( 'Fetching Inventory' );
-            const inventoryJSON     = await this.revocableFetchJSON ( nodeURL + '/accounts/' + accountID + '/inventory', null, 20000 );
+            const inventoryJSON     = await this.revocable.fetchJSON ( nodeURL + '/accounts/' + accountID + '/inventory', null, 20000 );
             console.log ( inventoryJSON );
 
             let assets = {};
@@ -102,6 +103,12 @@ export class InventoryService extends Service {
             console.log ( error );
         }
         this.setLoading ( false );
+    }
+
+    //----------------------------------------------------------------//
+    finalize () {
+
+        this.revocable.finalize ();
     }
 
     //----------------------------------------------------------------//
@@ -271,7 +278,7 @@ export class InventoryService extends Service {
             // TODO: use HEAD/OPTIONS to check for CORS?
 
             try {
-                const response  = await this.revocableFetch ( url, fetchOptions );
+                const response  = await this.revocable.fetch ( url, fetchOptions );
                 const buffer    = await response.arrayBuffer ();
                 return opentype.parse ( buffer );
             }
@@ -284,7 +291,7 @@ export class InventoryService extends Service {
 
                 // TODO: warn if CORS proxy used (and worked)
 
-                const response  = await this.revocableFetch ( consts.CORS_PROXY + url, fetchOptions );
+                const response  = await this.revocable.fetch ( consts.CORS_PROXY + url, fetchOptions );
                 const buffer    = await response.arrayBuffer ();
                 return opentype.parse ( buffer );
             }
