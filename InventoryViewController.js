@@ -24,21 +24,21 @@ export class InventoryViewController {
     @observable layoutName          = consts.WEB_LAYOUT;
     @observable selection           = {};
     @observable sortMode            = consts.SORT_MODE.RANK_DEFINITIONS;
-    @observable tags                = { foo: false, bar: false, baz: false };
+    // @observable tags                = { foo: false, bar: false, baz: false };
     @observable rankDefinitions     = false;
     @observable zoom                = consts.DEFAULT_ZOOM;
 
-    @observable assetTags           = {}; // TODO: this will move to inventory service after refactor
-    @observable filter              = '';
+    // @observable assetTags           = {}; // TODO: this will move to inventory service after refactor
+    // @observable filter              = '';
 
-    //----------------------------------------------------------------//
-    @action
-    affirmTag ( tag ) {
+    // //----------------------------------------------------------------//
+    // @action
+    // affirmTag ( tag ) {
     
-        if (( tag.length > 0 ) && ( !_.has ( this.tags, tag ))) {
-            this.tags [ tag ] = false;
-        }
-    }
+    //     if (( tag.length > 0 ) && ( !_.has ( this.tags, tag ))) {
+    //         this.tags [ tag ] = false;
+    //     }
+    // }
 
     //----------------------------------------------------------------//
     @action
@@ -85,26 +85,26 @@ export class InventoryViewController {
         this.inventory = inventory;
     }
 
-    //----------------------------------------------------------------//
-    countSelectedAssetsWithTag ( tagName ) {
+    // //----------------------------------------------------------------//
+    // countSelectedAssetsWithTag ( tagName ) {
 
-        let count = 0;
+    //     let count = 0;
 
-        for ( let assetID in this.selection ) {
-            let tagsForAsset = this.assetTags [ assetID ];
-            if ( tagsForAsset && ( tagsForAsset [ tagName ] === true )) {
-                count++;
-            }
-        }
-        return count;
-    }
+    //     for ( let assetID in this.selection ) {
+    //         let tagsForAsset = this.assetTags [ assetID ];
+    //         if ( tagsForAsset && ( tagsForAsset [ tagName ] === true )) {
+    //             count++;
+    //         }
+    //     }
+    //     return count;
+    // }
 
-    //----------------------------------------------------------------//
-    @action
-    deleteTag ( tag ) {
+    // //----------------------------------------------------------------//
+    // @action
+    // deleteTag ( tag ) {
     
-        delete this.tags [ tag ];
-    }
+    //     delete this.tags [ tag ];
+    // }
 
     //----------------------------------------------------------------//
     @action
@@ -124,12 +124,12 @@ export class InventoryViewController {
         return Object.keys ( this.selection ).length !== 0;
     }
 
-    //----------------------------------------------------------------//
-    @computed
-    get hasTags () {
+    // //----------------------------------------------------------------//
+    // @computed
+    // get hasTags () {
 
-        return Object.keys ( this.tags ).length !== 0;
-    }
+    //     return Object.keys ( this.tags ).length !== 0;
+    // }
 
     //----------------------------------------------------------------//
     @computed
@@ -151,13 +151,12 @@ export class InventoryViewController {
         const availableAssetArray = this.inventory.availableAssetsArray;
         let assetArray = availableAssetArray;
 
-        if ( this.filter.length > 0 ) {
+        if ( this.filterFunc ) {
 
             assetArray = [];
 
             for ( let asset of availableAssetArray ) {
-                let tagsForAsset = this.assetTags [ asset.assetID ];
-                if ( tagsForAsset && ( tagsForAsset [ this.filter ] === true )) {
+                if ( this.filterFunc ( asset.assetID )) {
                     assetArray.push ( asset );
                 }
             }
@@ -167,10 +166,10 @@ export class InventoryViewController {
         return assetArray;
     }
 
-    //----------------------------------------------------------------//
-    isTagActive ( tagName ) {
-        return this.tags [ tagName ] || false;
-    }
+    // //----------------------------------------------------------------//
+    // isTagActive ( tagName ) {
+    //     return this.tags [ tagName ] || false;
+    // }
 
     //----------------------------------------------------------------//
     isSelected ( asset ) {
@@ -184,12 +183,17 @@ export class InventoryViewController {
         this.selection [ asset.assetID ] = asset;
     }
 
+    // //----------------------------------------------------------------//
+    // @action
+    // setFilter ( filter ) {
+
+    //     this.filter = filter;
+    // }
 
     //----------------------------------------------------------------//
-    @action
-    setFilter ( filter ) {
+    setFilterFunc ( filterFunc ) {
 
-        this.filter = filter;
+        this.filterFunc = filterFunc;
     }
 
     //----------------------------------------------------------------//
@@ -220,21 +224,21 @@ export class InventoryViewController {
         this.zoom = zoom;
     }
 
-    //----------------------------------------------------------------//
-    @action
-    tagSelection ( tagName, value ) {
+    // //----------------------------------------------------------------//
+    // @action
+    // tagSelection ( tagName, value ) {
 
-        value = value || false;
+    //     value = value || false;
 
-        for ( let assetID in this.selection ) {
+    //     for ( let assetID in this.selection ) {
 
-            // do this here to work around mobx
-            if ( !_.has ( this.assetTags, assetID )) {
-                this.assetTags [ assetID ] = {};
-            }
-            this.assetTags [ assetID ][ tagName ] = value;
-        }
-    }
+    //         // do this here to work around mobx
+    //         if ( !_.has ( this.assetTags, assetID )) {
+    //             this.assetTags [ assetID ] = {};
+    //         }
+    //         this.assetTags [ assetID ][ tagName ] = value;
+    //     }
+    // }
 
     //----------------------------------------------------------------//
     @action
@@ -248,12 +252,12 @@ export class InventoryViewController {
         }
     }
 
-    //----------------------------------------------------------------//
-    @action
-    toggleTag ( tagName ) {
+    // //----------------------------------------------------------------//
+    // @action
+    // toggleTag ( tagName ) {
 
-        if ( _.has ( this.tags, tagName )) {
-            this.tags [ tagName ] = !this.tags [ tagName ];
-        }
-    }
+    //     if ( _.has ( this.tags, tagName )) {
+    //         this.tags [ tagName ] = !this.tags [ tagName ];
+    //     }
+    // }
 }

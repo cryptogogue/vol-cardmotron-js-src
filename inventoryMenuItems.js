@@ -68,30 +68,31 @@ export const SelectionTags = observer (( props ) => {
     const [ tagInput, setTagInput ]     = useState ( '' );
     const [ isOpen, setIsOpen ]         = useState ( false );
 
-    const { controller } = props;
+    const { controller, tags } = props;
 
     const onTagInputKey = ( key ) => {
         if ( key === 'Enter' ) {
-            controller.affirmTag ( tagInput );
+            tags.affirmTag ( tagInput );
             setTagInput ( '' );
         }
     }
 
-    const tagNames = Object.keys ( controller.tags ).sort ();
-    const selectionSize = controller.selectionSize;
+    const tagNames          = tags.tagNames;
+    const selectionSize     = controller.selectionSize;
 
-    let tags = [];
+    let tagList = [];
     for ( let tagName of tagNames ) {
 
-        const withTag           = controller.countSelectedAssetsWithTag ( tagName );
+        const withTag           = tags.countSelectedAssetsWithTag ( controller.selection, tagName );
         const allTagged         = (( withTag > 0 ) && ( withTag === selectionSize ));
         const noneTagged        = (( withTag > 0 ) && ( withTag === 0 ));
         const indeterminate     = (( withTag > 0 ) && !( allTagged || noneTagged ));
 
-        tags.push (
+        console.log ( 'TAGS', tagName, selectionSize, withTag, allTagged, noneTagged, indeterminate );
+
+        tagList.push (
             <div
                 key = { tagName }
-
             >
                 <Checkbox
                     label           = { tagName }
@@ -99,13 +100,13 @@ export const SelectionTags = observer (( props ) => {
                     indeterminate   = { indeterminate }
                     disabled        = { selectionSize === 0 }
                     onChange        = {( event ) => {
-                        controller.tagSelection ( tagName, !allTagged );
+                        tags.tagSelection ( controller.selection, tagName, !allTagged );
                         event.stopPropagation ();
                     }}
                 />
                 <Button
-                    icon        = 'trash'
-                    onClick     = {() => { controller.deleteTag ( tagName )}}
+                    icon            = 'trash'
+                    onClick         = {() => { tags.deleteTag ( tagName )}}
                 />
             </div>
         );
@@ -129,7 +130,7 @@ export const SelectionTags = observer (( props ) => {
             >
                 <Modal.Content>
                     <div>
-                        { tags }
+                        { tagList }
                         <Input
                             placeholder = 'New Tag...'
                             value = { tagInput }
@@ -148,9 +149,9 @@ export const SelectionTags = observer (( props ) => {
 //================================================================//
 export const VisibilityDropdown = observer (( props ) => {
 
-    const { controller } = props;
+    const { tags } = props;
 
-    const tagNames = Object.keys ( controller.tags ).sort ();
+    const tagNames = tags.tagNames;
 
     let options = [];
 
@@ -158,7 +159,7 @@ export const VisibilityDropdown = observer (( props ) => {
         <Dropdown.Item
             key         = { '' }
             icon        = 'eye'
-            onClick     = {() => { controller.setFilter ( '' )}}
+            onClick     = {() => { tags.setFilter ( '' )}}
         />
     );
 
@@ -167,7 +168,7 @@ export const VisibilityDropdown = observer (( props ) => {
             <Dropdown.Item
                 key         = { tagName }
                 text        = { tagName }
-                onClick     = {() => { controller.setFilter ( tagName )}}
+                onClick     = {() => { tags.setFilter ( tagName )}}
             />
         );
     }
@@ -175,8 +176,8 @@ export const VisibilityDropdown = observer (( props ) => {
     return (
         <Dropdown
             item
-            icon = { controller.filter === '' ? 'eye' : null }
-            text = { controller.filter }
+            icon = { tags.filter === '' ? 'eye' : null }
+            text = { tags.filter }
         >
             <Dropdown.Menu>
                 { options }
