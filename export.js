@@ -12,7 +12,6 @@ module.exports = {
     inventoryMenuItems:         require ( './inventoryMenuItems.js' ),
     InventoryPrintView:         require ( './InventoryPrintView.js' ).InventoryPrintView,
     InventoryService:           require ( './InventoryService.js' ).InventoryService,
-    InventoryTagController:     require ( './InventoryTagController.js' ).InventoryTagController,
     InventoryView:              require ( './InventoryView.js' ).InventoryView,
     InventoryViewController:    require ( './InventoryViewController.js' ).InventoryViewController,
     Schema:                     require ( './schema/Schema.js' ).Schema,
