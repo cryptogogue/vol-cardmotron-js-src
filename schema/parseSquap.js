@@ -1,6 +1,9 @@
 /* eslint-disable no-whitespace-before-property */
-
+import { assert }   from 'fgc';
 import ohm          from 'ohm-js';
+
+// Schema QUAlifier oPerator
+// TODO: yeah, it's weak. change it to something better later.
 
 const TYPE_BOOLEAN      = 'BOOLEAN';
 const TYPE_NUMERIC      = 'NUMERIC';
@@ -8,7 +11,7 @@ const TYPE_STRING       = 'STRING';
 const TYPE_UNDEFINED    = 'UNDEFINED';
 
 //----------------------------------------------------------------//
-function makeAssetFieldValue ( value ) {
+function makeAssetFieldVariant ( value ) {
     
     let type = TYPE_UNDEFINED;
 
@@ -23,15 +26,12 @@ function makeAssetFieldValue ( value ) {
             type = TYPE_STRING;
             break;
         default:
-            assert ( false );
+            assert ( false, `Error: '${ value }' has unsupported type.` );
     }
 
     return {
         type:           type,
         value:          value,
-        mutable:        false,
-        scriptable:     true,
-        alternates:     {},
     }
 }
 
@@ -51,33 +51,22 @@ function makeConstOp ( opname ) {
     return ( value ) => {
         return {
             op:         opname,
-            const:      makeAssetFieldValue ( value ),
+            const:      makeAssetFieldVariant ( value ),
         };
     };
 }
 
 //----------------------------------------------------------------//
-// function makeFuncOp ( opname ) {
-//     return ( ...args ) => {
+function makeFuncOp () {
+    return ( funcName, args ) => {
 
-//         let cleanArgs = [];
-
-//         args.forEach ( function ( arg ) {
-
-//             let argType = typeof ( arg );
-
-//             if ( argType != 'object' ) {
-//                 arg = SQUAP.CONST ( arg );
-//             }
-//             cleanArgs.push ( arg );
-//         });
-
-//         return {
-//             op:         opname,
-//             args:       cleanArgs,
-//         };
-//     };
-// }
+        return {
+            op:        'FUNC',
+            func:       funcName,
+            args:       args,
+        };
+    };
+}
 
 //----------------------------------------------------------------//
 function makeIndexOp ( opname ) {
@@ -180,33 +169,42 @@ const grammar = ohm.grammar ( `
             = "-"    UnaryExpr  -- neg
             | "~"    UnaryExpr  -- bitwiseNot
             | "!"    UnaryExpr  -- logicalNot
-            | CallExpr
+            | FuncExpr
 
-        CallExpr
-           = identifier "(" ListOf<Expr, ","> ")"   -- call
-           | PrimaryExpr
+        FuncExpr
+           = funcname "(" ListOf<Expr, ","> ")"     -- call
+           | FieldExpr
+
+        FieldExpr
+            = "[" ( fieldname | symbol ) "]"        -- field
+            | PrimaryExpr
 
         PrimaryExpr
             = "(" Expr ")"  -- parens
-            | identifier
             | literal
 
-        identifier 
-           = letter ( "_" | alnum )*
+        funcname
+            = "has"
+
+        symbol
+            = "@"
+
+        fieldname
+            = letter ( "_" | alnum )*
 
         literal
-           = "true"        -- true
-           | "false"       -- false
-           | string
-           | number
+            = "true"        -- true
+            | "false"       -- false
+            | string
+            | number
 
         number
             = digit+ "." digit+ (("E"|"e") ("+"|"-")? digit+)?      -- dec
             | digit+                                                -- int
 
         string
-           = "\\\"" ( ~"\\\"" any )* "\\\""
-           | "'" ( ~"'" any )* "'"
+            = "\\\"" ( ~"\\\"" any )* "\\\""
+            | "'" ( ~"'" any )* "'"
     }
 ` );
 
@@ -219,14 +217,13 @@ const SQUAP = {
     BW_OR:              makeBinaryOp    ( 'BW_OR' ),                // |
     BW_NOT:             makeBinaryOp    ( 'BW_NOT' ),               // ~
     BW_XOR:             makeBinaryOp    ( 'BW_XOR' ),               // ^
-    // ASSET_TYPE:         makeIndexOp     ( 'ASSET_TYPE' ),
     CONST:              makeConstOp     ( 'CONST' ),
     DIV:                makeBinaryOp    ( 'DIV' ),                  // /
-    EQUAL:              makeBinaryOp    ( 'EQUAL' ),                // ==
-    // FIELD:              makeIndexOp     ( 'FIELD' ),                
+    EQUAL:              makeBinaryOp    ( 'EQUAL' ),                // ==     
+    FUNC:               makeFuncOp      (),
     GREATER:            makeBinaryOp    ( 'GREATER' ),              // >
     GREATER_OR_EQUAL:   makeBinaryOp    ( 'GREATER_OR_EQUAL' ),     // >=
-    // KEYWORD:            makeBinaryOp    ( 'KEYWORD' ),          
+    INDEX:              makeIndexOp     ( 'INDEX' ),
     LESS:               makeBinaryOp    ( 'LESS' ),                 // <
     LESS_OR_EQUAL:      makeBinaryOp    ( 'LESS_OR_EQUAL' ),        // <=
     MOD:                makeBinaryOp    ( 'MOD' ),                  // %
@@ -241,10 +238,6 @@ const SQUAP = {
 }
 
 semantics.addOperation ( 'eval', {
-
-    // Expr: function ( e ) {
-    //     return 0;
-    // },
 
     LogicalORExpr_or: function ( l, op, r ) {
         return SQUAP.OR ( l.eval (), r.eval ());
@@ -330,13 +323,16 @@ semantics.addOperation ( 'eval', {
         return SQUAP.NOT ( v.eval ());
     },
 
-    // CallExpr: function () { return 0; },
-    PrimaryExpr_parens: function ( lp, e, rp ) {
-        return e.eval ();
+    FuncExpr_call: function ( funcname, lp, args, rp ) {
+        return SQUAP.FUNC ( funcname.sourceString, args.asIteration ().eval ());
     },
 
-    identifier: function ( first, rest ) {
-        return SQUAP.CONST ( this.stringValue ); // TODO: field op or function op
+    FieldExpr_field: function ( lb, e, rb ) {
+        return SQUAP.INDEX ( e.sourceString ); // can be a fieldname or a symbol
+    },
+
+    PrimaryExpr_parens: function ( lp, e, rp ) {
+        return e.eval ();
     },
 
     literal_true: function ( v ) {
@@ -348,15 +344,15 @@ semantics.addOperation ( 'eval', {
     },
 
     number_dec: function ( numerator, dot, denominator, e, sign, exp ) {
-        return SQUAP.CONST ( Number ( this.stringValue ));
+        return SQUAP.CONST ( Number ( this.sourceString ));
     },
 
     number_int: function ( v ) {
-        return SQUAP.CONST ( Number ( this.stringValue ));
+        return SQUAP.CONST ( Number ( this.sourceString ));
     },
 
     string: function ( lq, s, rq ) {
-        return SQUAP.CONST ( this.stringValue );
+        return SQUAP.CONST ( this.sourceString );
     },
 });
 

@@ -29,6 +29,34 @@ export const LAYOUT_COMMAND = {
     DRAW_TEXT_BOX:      'DRAW_TEXT_BOX',
 };
 
+//----------------------------------------------------------------//
+function makeAssetFieldValue ( value ) {
+    
+    let type = TYPE_UNDEFINED;
+
+    switch ( typeof ( value )) {
+        case 'boolean':
+            type = TYPE_BOOLEAN;
+            break;
+        case 'number':
+            type = TYPE_NUMERIC;
+            break;
+        case 'string':
+            type = TYPE_STRING;
+            break;
+        default:
+            assert ( false, `Error: '${ value }' has unsupported type.` );
+    }
+
+    return {
+        type:           type,
+        value:          value,
+        mutable:        false,
+        scriptable:     true,
+        alternates:     {},
+    }
+}
+
 //================================================================//
 // SchemaBuilder
 //================================================================//

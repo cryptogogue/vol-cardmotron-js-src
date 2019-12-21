@@ -2,6 +2,11 @@
 
 module.exports = {
 
+    debug: {
+        SquapScreen:                require ( './debug/SquapScreen.js' ).SquapScreen,
+    },
+    parseSquap:                 require ( './schema/parseSquap.js' ).parseSquap,
+
     AssetLayout:                require ( './AssetLayout.js' ).AssetLayout,
     AssetMetrics:               require ( './AssetMetrics.js' ).AssetMetrics,
     AssetModal:                 require ( './AssetModal.js' ).AssetModal,
@@ -14,7 +19,6 @@ module.exports = {
     InventoryService:           require ( './InventoryService.js' ).InventoryService,
     InventoryView:              require ( './InventoryView.js' ).InventoryView,
     InventoryViewController:    require ( './InventoryViewController.js' ).InventoryViewController,
-    parseSquap:                 require ( './schema/parseSquap.js' ).parseSquap,
     Schema:                     require ( './schema/Schema.js' ).Schema,
 
     LAYOUT_COMMAND:             require ( './schema/SchemaBuilder.js' ).LAYOUT_COMMAND,
