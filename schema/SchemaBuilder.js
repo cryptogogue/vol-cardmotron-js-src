@@ -5,6 +5,11 @@ import fs                       from 'fs';
 
 const { FONT_FACE, JUSTIFY } = textLayout;
 
+const TYPE_BOOLEAN      = 'BOOLEAN';
+const TYPE_NUMERIC      = 'NUMERIC';
+const TYPE_STRING       = 'STRING';
+const TYPE_UNDEFINED    = 'UNDEFINED';
+
 const MEDIA_AUDIO       = 'MEDIA_AUDIO';
 const MEDIA_IMAGE       = 'MEDIA_IMAGE';
 const MEDIA_TEXT        = 'MEDIA_TEXT';

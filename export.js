@@ -19,7 +19,9 @@ module.exports = {
     InventoryService:           require ( './InventoryService.js' ).InventoryService,
     InventoryView:              require ( './InventoryView.js' ).InventoryView,
     InventoryViewController:    require ( './InventoryViewController.js' ).InventoryViewController,
+    ScannerReportModal:         require ( './ScannerReportModal.js' ).ScannerReportModal,
     Schema:                     require ( './schema/Schema.js' ).Schema,
+    SchemaScreen:               require ( './SchemaScreen.js' ).SchemaScreen,
 
     LAYOUT_COMMAND:             require ( './schema/SchemaBuilder.js' ).LAYOUT_COMMAND,
 };
