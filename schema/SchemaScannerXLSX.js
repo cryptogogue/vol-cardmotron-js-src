@@ -83,7 +83,7 @@ export class SchemaScannerXLSX {
     //----------------------------------------------------------------//
     constructor ( book ) {
 
-        this.schemaBuilder = buildSchema ( 'TEST_SCHEMA' );
+        this.schemaBuilder = buildSchema ();
         this.macros                 = {};
         this.errors                 = [];
         this.warnings               = [];
@@ -561,6 +561,7 @@ export class SchemaScannerXLSX {
             INCLUDES:       ( name, row ) => { this.readIncludes        ( sheet, row )},
             LAYOUTS:        ( name, row ) => { this.readLayouts         ( sheet, row )},
             MACROS:         ( name, row ) => { this.readMacros          ( sheet, row )},
+            UPGRADES:       ( name, row ) => { this.readUpgrades        ( sheet, row )},
         }
 
         for ( let row = 0; row < sheet.height; ++row ) {
@@ -569,6 +570,24 @@ export class SchemaScannerXLSX {
             if ( directive && _.has ( handlers, directive )) {
                 handlers [ directive ]( sheet, row );
             }
+        }
+    }
+
+    //----------------------------------------------------------------//
+    readUpgrades ( sheet, row ) {
+
+        const paramNames = this.readParamNames ( sheet, row++ );
+
+        for ( ; scanMore ( sheet, row ); ++row ) {
+
+            const params = this.readParams ( sheet, row, paramNames, [
+                stringParam ( 'type' ),
+                stringParam ( 'upgrade' ),
+            ]);
+
+            if ( !( params.type && params.upgrade )) continue;
+
+            this.schemaBuilder.upgrade ( params.type, params.upgrade );
         }
     }
 

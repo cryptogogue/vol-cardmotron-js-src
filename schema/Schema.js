@@ -64,6 +64,8 @@ export class Schema {
         for ( let methodName in template.methods ) {
             this.methods [ methodName ] = new SchemaMethod ( methodName, template.methods [ methodName ]);
         }
+
+        this.upgrades = _.assign ( this.upgrades, template.upgrades );
     }
 
     //----------------------------------------------------------------//
@@ -72,6 +74,7 @@ export class Schema {
         this.applied        = {}; // table of schema names that have already been applied
         this.methods        = {}; // table of all available methods
         this.definitions    = {}; // table of all known asset types
+        this.upgrades       = {};
 
         this.applyTemplate ( template );
     }

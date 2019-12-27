@@ -23,9 +23,11 @@ const SCHEMA_BUILDER_ADDING_DRAW_SVG                    = 'SCHEMA_BUILDER_ADDING
 const SCHEMA_BUILDER_ADDING_DRAW_TEXT                   = 'SCHEMA_BUILDER_ADDING_DRAW_TEXT';
 const SCHEMA_BUILDER_ADDING_DRAW_TEXT_BOX               = 'SCHEMA_BUILDER_ADDING_DRAW_TEXT_BOX';
 const SCHEMA_BUILDER_ADDING_FONT                        = 'SCHEMA_BUILDER_ADDING_FONT';
+const SCHEMA_BUILDER_ADDING_ICON                        = 'SCHEMA_BUILDER_ADDING_ICON';
 const SCHEMA_BUILDER_ADDING_LAYOUT                      = 'SCHEMA_BUILDER_ADDING_LAYOUT';
 const SCHEMA_BUILDER_ADDING_METHOD                      = 'SCHEMA_BUILDER_ADDING_METHOD';
 const SCHEMA_BUILDER_ADDING_SCHEMA                      = 'SCHEMA_BUILDER_ADDING_SCHEMA';
+const SCHEMA_BUILDER_ADDING_UPGRADE                     = 'SCHEMA_BUILDER_ADDING_UPGRADE';
 
 export const LAYOUT_COMMAND = {
     DRAW_BARCODE:       'DRAW_BARCODE',
@@ -119,12 +121,11 @@ class SchemaBuilder {
     }
 
     //----------------------------------------------------------------//
-    constructor ( name ) {
+    constructor () {
 
         this.stack = [];
 
         this.schema = {
-            name:               name,
             fonts:              {},
             icons:              {},
             lua:                '',
@@ -132,6 +133,7 @@ class SchemaBuilder {
             layouts:            {},
             meta:               '',
             methods:            {},
+            upgrades:           {},
         };
 
         this.push (
@@ -336,7 +338,7 @@ class SchemaBuilder {
         assert ( this.popTo ( SCHEMA_BUILDER_ADDING_SCHEMA ));
 
         this.push (
-            SCHEMA_BUILDER_ADDING_FONT,
+            SCHEMA_BUILDER_ADDING_ICON,
             {
                 svg:        template,
                 width:      width || 1,
@@ -516,6 +518,24 @@ class SchemaBuilder {
     //----------------------------------------------------------------//
     top () {
         return this.stack [ this.stack.length - 1 ].container;
+    }
+
+    //----------------------------------------------------------------//
+    upgrade ( type, upgrade ) {
+
+        assert ( this.popTo ( SCHEMA_BUILDER_ADDING_SCHEMA ));
+
+        this.push (
+            SCHEMA_BUILDER_ADDING_UPGRADE,
+            {
+                type:       type,
+                upgrade:    upgrade,
+            },
+            ( schema, upgrade ) => {
+                schema.upgrades [ upgrade.type ] = upgrade.upgrade;
+            }
+        );
+        return this;
     }
 
     //----------------------------------------------------------------//

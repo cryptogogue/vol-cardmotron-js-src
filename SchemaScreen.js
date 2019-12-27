@@ -58,7 +58,7 @@ export const SchemaScreen = observer (( props ) => {
 
                     <Menu.Menu position = "right">
                         <ClipboardMenuItem
-                            value = { schema ? JSON.stringify ( schema ) : false }
+                            value = { schema ? JSON.stringify ( schema, null, 4 ) : false }
                         />
                     </Menu.Menu>
                 </Menu>

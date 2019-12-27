@@ -86,7 +86,7 @@ export class InventoryService {
             this.setLoading ( true );
 
             this.onProgress ( 'Fetching Schema' );
-            const schemaJSON        = await this.revocable.fetchJSON ( nodeURL + '/schemas', null, 20000 );
+            const schemaJSON        = await this.revocable.fetchJSON ( nodeURL + '/schema', null, 20000 );
             console.log ( schemaJSON );
 
             this.onProgress ( 'Fetching Inventory' );
@@ -97,7 +97,7 @@ export class InventoryService {
             for ( let asset of inventoryJSON.inventory ) {
                 assets [ asset.assetID ] = asset;
             }
-            await this.update ( schemaJSON.schemas, assets );
+            await this.update ([ schemaJSON.schema ], assets );
         }
         catch ( error ) {
             console.log ( error );
@@ -172,6 +172,22 @@ export class InventoryService {
     //----------------------------------------------------------------//
     getCraftingMethodBindingsForAssetID ( assetID ) {
         return this.binding.methodBindingsByAssetID [ assetID ];
+    }
+
+    //----------------------------------------------------------------//
+    getUpgradesForAssetID ( assetID ) {
+
+        const asset = this.assets [ assetID ];
+        if ( !asset ) return false;
+
+        const upgrades = [];
+        let type = asset.type;
+        while ( this.schema.upgrades [ type ]) {
+            const upgrade = this.schema.upgrades [ type ];
+            upgrades.push ( upgrade );
+            type = upgrade;
+        }
+        return upgrades.length > 0 ? upgrades : false;
     }
 
     //----------------------------------------------------------------//
@@ -374,6 +390,8 @@ export class InventoryService {
 
         this.onProgress ( 'Refreshing Binding' );
         this.setAssets ( schema, assets );
+
+        console.log ( 'UPDATED' );
         this.setLoading ( false );
     }
 
