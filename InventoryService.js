@@ -149,22 +149,6 @@ export class InventoryService {
     }
 
     //----------------------------------------------------------------//
-    @computed
-    get availableAssetsByID () {
-
-        // TODO: get rid of appState
-        const assetsUtilized = this.appState ? this.appState.assetsUtilized : [];
-
-        let assets = {};
-        for ( let assetID in this.assets ) {
-            if ( !assetsUtilized.includes ( assetID )) {
-                assets [ assetID ] = this.assets [ assetID ];
-            }
-        }
-        return assets;
-    }
-
-    //----------------------------------------------------------------//
     getCraftingMethodBindings () {
         return this.binding.methodBindingsByName;
     }
@@ -391,7 +375,6 @@ export class InventoryService {
         this.onProgress ( 'Refreshing Binding' );
         this.setAssets ( schema, assets );
 
-        console.log ( 'UPDATED' );
         this.setLoading ( false );
     }
 
