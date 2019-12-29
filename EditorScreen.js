@@ -28,25 +28,18 @@ export const EditorScreen = observer (( props ) => {
     const inventory                                 = hooks.useFinalizable (() => new InventoryService ( setProgressMessage ));
     const controller                                = hooks.useFinalizable (() => new InventoryViewController ( inventory ));
 
-    const loadFile = ( picked ) => {
+    const loadFile = ( binary ) => {
 
-        const reader = new FileReader ();
-
-        reader.onabort = () => { console.log ( 'file reading was aborted' )}
-        reader.onerror = () => { console.log ( 'file reading has failed' )}
-        reader.onload = () => {
-            const book = new excel.Workbook ( reader.result, { type: 'binary' });
-            if ( book ) {
-                const scanner = new SchemaScannerXLSX ( book );
-                const schema = scanner.schema;
-                inventory.reset ( schema, {}, scanner.inventory );
-                controller.setRankDefinitions ( scanner.rankDefinitions );
-                if ( scanner.hasMessages ) {
-                    setScanner ( scanner );
-                }
+        const book = new excel.Workbook ( binary, { type: 'binary' });
+        if ( book ) {
+            const scanner = new SchemaScannerXLSX ( book );
+            const schema = scanner.schema;
+            inventory.reset ( schema, {}, scanner.inventory );
+            controller.setRankDefinitions ( scanner.rankDefinitions );
+            if ( scanner.hasMessages ) {
+                setScanner ( scanner );
             }
         }
-        reader.readAsBinaryString ( picked );
     }
 
     const hasAssets = (( inventory.loading === false ) && ( inventory.availableAssetsArray.length > 0 ));

@@ -27,24 +27,18 @@ export const SchemaScreen = observer (( props ) => {
     const [ scanner, setScanner ]                   = useState ( false );
     const [ schema, setSchema ]                     = useState ( false );
 
-    const loadFile = ( picked ) => {
+    const loadFile = ( binary ) => {
 
         setSchema ( false );
-        const reader = new FileReader ();
 
-        // reader.onabort = () => { console.log ( 'file reading was aborted' )}
-        // reader.onerror = () => { console.log ( 'file reading has failed' )}
-        reader.onload = () => {
-            const book = new excel.Workbook ( reader.result, { type: 'binary' });
-            if ( book ) {
-                const scanner = new SchemaScannerXLSX ( book );
-                setSchema ( scanner.schema );
-                if ( scanner.hasMessages ()) {
-                    setScanner ( scanner );
-                }
+        const book = new excel.Workbook ( binary, { type: 'binary' });
+        if ( book ) {
+            const scanner = new SchemaScannerXLSX ( book );
+            setSchema ( scanner.schema );
+            if ( scanner.hasMessages ()) {
+                setScanner ( scanner );
             }
         }
-        reader.readAsBinaryString ( picked );
     }
 
     return (
@@ -54,8 +48,11 @@ export const SchemaScreen = observer (( props ) => {
 
             <SingleColumnContainerView title = 'Load Schema'>
                 <Menu>
-                    <FilePickerMenuItem loadFile = { loadFile }/>
-
+                    <FilePickerMenuItem
+                        loadFile = { loadFile }
+                        format = 'binary'
+                        accept = { '.xls, .xlsx' }
+                    />
                     <Menu.Menu position = "right">
                         <ClipboardMenuItem
                             value = { schema ? JSON.stringify ( schema, null, 4 ) : false }
