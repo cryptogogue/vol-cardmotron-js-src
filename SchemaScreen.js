@@ -59,11 +59,12 @@ export const SchemaScreen = observer (( props ) => {
                         />
                     </Menu.Menu>
                 </Menu>
-            </SingleColumnContainerView>
 
-            <If condition = { schema }>
-                <JSONTree data = { schema }/>
-            </If>
+                <If condition = { schema }>
+                    <JSONTree data = { schema } theme = 'bright'/>
+                </If>
+
+            </SingleColumnContainerView>
 
         </React.Fragment>
     );
