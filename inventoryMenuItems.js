@@ -9,6 +9,17 @@ import { Link }                                             from 'react-router-d
 import { Button, Checkbox, Dropdown, Grid, Icon, Input, List, Menu, Modal, Loader } from 'semantic-ui-react';
 import { assert, excel, hooks, RevocableContext, SingleColumnContainerView, util } from 'fgc';
 
+//----------------------------------------------------------------//
+function getIconNameForSortMode ( sortMode ) {
+
+    switch ( sortMode ) {
+        case consts.SORT_MODE.ALPHA_ATOZ:           return 'sort alphabet up';
+        case consts.SORT_MODE.ALPHA_ZTOA:           return 'sort alphabet down';
+        case consts.SORT_MODE.RANK_DEFINITIONS:     return 'book';
+    }
+    return '';
+}
+
 //================================================================//
 // SortModeFragment
 //================================================================//
@@ -16,20 +27,26 @@ export const SortModeFragment = observer (( props ) => {
 
     const { controller } = props;
 
-    const onSortItemClick = ( event, { name }) => {
-        controller.setSortMode ( name );
-    }
-
     return (
-        <Fragment>
-            <Menu.Item name = { consts.SORT_MODE.ALPHA_ATOZ } active = { controller.sortMode === consts.SORT_MODE.ALPHA_ATOZ } onClick = { onSortItemClick }>
-                <Icon name = 'sort alphabet up'/>
-            </Menu.Item>
-
-            <Menu.Item name = { consts.SORT_MODE.ALPHA_ZTOA } active = { controller.sortMode === consts.SORT_MODE.ALPHA_ZTOA } onClick = { onSortItemClick }>
-                <Icon name = 'sort alphabet down'/>
-            </Menu.Item>
-        </Fragment>
+        <Dropdown
+            item
+            icon = { getIconNameForSortMode ( controller.sortMode )}
+        >
+            <Dropdown.Menu>
+                <Dropdown.Item
+                    icon        = { getIconNameForSortMode ( consts.SORT_MODE.ALPHA_ATOZ )}
+                    onClick     = {() => { controller.setSortMode ( consts.SORT_MODE.ALPHA_ATOZ )}}
+                />
+                <Dropdown.Item
+                    icon        = { getIconNameForSortMode ( consts.SORT_MODE.ALPHA_ZTOA )}
+                    onClick     = {() => { controller.setSortMode ( consts.SORT_MODE.ALPHA_ZTOA )}}
+                />
+                <Dropdown.Item
+                    icon        = { getIconNameForSortMode ( consts.SORT_MODE.RANK_DEFINITIONS )}
+                    onClick     = {() => { controller.setSortMode ( consts.SORT_MODE.RANK_DEFINITIONS )}}
+                />
+            </Dropdown.Menu>
+        </Dropdown>
     );
 });
 

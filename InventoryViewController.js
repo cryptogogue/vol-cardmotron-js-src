@@ -2,18 +2,9 @@
 
 import { AssetView }                                        from './AssetView';
 import * as consts                                          from './consts';
-// import { NavigationBar }                                    from './NavigationBar';
-// import { AppStateService }                                  from './AppStateService';
-// import { InventoryService }                                 from './InventoryService';
-// import * as util                                            from './util/util';
-// import { InventoryPrintView, PRINT_LAYOUT }                 from './InventoryPrintView';
-// import { InventoryView }                                    from './InventoryView';
 import _                                                    from 'lodash';
 import { action, computed, extendObservable, observable }   from "mobx";
 import { observer }                                         from 'mobx-react';
-import React, { useState }                                  from 'react';
-// import { Link }                                             from 'react-router-dom';
-// import { Dropdown, Grid, Icon, List, Menu, Loader }         from 'semantic-ui-react';
 import { assert, excel, hooks, RevocableContext, SingleColumnContainerView, util } from 'fgc';
 
 //================================================================//
@@ -23,22 +14,9 @@ export class InventoryViewController {
 
     @observable layoutName          = consts.WEB_LAYOUT;
     @observable selection           = {};
-    @observable sortMode            = consts.SORT_MODE.RANK_DEFINITIONS;
-    // @observable tags                = { foo: false, bar: false, baz: false };
+    @observable sortMode            = consts.SORT_MODE.ALPHA_ATOZ;
     @observable rankDefinitions     = false;
     @observable zoom                = consts.DEFAULT_ZOOM;
-
-    // @observable assetTags           = {}; // TODO: this will move to inventory service after refactor
-    // @observable filter              = '';
-
-    // //----------------------------------------------------------------//
-    // @action
-    // affirmTag ( tag ) {
-    
-    //     if (( tag.length > 0 ) && ( !_.has ( this.tags, tag ))) {
-    //         this.tags [ tag ] = false;
-    //     }
-    // }
 
     //----------------------------------------------------------------//
     @action
@@ -85,27 +63,6 @@ export class InventoryViewController {
         this.inventory = inventory;
     }
 
-    // //----------------------------------------------------------------//
-    // countSelectedAssetsWithTag ( tagName ) {
-
-    //     let count = 0;
-
-    //     for ( let assetID in this.selection ) {
-    //         let tagsForAsset = this.assetTags [ assetID ];
-    //         if ( tagsForAsset && ( tagsForAsset [ tagName ] === true )) {
-    //             count++;
-    //         }
-    //     }
-    //     return count;
-    // }
-
-    // //----------------------------------------------------------------//
-    // @action
-    // deleteTag ( tag ) {
-    
-    //     delete this.tags [ tag ];
-    // }
-
     //----------------------------------------------------------------//
     @action
     deselectAsset ( asset ) {
@@ -123,13 +80,6 @@ export class InventoryViewController {
 
         return Object.keys ( this.selection ).length !== 0;
     }
-
-    // //----------------------------------------------------------------//
-    // @computed
-    // get hasTags () {
-
-    //     return Object.keys ( this.tags ).length !== 0;
-    // }
 
     //----------------------------------------------------------------//
     @computed
@@ -166,11 +116,6 @@ export class InventoryViewController {
         return assetArray;
     }
 
-    // //----------------------------------------------------------------//
-    // isTagActive ( tagName ) {
-    //     return this.tags [ tagName ] || false;
-    // }
-
     //----------------------------------------------------------------//
     isSelected ( asset ) {
         return _.has ( this.selection, asset.assetID );
@@ -182,13 +127,6 @@ export class InventoryViewController {
 
         this.selection [ asset.assetID ] = asset;
     }
-
-    // //----------------------------------------------------------------//
-    // @action
-    // setFilter ( filter ) {
-
-    //     this.filter = filter;
-    // }
 
     //----------------------------------------------------------------//
     setFilterFunc ( filterFunc ) {
@@ -224,22 +162,6 @@ export class InventoryViewController {
         this.zoom = zoom;
     }
 
-    // //----------------------------------------------------------------//
-    // @action
-    // tagSelection ( tagName, value ) {
-
-    //     value = value || false;
-
-    //     for ( let assetID in this.selection ) {
-
-    //         // do this here to work around mobx
-    //         if ( !_.has ( this.assetTags, assetID )) {
-    //             this.assetTags [ assetID ] = {};
-    //         }
-    //         this.assetTags [ assetID ][ tagName ] = value;
-    //     }
-    // }
-
     //----------------------------------------------------------------//
     @action
     toggleAssetSelection ( asset ) {
@@ -251,13 +173,4 @@ export class InventoryViewController {
             this.selectAsset ( asset );
         }
     }
-
-    // //----------------------------------------------------------------//
-    // @action
-    // toggleTag ( tagName ) {
-
-    //     if ( _.has ( this.tags, tagName )) {
-    //         this.tags [ tagName ] = !this.tags [ tagName ];
-    //     }
-    // }
 }
