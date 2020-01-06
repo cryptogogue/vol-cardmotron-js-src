@@ -31,6 +31,22 @@ export class InventoryService {
     @observable docSizes        = {}; // common doc sizes in inches; used to generate sizers
 
     //----------------------------------------------------------------//
+    @computed get
+    availableAssetsArray () {
+
+        // TODO: get rid of appState
+        const assetsUtilized = this.appState ? this.appState.assetsUtilized : [];
+
+        let assets = [];
+        for ( let assetID in this.assets ) {
+            if ( !assetsUtilized.includes ( assetID )) {
+                assets.push ( this.assets [ assetID ]);
+            }
+        }
+        return assets;
+    }
+
+    //----------------------------------------------------------------//
     composeAssetContext ( asset, overrideContext ) {
 
         let context = {
@@ -133,22 +149,6 @@ export class InventoryService {
     }
 
     //----------------------------------------------------------------//
-    @computed
-    get availableAssetsArray () {
-
-        // TODO: get rid of appState
-        const assetsUtilized = this.appState ? this.appState.assetsUtilized : [];
-
-        let assets = [];
-        for ( let assetID in this.assets ) {
-            if ( !assetsUtilized.includes ( assetID )) {
-                assets.push ( this.assets [ assetID ]);
-            }
-        }
-        return assets;
-    }
-
-    //----------------------------------------------------------------//
     getCraftingMethodBindings () {
         return this.binding.methodBindingsByName;
     }
@@ -164,14 +164,14 @@ export class InventoryService {
         const asset = this.assets [ assetID ];
         if ( !asset ) return false;
 
-        const upgrades = [];
         let type = asset.type;
+        const upgrades = [ type ];
         while ( this.schema.upgrades [ type ]) {
             const upgrade = this.schema.upgrades [ type ];
             upgrades.push ( upgrade );
             type = upgrade;
         }
-        return upgrades.length > 0 ? upgrades : false;
+        return upgrades.length > 1 ? upgrades : false;
     }
 
     //----------------------------------------------------------------//
