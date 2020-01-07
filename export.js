@@ -21,7 +21,7 @@ module.exports = {
     InventoryViewController:    require ( './InventoryViewController.js' ).InventoryViewController,
     ScannerReportModal:         require ( './ScannerReportModal.js' ).ScannerReportModal,
     Schema:                     require ( './schema/Schema.js' ).Schema,
-    SchemaScreen:               require ( './SchemaScreen.js' ).SchemaScreen,
+    SchemaScannerXLSX:          require ( './schema/SchemaScannerXLSX.js' ).SchemaScannerXLSX,
 
     LAYOUT_COMMAND:             require ( './schema/SchemaBuilder.js' ).LAYOUT_COMMAND,
 };
