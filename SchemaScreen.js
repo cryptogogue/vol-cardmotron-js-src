@@ -61,7 +61,7 @@ export const SchemaScreen = observer (( props ) => {
                 </Menu>
 
                 <If condition = { schema }>
-                    <JSONTree data = { schema } theme = 'bright'/>
+                    <JSONTree hideRoot data = { schema } theme = 'bright'/>
                 </If>
 
             </SingleColumnContainerView>

@@ -48,7 +48,7 @@ export const SquapScreen = observer (( props ) => {
             </SingleColumnContainerView>
 
             <If condition = { squap }>
-                <JSONTree data = { squap }/>
+                <JSONTree hideRoot data = { squap } theme = 'bright'/>
             </If>
 
             <If condition = { error }>
