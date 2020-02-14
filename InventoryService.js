@@ -34,16 +34,7 @@ export class InventoryService {
     @computed get
     availableAssetsArray () {
 
-        // TODO: get rid of appState
-        const assetsUtilized = this.appState ? this.appState.assetsUtilized : [];
-
-        let assets = [];
-        for ( let assetID in this.assets ) {
-            if ( !assetsUtilized.includes ( assetID )) {
-                assets.push ( this.assets [ assetID ]);
-            }
-        }
-        return assets;
+        return Object.values ( this.assets );
     }
 
     //----------------------------------------------------------------//
@@ -84,13 +75,6 @@ export class InventoryService {
         if ( accountID && nodeURL ) {
             this.fetchInventory ( nodeURL, accountID );
         }
-
-        // if ( appState ) {
-        //     observe ( appState, 'assetsUtilized', ( change ) => {
-        //         console.log ( 'ASSETS UTILIZED DID CHANGE' );
-        //         this.setAssets ();
-        //     });
-        // }
     }
 
     //----------------------------------------------------------------//
