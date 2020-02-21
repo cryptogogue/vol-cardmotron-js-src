@@ -125,9 +125,21 @@ export class SchemaScannerXLSX {
     }
 
     //----------------------------------------------------------------//
+    hasErrors () {
+
+        return ( this.errors.length > 0 );
+    }
+
+    //----------------------------------------------------------------//
     hasMessages () {
 
         return (( this.errors.length + this.warnings.length ) > 0 );
+    }
+
+    //----------------------------------------------------------------//
+    hasWarnings () {
+
+        return ( this.warnings.length > 0 );
     }
 
     //----------------------------------------------------------------//
@@ -635,16 +647,22 @@ export class SchemaScannerXLSX {
 
     //----------------------------------------------------------------//
     reportError ( body, col, row ) {
+
+        const cell = ( col && row ) ? `${ excel.coordToAddr ( col, row )}: ` : '';
+
         this.errors.push ({
-            header:     `${ excel.coordToAddr ( col, row )}: ERROR`,
+            header:     `${ cell }ERROR`,
             body:       body,
         });
     }
 
     //----------------------------------------------------------------//
     reportWarning ( body, col, row ) {
+
+        const cell = ( col && row ) ? `${ excel.coordToAddr ( col, row )}: ` : '';
+
         this.warnings.push ({
-            header:     `${ excel.coordToAddr ( col, row )}: WARNING`,
+            header:     `${ cell }WARNING`,
             body:       body,
         });
     }

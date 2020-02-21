@@ -22,6 +22,7 @@ import { assert, excel, hooks, RevocableContext, SingleColumnContainerView, util
 //================================================================//
 export const ScannerReportModal = observer (( props ) => {
 
+    const { setScanner } = props;
     const scanner = props.scanner || false;
 
     if ( !scanner ) {
@@ -57,11 +58,12 @@ export const ScannerReportModal = observer (( props ) => {
 
     return (
         <Modal
-            style = {{ height : 'auto' }}
-            size = "small"
-            open = { hasMessages }
+            closeIcon
+            size = 'small'
+            open = { messages.length > 0 }
             onClose = {() => { setScanner ( false )}}
         >
+            <Modal.Header>Found Schema Issues</Modal.Header>
             <Modal.Content>
                 { messages }
             </Modal.Content>
