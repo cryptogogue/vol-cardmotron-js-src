@@ -86,11 +86,11 @@ export class InventoryService {
             this.setLoading ( true );
 
             this.onProgress ( 'Fetching Schema' );
-            const schemaJSON        = await this.revocable.fetchJSON ( nodeURL + '/schema', null, 20000 );
+            const schemaJSON        = await this.revocable.fetchJSON ( nodeURL + '/schema' );
             console.log ( schemaJSON );
 
             this.onProgress ( 'Fetching Inventory' );
-            const inventoryJSON     = await this.revocable.fetchJSON ( nodeURL + '/accounts/' + accountID + '/inventory', null, 20000 );
+            const inventoryJSON     = await this.revocable.fetchJSON ( nodeURL + '/accounts/' + accountID + '/inventory' );
             console.log ( inventoryJSON );
 
             let assets = {};

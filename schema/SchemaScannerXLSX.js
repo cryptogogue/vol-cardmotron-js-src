@@ -84,6 +84,7 @@ export class SchemaScannerXLSX {
     constructor ( book ) {
 
         this.schemaBuilder = buildSchema ();
+        this.decks                  = {};
         this.macros                 = {};
         this.errors                 = [];
         this.warnings               = [];
@@ -93,6 +94,18 @@ export class SchemaScannerXLSX {
         this.book = book;
         this.readSheet ( 0 );
         delete ( this.book );
+
+        for ( let deckName in this.decks ) {
+
+            const deck = this.decks [ deckName ];
+            if ( Object.keys ( deck ).length === 0 ) continue;
+
+            this.schemaBuilder.deck ( deckName );
+            
+            for ( let assetType in deck ) {
+                this.schemaBuilder.deckMember ( assetType, deck [ assetType ]);
+            }
+        }
 
         this.schema = this.schemaBuilder.done ();
     }
@@ -125,11 +138,17 @@ export class SchemaScannerXLSX {
         for ( let col = 1; col < sheet.width; ++col ) {
 
             const name = sheet.getValueByCoord ( col, row, false );
+            if ( !name ) continue;
+
             let type = false;
 
-            switch ( name ) {
+            switch ( name.charAt ( 0 )) {
                 case '*':
                     type = 'number';
+                    if ( name.length > 1 ) {
+                        const deckName = name.slice ( 1 );
+                        this.decks [ deckName ] = this.decks [ deckName ] || {}
+                    }
                     break;
 
                 case '@':
@@ -140,6 +159,8 @@ export class SchemaScannerXLSX {
                     type = sheet.getValueByCoord ( col, row + 1, 'string' );
                     break;
             };
+
+            if ( !type ) continue;
 
             if ( name && type ) {
                 fieldDefs [ col ] = {
@@ -191,7 +212,7 @@ export class SchemaScannerXLSX {
             const hasTypeColumn = _.has ( definition, typeColumnName );
 
             // if there's a name column, use the value there. if not, default name is 'definition'.
-            let definitionType = hasTypeColumn ? ( definition [ typeColumnName ] || false ):  'definition';
+            let definitionType = hasTypeColumn ? ( definition [ typeColumnName ] || false ) : 'definition';
 
             if ( definitionType && ( definitionCount > 0 ) && ( fieldCount > 0 )) {
 
@@ -201,8 +222,29 @@ export class SchemaScannerXLSX {
 
                 this.schemaBuilder.definition ( definitionType );
                 for ( let fieldName in definition ) {
-                    if (( fieldName === '*' ) || ( fieldName === '@' )) continue; // ignore control fields
-                    this.schemaBuilder.field ( fieldName, definition [ fieldName ]);
+
+                    switch ( fieldName.charAt ( 0 )) {
+
+                        case '*': {
+
+                            const deckName = fieldName.slice ( 1 );
+
+                            if ( deckName && _.has ( this.decks, deckName )) {
+                                const deckCount = definition [ fieldName ] || 0;
+                                if ( deckCount > 0 ) {
+                                    this.decks [ deckName ][ definitionType ] = deckCount;
+                                }
+                            }
+                            continue;
+                        }
+
+                        case '@':
+                            continue;
+
+                        default:
+                            this.schemaBuilder.field ( fieldName, definition [ fieldName ]);
+                            break;
+                    }
                 }
             }
         }

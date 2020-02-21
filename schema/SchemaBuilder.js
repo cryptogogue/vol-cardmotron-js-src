@@ -22,6 +22,7 @@ const SCHEMA_BUILDER_ADDING_DRAW_LAYOUT                 = 'SCHEMA_BUILDER_ADDING
 const SCHEMA_BUILDER_ADDING_DRAW_SVG                    = 'SCHEMA_BUILDER_ADDING_DRAW_SVG';
 const SCHEMA_BUILDER_ADDING_DRAW_TEXT                   = 'SCHEMA_BUILDER_ADDING_DRAW_TEXT';
 const SCHEMA_BUILDER_ADDING_DRAW_TEXT_BOX               = 'SCHEMA_BUILDER_ADDING_DRAW_TEXT_BOX';
+const SCHEMA_BUILDER_ADDING_DECK                        = 'SCHEMA_BUILDER_ADDING_DECK';
 const SCHEMA_BUILDER_ADDING_FONT                        = 'SCHEMA_BUILDER_ADDING_FONT';
 const SCHEMA_BUILDER_ADDING_ICON                        = 'SCHEMA_BUILDER_ADDING_ICON';
 const SCHEMA_BUILDER_ADDING_LAYOUT                      = 'SCHEMA_BUILDER_ADDING_LAYOUT';
@@ -126,6 +127,7 @@ class SchemaBuilder {
         this.stack = [];
 
         this.schema = {
+            decks:              {},
             fonts:              {},
             icons:              {},
             lua:                '',
@@ -140,6 +142,29 @@ class SchemaBuilder {
             SCHEMA_BUILDER_ADDING_SCHEMA,
             this.schema
         );
+    }
+
+    //----------------------------------------------------------------//
+    deck ( name ) {
+
+        assert ( this.popTo ( SCHEMA_BUILDER_ADDING_SCHEMA ));
+
+        this.push (
+            SCHEMA_BUILDER_ADDING_DECK,
+            {},
+            ( schema, deck ) => {
+                schema.decks [ name ] = deck;
+            }
+        );
+        return this;
+    }
+
+    //----------------------------------------------------------------//
+    deckMember ( assetType, amount ) {
+
+        assert ( this.popTo ( SCHEMA_BUILDER_ADDING_DECK ));
+        this.top ()[ assetType ] = amount;
+        return this;
     }
 
     //----------------------------------------------------------------//
