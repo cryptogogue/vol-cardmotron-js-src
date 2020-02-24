@@ -145,6 +145,8 @@ export class SchemaScannerXLSX {
     //----------------------------------------------------------------//
     readDefinitions ( sheet, row ) {
 
+        console.log ( 'READING DEFINITIONS' );
+
         // read in the field definitions
         const fieldDefs = {};
         for ( let col = 1; col < sheet.width; ++col ) {
@@ -153,10 +155,12 @@ export class SchemaScannerXLSX {
             if ( !name ) continue;
 
             let type = false;
+            let isDeck = false;
 
             switch ( name.charAt ( 0 )) {
                 case '*':
                     type = 'number';
+                    isDeck = true;
                     if ( name.length > 1 ) {
                         const deckName = name.slice ( 1 );
                         this.decks [ deckName ] = this.decks [ deckName ] || {}
@@ -176,8 +180,9 @@ export class SchemaScannerXLSX {
 
             if ( name && type ) {
                 fieldDefs [ col ] = {
-                    name:   name,
-                    type:   type,
+                    name:       name,
+                    type:       type,
+                    isDeck:     isDeck,
                 }
             }
         }
@@ -189,6 +194,8 @@ export class SchemaScannerXLSX {
 
             let definition = {};
             let fieldCount = 0;
+            let definitionCount = 0;
+            let definitionType = 'definition';
 
             for ( let col = 1; col < sheet.width; ++col ) {
 
@@ -212,19 +219,18 @@ export class SchemaScannerXLSX {
                         continue;
                 }
 
-                definition [ fieldDef.name ] = value;
-                fieldCount++;
+                if ( fieldDef.isDeck ) {
+                    definitionCount += value;
+                }
+
+                if ( fieldDef.name === '@' ) {
+                    definitionType = value;
+                }
+                else {
+                    definition [ fieldDef.name ] = value;
+                    fieldCount++;
+                }   
             }
-            
-            // if there's a count column, use the value there. if not, default count is 1.
-            const definitionCount = _.has ( definition, '*' ) ? ( definition [ '*' ] || 0 ): 1;
-
-            // type column could be '@' or 'name'. prefer '@'.
-            const typeColumnName = _.has ( definition, '@' ) ? '@' : 'name';
-            const hasTypeColumn = _.has ( definition, typeColumnName );
-
-            // if there's a name column, use the value there. if not, default name is 'definition'.
-            let definitionType = hasTypeColumn ? ( definition [ typeColumnName ] || false ) : 'definition';
 
             if ( definitionType && ( definitionCount > 0 ) && ( fieldCount > 0 )) {
 
