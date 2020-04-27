@@ -2,6 +2,7 @@
 
 import { assert, excel, hooks, RevocableContext, SingleColumnContainerView, textLayout, util } from 'fgc';
 import { buildSchema, op }      from './SchemaBuilder';
+import { parseSquap }           from './parseSquap.js';
 import fs                       from 'fs';
 import handlebars               from 'handlebars';
 import _                        from 'lodash';
@@ -85,6 +86,7 @@ export class SchemaScannerXLSX {
 
         this.schemaBuilder = buildSchema ();
         this.decks                  = {};
+        this.sets                   = {};
         this.macros                 = {};
         this.errors                 = [];
         this.warnings               = [];
@@ -104,6 +106,18 @@ export class SchemaScannerXLSX {
             
             for ( let assetType in deck ) {
                 this.schemaBuilder.deckMember ( assetType, deck [ assetType ]);
+            }
+        }
+
+        for ( let setName in this.sets ) {
+
+            const set = this.sets [ setName ];
+            if ( Object.keys ( set ).length === 0 ) continue;
+
+            this.schemaBuilder.set ( setName );
+            
+            for ( let assetType in set ) {
+                this.schemaBuilder.setMember ( assetType, set [ assetType ]);
             }
         }
 
@@ -157,13 +171,21 @@ export class SchemaScannerXLSX {
             let type = false;
             let isDeck = false;
 
-            switch ( name.charAt ( 0 )) {
+            const firstChar = name.charAt ( 0 );
+
+            switch ( firstChar ) {
+                case '#':
                 case '*':
                     type = 'number';
                     isDeck = true;
                     if ( name.length > 1 ) {
                         const deckName = name.slice ( 1 );
-                        this.decks [ deckName ] = this.decks [ deckName ] || {}
+                        if ( firstChar === '#' ) {
+                            this.sets [ deckName ] = this.sets [ deckName ] || {};
+                        }
+                        else {
+                            this.decks [ deckName ] = this.decks [ deckName ] || {};
+                        }
                     }
                     break;
 
@@ -241,16 +263,26 @@ export class SchemaScannerXLSX {
                 this.schemaBuilder.definition ( definitionType );
                 for ( let fieldName in definition ) {
 
-                    switch ( fieldName.charAt ( 0 )) {
+                    const firstChar = fieldName.charAt ( 0 );
 
+                    switch ( firstChar ) {
+
+                        case '#':
                         case '*': {
 
-                            const deckName = fieldName.slice ( 1 );
-
-                            if ( deckName && _.has ( this.decks, deckName )) {
+                            if ( fieldName.length > 1 ) {
+                                
                                 const deckCount = definition [ fieldName ] || 0;
                                 if ( deckCount > 0 ) {
-                                    this.decks [ deckName ][ definitionType ] = deckCount;
+
+                                    const deckName = fieldName.slice ( 1 );
+
+                                    if ( firstChar === '#' ) {
+                                        this.sets [ deckName ][ definitionType ] = deckCount;
+                                    }
+                                    else {
+                                        this.decks [ deckName ][ definitionType ] = deckCount;
+                                    }
                                 }
                             }
                             continue;
@@ -547,6 +579,41 @@ export class SchemaScannerXLSX {
     }
 
     //----------------------------------------------------------------//
+    readMethods ( sheet, row ) {
+
+        const paramNames = this.readParamNames ( sheet, row++ );
+
+        for ( ; scanMore ( sheet, row ); ++row ) {
+
+            const name = util.toStringOrFalse ( sheet.getValueByCoord ( paramNames.name, row ));
+
+            if ( name ) {
+                const params = this.readParams ( sheet, row, paramNames, [
+                    stringParam ( 'name' ),
+                    stringParam ( 'script' ),
+                    stringParam ( 'description', false ),
+                ]);
+
+                this.schemaBuilder.method ( params.name, params.description );
+                this.schemaBuilder.lua ( params.script );
+                continue;
+            }
+
+            const param = util.toStringOrFalse ( sheet.getValueByCoord ( paramNames.param, row ));
+
+            if ( param ) {
+                const params = this.readParams ( sheet, row, paramNames, [
+                    stringParam ( 'param' ),
+                    stringParam ( 'qualifier', '' ),
+                ]);
+                const squap = parseSquap ( params.qualifier );
+                this.schemaBuilder.assetArg ( params.param, squap );
+                continue;
+            }
+        }
+    }
+
+    //----------------------------------------------------------------//
     readParamNames ( sheet, row ) {
 
         const paramNames = {};
@@ -621,6 +688,7 @@ export class SchemaScannerXLSX {
             INCLUDES:       ( name, row ) => { this.readIncludes        ( sheet, row )},
             LAYOUTS:        ( name, row ) => { this.readLayouts         ( sheet, row )},
             MACROS:         ( name, row ) => { this.readMacros          ( sheet, row )},
+            METHODS:        ( name, row ) => { this.readMethods         ( sheet, row )},
             UPGRADES:       ( name, row ) => { this.readUpgrades        ( sheet, row )},
         }
 

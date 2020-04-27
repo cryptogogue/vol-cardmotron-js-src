@@ -228,7 +228,7 @@ const SQUAP = {
     LESS_OR_EQUAL:      makeBinaryOp    ( 'LESS_OR_EQUAL' ),        // <=
     MOD:                makeBinaryOp    ( 'MOD' ),                  // %
     MUL:                makeBinaryOp    ( 'MUL' ),                  // *
-    NEG:                makeUnaryOp     ( 'NEG' ),             // -
+    NEG:                makeUnaryOp     ( 'NEG' ),                  // -
     NOT:                makeUnaryOp     ( 'NOT' ),                  // !
     NOT_EQUAL:          makeBinaryOp    ( 'NOT_EQUAL' ),            // !=
     OR:                 makeBinaryOp    ( 'OR' ),                   // ||
@@ -352,7 +352,7 @@ semantics.addOperation ( 'eval', {
     },
 
     string: function ( lq, s, rq ) {
-        return SQUAP.CONST ( this.sourceString );
+        return SQUAP.CONST ( this.sourceString.slice ( 1, -1 ));
     },
 });
 

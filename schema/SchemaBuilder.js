@@ -28,6 +28,7 @@ const SCHEMA_BUILDER_ADDING_ICON                        = 'SCHEMA_BUILDER_ADDING
 const SCHEMA_BUILDER_ADDING_LAYOUT                      = 'SCHEMA_BUILDER_ADDING_LAYOUT';
 const SCHEMA_BUILDER_ADDING_METHOD                      = 'SCHEMA_BUILDER_ADDING_METHOD';
 const SCHEMA_BUILDER_ADDING_SCHEMA                      = 'SCHEMA_BUILDER_ADDING_SCHEMA';
+const SCHEMA_BUILDER_ADDING_SET                         = 'SCHEMA_BUILDER_ADDING_SET';
 const SCHEMA_BUILDER_ADDING_UPGRADE                     = 'SCHEMA_BUILDER_ADDING_UPGRADE';
 
 export const LAYOUT_COMMAND = {
@@ -135,6 +136,7 @@ class SchemaBuilder {
             layouts:            {},
             meta:               '',
             methods:            {},
+            sets:               {},
             upgrades:           {},
         };
 
@@ -529,6 +531,29 @@ class SchemaBuilder {
 
         assert ( this.popTo ( SCHEMA_BUILDER_ADDING_ASSET_DEFINITION_FIELD ));
         this.top ().scriptable = typeof ( value ) === 'boolean' ? value : true;
+        return this;
+    }
+
+    //----------------------------------------------------------------//
+    set ( name ) {
+
+        assert ( this.popTo ( SCHEMA_BUILDER_ADDING_SCHEMA ));
+
+        this.push (
+            SCHEMA_BUILDER_ADDING_SET,
+            {},
+            ( schema, set ) => {
+                schema.sets [ name ] = set;
+            }
+        );
+        return this;
+    }
+
+    //----------------------------------------------------------------//
+    setMember ( assetType, amount ) {
+
+        assert ( this.popTo ( SCHEMA_BUILDER_ADDING_SET ));
+        this.top ()[ assetType ] = amount;
         return this;
     }
 
