@@ -82,6 +82,8 @@ export class Schema {
     //----------------------------------------------------------------//
     generateBinding ( assets ) {
 
+        console.log ( 'GENERATE BINDING', assets );
+
         let methodBindingsByAssetID     = {};
         let methodBindingsByName        = {};
 
@@ -110,6 +112,8 @@ export class Schema {
         // all methods and method params track assets that qualify.
         // now we have to iterate through all the methods and find out if they can be executed.
         for ( let methodName in this.methods ) {
+
+            console.log ( 'METHOD:', methodName );
 
             // create a relationship if the asset qualifies.
             this.methods [ methodName ].validate ( methodBindingsByName [ methodName ]);

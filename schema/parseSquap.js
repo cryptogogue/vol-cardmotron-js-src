@@ -214,8 +214,8 @@ const SQUAP = {
     ADD:                makeBinaryOp    ( 'ADD' ),                  // +
     AND:                makeBinaryOp    ( 'AND' ),                  // &&
     BW_AND:             makeBinaryOp    ( 'BW_AND' ),               // &
-    BW_OR:              makeBinaryOp    ( 'BW_OR' ),                // |
     BW_NOT:             makeBinaryOp    ( 'BW_NOT' ),               // ~
+    BW_OR:              makeBinaryOp    ( 'BW_OR' ),                // |
     BW_XOR:             makeBinaryOp    ( 'BW_XOR' ),               // ^
     CONST:              makeConstOp     ( 'CONST' ),
     DIV:                makeBinaryOp    ( 'DIV' ),                  // /

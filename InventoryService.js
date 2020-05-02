@@ -6,7 +6,6 @@ import { AssetLayout }                          from './AssetLayout';
 import { AssetMetrics }                         from './AssetMetrics';
 import * as consts                              from './consts';
 import { action, computed, extendObservable, observable, observe, runInAction } from 'mobx';
-import { Binding }                              from './schema/Binding';
 import { Schema }                               from './schema/Schema';
 import { buildSchema, op, LAYOUT_COMMAND }      from './schema/SchemaBuilder';
 import handlebars                               from 'handlebars';
@@ -22,7 +21,6 @@ export class InventoryService {
 
     @observable assets          = {};
     @observable schema          = new Schema (); // empty schema
-    @observable binding         = new Binding (); // empty binding
 
     @observable filters         = [ 'EN', 'RGB' ];
 
@@ -133,16 +131,6 @@ export class InventoryService {
     }
 
     //----------------------------------------------------------------//
-    getCraftingMethodBindings () {
-        return this.binding.methodBindingsByName;
-    }
-
-    //----------------------------------------------------------------//
-    getCraftingMethodBindingsForAssetID ( assetID ) {
-        return this.binding.methodBindingsByAssetID [ assetID ];
-    }
-
-    //----------------------------------------------------------------//
     getUpgradesForAssetID ( assetID ) {
 
         const asset = this.assets [ assetID ];
@@ -170,11 +158,6 @@ export class InventoryService {
             }
         }
         return false;
-    }
-
-    //----------------------------------------------------------------//
-    methodIsValid ( methodName, assetID ) {
-        return ( methodName !== '' ) && this.binding.methodIsValid ( methodName, assetID );
     }
 
     //----------------------------------------------------------------//
@@ -210,9 +193,6 @@ export class InventoryService {
 
         this.schema = schema || this.schema;
         this.assets = assets || this.assets;
-
-        const availableAssetsByID = this.availableAssetsByID;
-        this.binding = this.schema.generateBinding ( availableAssetsByID );
 
         // empty the layout and metrics caches
         this.layoutCache = {};
@@ -356,23 +336,9 @@ export class InventoryService {
             }
         }
 
-        this.onProgress ( 'Refreshing Binding' );
+        this.onProgress ( 'Setting Assets' );
         this.setAssets ( schema, assets );
 
         this.setLoading ( false );
-    }
-
-    //----------------------------------------------------------------//
-    @computed get
-    validMethods () {
-
-        let methods = [];
-        const bindingsByName = this.binding.methodBindingsByName;
-        for ( let name in bindingsByName ) {
-            if ( bindingsByName [ name ].valid ) {
-                methods.push ( name );
-            }
-        }
-        return methods;
     }
 }

@@ -3,10 +3,11 @@
 module.exports = {
 
     debug: {
-        SquapScreen:                require ( './debug/SquapScreen.js' ).SquapScreen,
+        SquapScreen:            require ( './debug/SquapScreen.js' ).SquapScreen,
     },
     parseSquap:                 require ( './schema/parseSquap.js' ).parseSquap,
 
+    AssetCardView:              require ( './AssetCardView.js' ).AssetCardView,
     AssetLayout:                require ( './AssetLayout.js' ).AssetLayout,
     AssetMetrics:               require ( './AssetMetrics.js' ).AssetMetrics,
     AssetModal:                 require ( './AssetModal.js' ).AssetModal,

@@ -92,17 +92,46 @@ class AndSquap extends AbstractBinarySquap {
 }
 
 //================================================================//
-// AssetTypeSquap
+// BitwiseAndSquap
 //================================================================//
-class AssetTypeSquap extends AbstractIndexSquap {
+class BitwiseAndSquap extends AbstractBinarySquap {
 
     //----------------------------------------------------------------//
     eval ( opArgs ) {
+        return false;
+    }
+}
 
-        const arg           = opArgs.assets [ this.paramID || 0 ];
-        const className     = this.value;
+//================================================================//
+// BitwiseNotSquap
+//================================================================//
+class BitwiseNotSquap extends AbstractBinarySquap {
 
-        return ( arg.type === className );
+    //----------------------------------------------------------------//
+    eval ( opArgs ) {
+        return false;
+    }
+}
+
+//================================================================//
+// BitwiseOrSquap
+//================================================================//
+class BitwiseOrSquap extends AbstractBinarySquap {
+
+    //----------------------------------------------------------------//
+    eval ( opArgs ) {
+        return false;
+    }
+}
+
+//================================================================//
+// BitwiseXORSquap
+//================================================================//
+class BitwiseXORSquap extends AbstractBinarySquap {
+
+    //----------------------------------------------------------------//
+    eval ( opArgs ) {
+        return false;
     }
 }
 
@@ -150,24 +179,6 @@ class EqualSquap extends AbstractBinarySquap {
 }
 
 //================================================================//
-// FieldSquap
-//================================================================//
-class FieldSquap extends AbstractIndexSquap {
-
-    //----------------------------------------------------------------//
-    eval ( opArgs ) {
-
-        const arg           = opArgs.assets [ this.paramID || 0 ];
-        const fieldName     = this.value;
-
-        if ( arg.fields.hasOwnProperty ( fieldName )) {
-            return arg.fields [ fieldName ];
-        }
-        return false;
-    }
-}
-
-//================================================================//
 // GreaterSquap
 //================================================================//
 class GreaterSquap extends AbstractBinarySquap {
@@ -194,15 +205,24 @@ class GreaterOrEqualSquap extends AbstractBinarySquap {
 }
 
 //================================================================//
-// KeywordSquap
+// IndexSquap
 //================================================================//
-class KeywordSquap extends AbstractBinarySquap {
+class IndexSquap extends AbstractIndexSquap {
 
     //----------------------------------------------------------------//
     eval ( opArgs ) {
-        const leftVal       = this.left.eval ( opArgs );
-        const rightVal      = this.right.eval ( opArgs );
-        return ( leftVal.split ( ' ' ).indexOf ( rightVal ) >= 0 );
+
+        const arg           = opArgs.assets [ this.paramID || 0 ];
+        const fieldName     = this.value;
+
+        if ( fieldName === '@' ) {
+            return arg.type;
+        }
+
+        if ( arg.fields.hasOwnProperty ( fieldName )) {
+            return arg.fields [ fieldName ];
+        }
+        return false;
     }
 }
 
@@ -297,6 +317,28 @@ class OrSquap extends AbstractBinarySquap {
 }
 
 //================================================================//
+// ShiftLeftSquap
+//================================================================//
+class ShiftLeftSquap extends AbstractBinarySquap {
+
+    //----------------------------------------------------------------//
+    eval ( opArgs ) {
+        return false;
+    }
+}
+
+//================================================================//
+// ShiftRightSquap
+//================================================================//
+class ShiftRightSquap extends AbstractBinarySquap {
+
+    //----------------------------------------------------------------//
+    eval ( opArgs ) {
+        return false;
+    }
+}
+
+//================================================================//
 // SubSquap
 //================================================================//
 class SubSquap extends AbstractBinarySquap {
@@ -312,6 +354,7 @@ class SubSquap extends AbstractBinarySquap {
 //================================================================//
 // XorSquap
 //================================================================//
+/*
 class XorSquap extends AbstractBinarySquap {
 
     //----------------------------------------------------------------//
@@ -321,20 +364,23 @@ class XorSquap extends AbstractBinarySquap {
         return !leftVal !== !rightVal;
     }
 }
+*/
 
 //----------------------------------------------------------------//
 const factoryTable = {
 
     ADD:                ( template ) => new AddSquap ( template ),
     AND:                ( template ) => new AndSquap ( template ),
-    ASSET_TYPE:         ( template ) => new AssetTypeSquap ( template ),
+    //BW_AND:             ( template ) => new BitwiseAddSquap ( template ),
+    //BW_OR:              ( template ) => new BitwiseOrSquap ( template ),
+    //BW_NOT:             ( template ) => new BitwiseNotSquap ( template ),
+    //BW_XOR:             ( template ) => new BitwiseXORSquap ( template ),
     CONST:              ( template ) => new ConstSquap ( template ),
     DIV:                ( template ) => new DivSquap ( template ),
     EQUAL:              ( template ) => new EqualSquap ( template ),
-    FIELD:              ( template ) => new FieldSquap ( template ),
     GREATER:            ( template ) => new GreaterSquap ( template ),
     GREATER_OR_EQUAL:   ( template ) => new GreaterOrEqualSquap ( template ),
-    KEYWORD:            ( template ) => new KeywordSquap ( template ),
+    INDEX:              ( template ) => new IndexSquap ( template ),
     LESS:               ( template ) => new LessSquap ( template ),
     LESS_OR_EQUAL:      ( template ) => new LessOrEqualSquap ( template ),
     MOD:                ( template ) => new ModSquap ( template ),
@@ -342,8 +388,9 @@ const factoryTable = {
     NOT:                ( template ) => new NotSquap ( template ),
     NOT_EQUAL:          ( template ) => new NotEqualSquap ( template ),
     OR:                 ( template ) => new OrSquap ( template ),
+    //SHIFT_LEFT:         ( template ) => new ShiftLeftSquap ( template ),
+    //SHIFT_RIGHT:        ( template ) => new ShiftRightSquap ( template ),
     SUB:                ( template ) => new SubSquap ( template ),
-    XOR:                ( template ) => new XorSquap ( template ),
 }
 
 //----------------------------------------------------------------//

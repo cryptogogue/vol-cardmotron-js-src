@@ -21,7 +21,6 @@ export class SchemaMethod {
 
             if ( this.assetArgs [ argname ].eval ( opArgs )) {
 
-                // console.log ( 'EVAL OK' );
                 methodBinding.assetIDsByArgName [ argname ].push ( asset.assetID );
                 methodBindingsForAssetByMethodName [ this.name ] = methodBinding;
             }
@@ -67,9 +66,7 @@ export class SchemaMethod {
     }
 
     //----------------------------------------------------------------//
-    validate ( methodBinding ) {
-
-        //console.log ( 'VALIDATE', methodBinding );
+    validate ( methodBinding, filterAssets ) {
 
         const assetArgs = this.assetArgs;
 
@@ -81,15 +78,13 @@ export class SchemaMethod {
         // build the tables and initialize the counter.
         for ( let argName in assetArgs ) {
 
-            const argList = methodBinding.assetIDsByArgName [ argName ];
+            const argList = methodBinding.assetIDsByArgName [ argName ].filter ( filterAssets );
             if ( argList.length === 0 ) return; // bail; method can never be valid.
 
             multiCounter.setLimit ( argCount, argList.length );
             argListsByIndex.push ( argList );
             argCount++
         }
-
-        // TODO: we eventually need to prune out invalid asset bindings
 
         // try every permutation of args until a valid configuration is found.
         for ( ; multiCounter.cycles < 1; multiCounter.increment ()) {
