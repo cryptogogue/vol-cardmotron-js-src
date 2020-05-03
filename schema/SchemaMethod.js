@@ -3,6 +3,7 @@
 import { assert, excel, hooks, RevocableContext, SingleColumnContainerView, util } from 'fgc';
 import { MultiCounter }     from './MultiCounter';
 import * as squap           from './Squap';
+import _                    from 'lodash';
 
 //================================================================//
 // SchemaMethod
@@ -47,6 +48,9 @@ export class SchemaMethod {
 
         this.weight     = template.weight;
         this.maturity   = template.maturity;
+
+        this.totalAssetsArgs = _.size ( this.assetArgs );
+        this.totalConstArgs = _.size ( this.constArgs );
 
         // TODO: constraints
         //console.log ( this )
