@@ -26,11 +26,15 @@ export const AssetCardView = observer (( props ) => {
 
     const asset         = inventory.assets [ assetID ];
 
+    const controller = props.controller || false;
+    const isSelected = props.isSelected || controller && controller.isSelected ( asset ); // because mobX
+    const color = isSelected ? 'cyan' : 'white';
+
     const onClickCard = ( event ) => {
         event.stopPropagation ();
         setToggle ( !toggle );
         if ( onSelect ) {
-            onSelect ( asset, !toggle );
+            onSelect ( asset, !isSelected );
         }
     }
 
@@ -40,10 +44,6 @@ export const AssetCardView = observer (( props ) => {
             handler ( asset );
         }
     }
-
-    const controller = props.controller || false;
-    const isSelected = props.isSelected || controller && controller.isSelected ( asset ); // because mobX
-    const color = isSelected ? 'cyan' : 'white';
 
     return (
         <UI.Card
