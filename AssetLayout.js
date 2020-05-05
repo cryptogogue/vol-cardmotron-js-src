@@ -12,42 +12,37 @@ const { TextFitter, JUSTIFY } = textLayout;
 export class AssetLayout {
 
     //----------------------------------------------------------------//
-    constructor ( inventory, assetID ) {
+    constructor ( layoutController, asset ) {
 
-        const asset     = inventory.assets [ assetID ];
-        const context   = inventory.composeAssetContext ( asset, {[ '$' ]: assetID });
-
-        const resources = {
-            fonts:      inventory.fonts,
-            icons:      inventory.icons,
-        };
+        const schema    = layoutController.schema;
+        const context   = schema.composeAssetContext ( asset, {[ '$' ]: asset.assetID });
 
         this.width      = 0;
         this.height     = 0;
         this.dpi        = false;
         this.context    = context;
 
-        const layoutNameList = inventory.getAssetField ( asset, 'layout', '' );
-        this.svg = this.layoutList ( layoutNameList, context, inventory, []);
+        const layoutNameList = schema.getAssetField ( asset, 'layout', '' );
+        this.svg = this.layoutList ( layoutNameList, context, layoutController, []);
     }
 
     //----------------------------------------------------------------//
-    layoutList ( layoutNameList, context, inventory, stack ) {
+    layoutList ( layoutNameList, context, layoutController, stack ) {
 
-        const layoutNames = inventory.tokenizeLayoutNames ( layoutNameList );
+        const layoutNames = layoutController.tokenizeLayoutNames ( layoutNameList );
 
         let items = [];
         for ( const layoutName of layoutNames ) {
             context [ '$$' ] = '';
-            items.push ( this.layoutSingle ( layoutName, context, inventory, stack ));
+            items.push ( this.layoutSingle ( layoutName, context, layoutController, stack ));
         }
         return `<g>${ items.join ( '' )}</g>`;
     }
 
     //----------------------------------------------------------------//
-    layoutSingle ( layoutName, context, inventory, stack ) {
+    layoutSingle ( layoutName, context, layoutController, stack ) {
 
-        const layout = inventory.layouts [ layoutName ]; 
+        const layout = layoutController.layouts [ layoutName ]; 
         if ( !layout ) return;
 
         if ( this.dpi && ( layout.dpi !== this.dpi )) return;
@@ -119,7 +114,7 @@ export class AssetLayout {
                 case LAYOUT_COMMAND.DRAW_LAYOUT: {
 
                     const layoutNameList = command.template ( context );
-                    svg = this.layoutList ( layoutNameList, context, inventory, stack );
+                    svg = this.layoutList ( layoutNameList, context, layoutController, stack );
 
                     break;
                 }
@@ -133,8 +128,8 @@ export class AssetLayout {
                 case LAYOUT_COMMAND.DRAW_TEXT_BOX: {
 
                     const resources = {
-                        fonts:  inventory.fonts,
-                        icons:  inventory.icons,
+                        fonts:  layoutController.fonts,
+                        icons:  layoutController.icons,
                     };
 
                     const fitter = new TextFitter ( resources, x, y, w, h, command.vJustify );

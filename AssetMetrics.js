@@ -10,23 +10,18 @@ import _                            from 'lodash';
 export class AssetMetrics {
 
     //----------------------------------------------------------------//
-    constructor ( inventory, assetID ) {
+    constructor ( layoutController, asset ) {
 
-        const asset     = inventory.assets [ assetID ];
-        const context   = inventory.composeAssetContext ( asset, {[ '$' ]: assetID });
-
-        const resources = {
-            fonts:      inventory.fonts,
-            icons:      inventory.icons,
-        };
+        const schema    = layoutController.schema;
+        const context   = schema.composeAssetContext ( asset, {[ '$' ]: asset.assetID });
 
         this.width      = 0;
         this.height     = 0;
         this.dpi        = false;
         this.context    = context;
 
-        const layoutNameList = inventory.getAssetField ( asset, 'layout', '' );
-        this.layoutList ( layoutNameList, context, inventory, []);
+        const layoutNameList = schema.getAssetField ( asset, 'layout', '' );
+        this.layoutList ( layoutNameList, context, layoutController, []);
 
         this.docSize = {
             widthInInches: this.width / this.dpi,
@@ -36,19 +31,19 @@ export class AssetMetrics {
     }
 
     //----------------------------------------------------------------//
-    layoutList ( layoutNameList, context, inventory, stack ) {
+    layoutList ( layoutNameList, context, layoutController, stack ) {
 
-        const layoutNames = inventory.tokenizeLayoutNames ( layoutNameList );
+        const layoutNames = layoutController.tokenizeLayoutNames ( layoutNameList );
 
         for ( const layoutName of layoutNames ) {
-            this.layoutSingle ( layoutName, context, inventory, stack );
+            this.layoutSingle ( layoutName, context, layoutController, stack );
         }
     }
 
     //----------------------------------------------------------------//
-    layoutSingle ( layoutName, context, inventory, stack ) {
+    layoutSingle ( layoutName, context, layoutController, stack ) {
 
-        const layout = inventory.layouts [ layoutName ]; 
+        const layout = layoutController.layouts [ layoutName ]; 
         if ( !layout ) return;
 
         if ( this.dpi && ( layout.dpi !== this.dpi )) return;
@@ -63,7 +58,7 @@ export class AssetMetrics {
         for ( let i in layout.commands ) {
             const command = layout.commands [ i ];
             if ( command.type === LAYOUT_COMMAND.DRAW_LAYOUT ) {
-                this.layoutList ( layoutNameList, context, inventory, stack );
+                this.layoutList ( layoutNameList, context, layoutController, stack );
             }
         }
 

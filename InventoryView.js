@@ -5,7 +5,7 @@ import { assert, InfiniteScrollView, util } from 'fgc';
 import { AssetCardView }                                    from './AssetCardView';
 import { AssetView }                                        from './AssetView';
 import { AssetSizer }                                       from './AssetSizer';
-import { InventoryService }                                 from './InventoryService';
+import { InventoryController }                              from './InventoryController';
 import handlebars                                           from 'handlebars';
 import { action, computed, extendObservable, observable }   from 'mobx';
 import { observer }                                         from 'mobx-react';
@@ -22,10 +22,11 @@ import './InventoryView.css';
 //================================================================//
 export const InventoryView = observer (( props ) => {
 
-    const controller    = props.controller;
-    const inventory     = controller.inventory;
-    const assetArray    = controller.sortedAssets || inventory.availableAssetsArray;
-    const zoom          = controller.zoom || 1;
+    const controller            = props.controller;
+    const inventory             = controller.inventory;
+    const layoutController      = inventory.layoutController;
+    const assetArray            = controller.sortedAssets || inventory.availableAssetsArray;
+    const zoom                  = controller.zoom || 1;
 
     const onAssetEvent = ( handler, asset, event ) => {
         event.stopPropagation ();
@@ -35,7 +36,7 @@ export const InventoryView = observer (( props ) => {
     }
 
     const sizers = {};
-    for ( let docSizeName in inventory.docSizes ) {
+    for ( let docSizeName in layoutController.docSizes ) {
         sizers [ docSizeName ] = (
             <Card
                 style = {{
@@ -45,17 +46,17 @@ export const InventoryView = observer (( props ) => {
                 }}
             >
                 <AssetSizer
-                    inventory = { inventory }
+                    docSizes = { layoutController.docSizes }
                     docSizeName = { docSizeName }
                     scale = { zoom }
                 />
             </Card>
-        ); 
+        );
     }
 
     const getSizerName = ( i ) => {
         const assetID = assetArray [ i ].assetID;
-        const metrics = inventory.getAssetMetrics ( assetID );
+        const metrics = layoutController.getAssetMetrics ( assetID );
         return metrics.docSizeName;
     }
 

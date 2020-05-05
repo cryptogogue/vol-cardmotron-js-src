@@ -4,7 +4,7 @@ import './EditorScreen.css';
 
 import { AssetView }                                        from './AssetView';
 import { EditorMenu }                                       from './EditorMenu';
-import { InventoryService }                                 from './InventoryService';
+import { InventoryController }                              from './InventoryController';
 import { InventoryPrintView }                               from './InventoryPrintView';
 import { InventoryView }                                    from './InventoryView';
 import { InventoryViewController }                          from './InventoryViewController';

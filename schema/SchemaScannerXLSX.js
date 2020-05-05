@@ -127,7 +127,7 @@ export class SchemaScannerXLSX {
     //----------------------------------------------------------------//
     escapeDefinitionType ( name ) {
 
-        const baseName = ( name || '' ).toLowerCase ().replace ( /[^a-z0-9]+/g, '-' );
+        const baseName = ( name || '' ).replace ( /[^a-zA-Z0-9]+/g, '-' );
 
         let postfix = 0;
         name = baseName;

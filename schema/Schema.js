@@ -48,35 +48,44 @@ export class Schema {
     }
 
     //----------------------------------------------------------------//
-    applyTemplate ( template ) {
+    composeAssetContext ( asset, overrideContext ) {
 
-        if ( !template ) return;
+        let context = {
+            [ '@' ]: asset.type,
+        };
 
-        const name = template.name;
+        for ( let fieldName in asset.fields ) {
 
-        if ( this.applied [ name ]) return;
-        this.applied [ name ] = true;
+            const field = asset.fields [ fieldName ];
+            const alternates = field.alternates;
 
-        for ( let typeName in template.definitions ) {
-            this.definitions [ typeName ] = template.definitions [ typeName ]; // TODO: deep copy
+            context [ fieldName ] = field.value;
+
+            for ( let i in this.filters ) {
+                const filter = this.filters [ i ];
+                if ( _.has ( alternates, filter )) {
+                    context [ fieldName ] = alternates [ filter ];
+                }
+            }
         }
-
-        for ( let methodName in template.methods ) {
-            this.methods [ methodName ] = new SchemaMethod ( methodName, template.methods [ methodName ]);
-        }
-
-        this.upgrades = _.assign ( this.upgrades, template.upgrades );
+        return Object.assign ( context, overrideContext );
     }
 
     //----------------------------------------------------------------//
-    constructor ( template ) {
+    constructor ( json ) {
 
-        this.applied        = {}; // table of schema names that have already been applied
-        this.methods        = {}; // table of all available methods
-        this.definitions    = {}; // table of all known asset types
-        this.upgrades       = {};
+        this.definitions    = json ? _.cloneDeep ( json.definitions ) : {};
+        this.fonts          = json ? _.cloneDeep ( json.fonts ) : {};
+        this.icons          = json ? _.cloneDeep ( json.icons ) : {};
+        this.layouts        = json ? _.cloneDeep ( json.layouts ) : {};
+        this.upgrades       = json ? _.cloneDeep ( json.upgrades ) : {};
 
-        this.applyTemplate ( template );
+        this.methods = {};
+            if ( json && json.methods ) {
+            for ( let methodName in json.methods ) {
+                this.methods [ methodName ] = new SchemaMethod ( methodName, json.methods [ methodName ]);
+            }
+        }
     }
 
     //----------------------------------------------------------------//
@@ -120,6 +129,25 @@ export class Schema {
         }
 
         return new Binding ( methodBindingsByName, methodBindingsByAssetID );
+    }
+
+    //----------------------------------------------------------------//
+    getAssetField ( asset, fieldName, fallback ) {
+
+        return _.has ( asset.fields, fieldName ) ? asset.fields [ fieldName ].value : fallback;
+    }
+
+    //----------------------------------------------------------------//
+    getUpgradesForAsset ( asset ) {
+
+        let type = asset.type;
+        const upgrades = [ type ];
+        while ( this.upgrades [ type ]) {
+            const upgrade = this.upgrades [ type ];
+            upgrades.push ( upgrade );
+            type = upgrade;
+        }
+        return upgrades.length > 1 ? upgrades : false;
     }
 
     //----------------------------------------------------------------//

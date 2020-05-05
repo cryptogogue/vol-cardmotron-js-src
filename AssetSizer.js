@@ -10,10 +10,10 @@ import React                        from 'react';
 //================================================================//
 export const AssetSizer = ( props ) => {
 
-    const { inventory, docSizeName } = props;
+    const { docSizes, docSizeName } = props;
     const dpi = props.dpi || 300;
 
-    const docSize       = inventory.docSizes [ docSizeName ];
+    const docSize       = docSizes [ docSizeName ];
 
     const scale         = props.scale || 1;
 

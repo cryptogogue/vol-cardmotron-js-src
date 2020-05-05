@@ -13,7 +13,7 @@ export const AssetView = ( props ) => {
     const { inventory, assetID, inches } = props;
     const dpi = props.dpi || 300;
 
-    const layout        = inventory.getAssetLayout ( assetID );
+    const layout        = inventory.layoutController.getAssetLayout ( assetID );
 
     const dpiScale      = dpi / layout.dpi;
 
