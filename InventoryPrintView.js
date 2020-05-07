@@ -160,7 +160,7 @@ export const InventoryPrintView = observer (( props ) => {
 
     for ( let asset of assetArray ) {
 
-        const metrics = inventory.getAssetMetrics ( asset.assetID );
+        const metrics = inventory.layoutController.getAssetMetrics ( asset.assetID );
         let batch = batchesByName [ metrics.docSizeName ];
 
         if ( !batch ) {
