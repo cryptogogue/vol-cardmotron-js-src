@@ -105,8 +105,10 @@ export class AssetLayoutController {
     //----------------------------------------------------------------//
     @action
     getAssetLayout ( assetID ) {
+
         if ( !_.has ( this.layoutCache, assetID )) {
-            this.layoutCache [ assetID ] = new AssetLayout ( this, this.assets [ assetID ], this.filters );
+            const asset = _.has ( this.assets, assetID ) ? this.assets [ assetID ] : this.schema.newAsset ( assetID, assetID );
+            this.layoutCache [ assetID ] = new AssetLayout ( this, asset, this.filters );
         }
         return this.layoutCache [ assetID ];
     }

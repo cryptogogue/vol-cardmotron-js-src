@@ -138,6 +138,19 @@ export class Schema {
     }
 
     //----------------------------------------------------------------//
+    getFriendlyNameForAsset ( asset ) {
+
+        return asset.fields.name ? asset.fields.name.value : asset.assetID;
+    }
+
+    //----------------------------------------------------------------//
+    getFriendlyNameForType ( type ) {
+
+        const definition = this.definitions [ type ];
+        return definition.fields.name ? definition.fields.name.value : type;
+    }
+
+    //----------------------------------------------------------------//
     getUpgradesForAsset ( asset ) {
 
         let type = asset.type;
