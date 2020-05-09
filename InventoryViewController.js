@@ -3,8 +3,9 @@
 import { AssetView }                                        from './AssetView';
 import * as consts                                          from './consts';
 import _                                                    from 'lodash';
-import { action, computed, extendObservable, observable }   from "mobx";
+import { action, computed, extendObservable, observable }   from 'mobx';
 import { observer }                                         from 'mobx-react';
+import { computedFn }                                       from 'mobx-utils'
 import { assert, excel, hooks, RevocableContext, SingleColumnContainerView, util } from 'fgc';
 
 //================================================================//
@@ -88,6 +89,11 @@ export class InventoryViewController {
     }
 
     //----------------------------------------------------------------//
+    isSelected ( assetID ) {
+        return ( this.selection [ assetID ] !== undefined );
+    }
+
+    //----------------------------------------------------------------//
     @computed
     get selectionSize () {
 
@@ -114,11 +120,6 @@ export class InventoryViewController {
 
         assetArray.sort (( asset0, asset1 ) => this.compareForSort ( asset0, asset1 ));
         return assetArray;
-    }
-
-    //----------------------------------------------------------------//
-    isSelected ( asset ) {
-        return _.has ( this.selection, asset.assetID );
     }
 
     //----------------------------------------------------------------//
@@ -166,7 +167,7 @@ export class InventoryViewController {
     @action
     toggleAssetSelection ( asset ) {
 
-        if ( this.isSelected ( asset ) ) {
+        if ( this.isSelected ( asset.assetID ) ) {
             this.deselectAsset ( asset );
         }
         else {
