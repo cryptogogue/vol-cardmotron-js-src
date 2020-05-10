@@ -58,6 +58,18 @@ export class InventoryController {
     }
 
     //----------------------------------------------------------------//
+    getDuplicateIDs ( assetID ) {
+
+        const primary = this.primaries [ this.duplicates [ assetID ]];
+        
+        const duplicateIDs = [];
+        for ( let duplicate of primary.duplicates ) {
+            duplicateIDs.push ( duplicate.assetID );
+        }
+        return duplicateIDs;
+    }
+
+    //----------------------------------------------------------------//
     isPrimary ( assetID ) {
 
         return ( this.primaries [ assetID ] !== undefined );

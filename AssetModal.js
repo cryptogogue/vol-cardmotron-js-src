@@ -16,11 +16,17 @@ import zoom from './assets/zoom.png';
 //================================================================//
 export const AssetModal = observer (( props ) => {
 
-    const inventory     = props.inventory;
+    const controller    = props.controller;
+    const inventory     = controller.inventory;
     const assetID       = props.assetID;
     const onClose       = props.onClose || false;
 
     const isOpen = (( typeof ( assetID ) === 'string' ) && ( assetID.length > 0 ));
+
+    let description = assetID;
+    if (( assetID !== false ) && controller.hideDuplicates ) {
+        description = inventory.getDuplicateIDs ( assetID ).join ( ', ' );
+    }
 
     return (
         <Modal
@@ -38,7 +44,7 @@ export const AssetModal = observer (( props ) => {
                         inventory = { inventory }
                         inches = 'true'
                     />
-                    <p>Asset ID: { assetID }</p>
+                    <p>{ description }</p>
                 </center>
             </Modal.Content>
         </Modal>
