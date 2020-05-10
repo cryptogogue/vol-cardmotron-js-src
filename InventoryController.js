@@ -48,10 +48,7 @@ export class InventoryController {
     //----------------------------------------------------------------//
     countDuplicates ( assetID ) {
 
-        const primary = this.primaries [ this.duplicates [ assetID ]];
-
-        console.log ( 'COUNT DUPLICATES:', assetID, primary.duplicates.length );
-        return primary.count;
+        return this.primaries [ this.duplicates [ assetID ]].count;
     }
 
     //----------------------------------------------------------------//
@@ -109,8 +106,6 @@ export class InventoryController {
                 this.duplicates [ assetID ] = primary.asset.assetID;
             }
         }
-
-        console.log ( 'PRIMARIES:', JSON.stringify ( this.primaries, null, 4 ));
     }
 
     //----------------------------------------------------------------//
