@@ -25,7 +25,7 @@ export const AssetModal = observer (( props ) => {
 
     let description = assetID;
     if (( assetID !== false ) && controller.hideDuplicates ) {
-        description = inventory.getDuplicateIDs ( assetID ).join ( ', ' );
+        description = inventory.getDuplicateIDs ( assetID, controller.filterFunc ).join ( ', ' );
     }
 
     return (

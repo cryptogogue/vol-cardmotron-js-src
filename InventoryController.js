@@ -46,9 +46,16 @@ export class InventoryController {
     }
 
     //----------------------------------------------------------------//
-    countDuplicates ( assetID ) {
+    countDuplicates ( assetID, filterFunc ) {
 
-        return this.primaries [ this.duplicates [ assetID ]].count;
+        const primary = this.primaries [ this.duplicates [ assetID ]];
+        
+        let count = 0;
+        for ( let duplicate of primary.duplicates ) {
+            if ( filterFunc && !filterFunc ( duplicate.assetID )) continue;
+            count++;
+        }
+        return count;
     }
 
     //----------------------------------------------------------------//
@@ -58,12 +65,13 @@ export class InventoryController {
     }
 
     //----------------------------------------------------------------//
-    getDuplicateIDs ( assetID ) {
+    getDuplicateIDs ( assetID, filterFunc ) {
 
         const primary = this.primaries [ this.duplicates [ assetID ]];
         
         const duplicateIDs = [];
         for ( let duplicate of primary.duplicates ) {
+            if ( filterFunc && !filterFunc ( duplicate.assetID )) continue;
             duplicateIDs.push ( duplicate.assetID );
         }
         return duplicateIDs;
