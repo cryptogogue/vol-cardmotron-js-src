@@ -122,7 +122,7 @@ export class InventoryViewController {
 
             for ( let asset of availableAssetArray ) {
 
-                const isPrimary = this.hideDuplicates ? this.inventory.isPrimary ( asset.assetID ) : true;
+                const isPrimary = (( this.layoutName == consts.WEB_LAYOUT ) && this.hideDuplicates ) ? this.inventory.isPrimary ( asset.assetID ) : true;
                 const isVisible = this.filterFunc ? this.filterFunc ( asset.assetID ) : true;
 
                 if ( isPrimary && isVisible ) {
