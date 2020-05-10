@@ -66,17 +66,19 @@ export const InventoryView = observer (( props ) => {
         if ( !assetLayoutCache.includes ( i )) {
             
             const asset = assetArray [ i ];
+            const assetID = asset.assetID;
 
             assetLayoutCache [ i ] = (
                 <AssetCardView
-                    key             = { asset.assetID }
-                    assetID         = { asset.assetID }
+                    key             = { assetID }
+                    assetID         = { assetID }
                     inventory       = { controller.inventory }
                     zoom            = { zoom }
                     onSelect        = { props.onSelect || false }
                     onMagnify       = { props.onMagnify || false }
                     onEllipsis      = { props.onEllipsis || false }
                     controller      = { controller }
+                    count           = { controller.hideDuplicates ? inventory.countDuplicates ( assetID ) : 1 }
                 />
             );
         }

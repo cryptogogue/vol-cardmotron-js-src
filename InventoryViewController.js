@@ -18,6 +18,7 @@ export class InventoryViewController {
     @observable sortMode            = consts.SORT_MODE.ALPHA_ATOZ;
     @observable rankDefinitions     = false;
     @observable zoom                = consts.DEFAULT_ZOOM;
+    @observable hideDuplicates      = false;
 
     //----------------------------------------------------------------//
     @action
@@ -68,7 +69,15 @@ export class InventoryViewController {
     @action
     deselectAsset ( asset ) {
 
-        delete this.selection [ asset.assetID ];
+        if ( this.hideDuplicates && this.inventory.isPrimary ( asset.assetID )) {
+            const duplicates = this.inventory.primaries [ asset.assetID ].duplicates;
+            for ( let duplicate of duplicates ) {
+                delete this.selection [ duplicate.assetID ];
+            }
+        }
+        else {
+            delete this.selection [ asset.assetID ];
+        }
     }
 
     //----------------------------------------------------------------//
@@ -107,12 +116,16 @@ export class InventoryViewController {
         const availableAssetArray = this.inventory.availableAssetsArray;
         let assetArray = availableAssetArray;
 
-        if ( this.filterFunc ) {
+        if ( this.hideDuplicates || this.filterFunc ) {
 
             assetArray = [];
 
             for ( let asset of availableAssetArray ) {
-                if ( this.filterFunc ( asset.assetID )) {
+
+                const isPrimary = this.hideDuplicates ? this.inventory.isPrimary ( asset.assetID ) : true;
+                const isVisible = this.filterFunc ? this.filterFunc ( asset.assetID ) : true;
+
+                if ( isPrimary && isVisible ) {
                     assetArray.push ( asset );
                 }
             }
@@ -126,13 +139,31 @@ export class InventoryViewController {
     @action
     selectAsset ( asset ) {
 
-        this.selection [ asset.assetID ] = asset;
+        if ( this.hideDuplicates && this.inventory.isPrimary ( asset.assetID )) {
+            const duplicates = this.inventory.primaries [ asset.assetID ].duplicates;
+            for ( let duplicate of duplicates ) {
+                this.selection [ duplicate.assetID ] = duplicate;
+            }
+        }
+        else {
+            this.selection [ asset.assetID ] = asset;
+        }
     }
 
     //----------------------------------------------------------------//
     setFilterFunc ( filterFunc ) {
 
         this.filterFunc = filterFunc;
+    }
+
+    //----------------------------------------------------------------//
+    @action
+    setHideDuplicates ( hidden ) {
+
+        this.hideDuplicates = hidden;
+        if ( hidden ) {
+            this.clearSelection ();
+        }
     }
 
     //----------------------------------------------------------------//
