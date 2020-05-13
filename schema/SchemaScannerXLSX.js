@@ -92,6 +92,7 @@ export class SchemaScannerXLSX {
         this.warnings               = [];
         this.inventory              = {};
         this.rankDefinitions        = {};
+        this.version                = {};
 
         this.book = book;
         this.readSheet ( 0 );
@@ -120,6 +121,13 @@ export class SchemaScannerXLSX {
                 this.schemaBuilder.setMember ( assetType, set [ assetType ]);
             }
         }
+
+        this.schemaBuilder.version (
+            this.version.release,
+            this.version.major,
+            this.version.minor,
+            this.version.revision
+        );
 
         this.schema = this.schemaBuilder.done ();
     }
@@ -158,8 +166,6 @@ export class SchemaScannerXLSX {
 
     //----------------------------------------------------------------//
     readDefinitions ( sheet, row ) {
-
-        console.log ( 'READING DEFINITIONS' );
 
         // read in the field definitions
         const fieldDefs = {};
@@ -690,6 +696,7 @@ export class SchemaScannerXLSX {
             MACROS:         ( name, row ) => { this.readMacros          ( sheet, row )},
             METHODS:        ( name, row ) => { this.readMethods         ( sheet, row )},
             UPGRADES:       ( name, row ) => { this.readUpgrades        ( sheet, row )},
+            VERSION:        ( name, row ) => { this.readVersion         ( sheet, row )},
         }
 
         for ( let row = 0; row < sheet.height; ++row ) {
@@ -716,6 +723,32 @@ export class SchemaScannerXLSX {
             if ( !( params.type && params.upgrade )) continue;
 
             this.schemaBuilder.upgrade ( params.type, params.upgrade );
+        }
+    }
+
+    //----------------------------------------------------------------//
+    readVersion ( sheet, row ) {
+
+        const paramNames = this.readParamNames ( sheet, row++ );
+
+        for ( ; scanMore ( sheet, row ); ++row ) {
+
+            const release = util.toStringOrFalse ( sheet.getValueByCoord ( paramNames.release, row ));
+            if ( !release ) continue;
+
+            const params = this.readParams ( sheet, row, paramNames, [
+                stringParam ( 'release' ),
+                numberParam ( 'major' ),
+                numberParam ( 'minor' ),
+                numberParam ( 'revision' ),
+            ]);
+
+            this.version = {
+                release:    params.release,
+                major:      params.major,
+                minor:      params.minor,
+                revision:   params.revision,
+            };
         }
     }
 

@@ -360,6 +360,12 @@ class SchemaBuilder {
     }
 
     //----------------------------------------------------------------//
+    getState () {
+
+        return this.stack [ this.stack.length - 1 ].state;
+    }
+
+    //----------------------------------------------------------------//
     icon ( name, width, height, template ) {
 
         assert ( this.popTo ( SCHEMA_BUILDER_ADDING_SCHEMA ));
@@ -589,6 +595,20 @@ class SchemaBuilder {
     }
 
     //----------------------------------------------------------------//
+    version ( release, major, minor, revision ) {
+
+        assert ( this.popTo ( SCHEMA_BUILDER_ADDING_SCHEMA ));
+
+        this.top ().version = {
+            release:    release || '',
+            major:      major || 0,
+            minor:      minor || 0,
+            revision:   revision || 0,
+        };
+        return this;
+    }
+
+    //----------------------------------------------------------------//
     wrapSVG ( template ) {
 
         assert (
@@ -602,4 +622,4 @@ class SchemaBuilder {
     }
 }
 
-export const buildSchema = ( name, displayName ) => { return new SchemaBuilder ( name, displayName ); }
+export const buildSchema = () => { return new SchemaBuilder ()}
