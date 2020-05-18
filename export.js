@@ -4,6 +4,7 @@ module.exports = {
 
     debug: {
         SquapScreen:            require ( './debug/SquapScreen.js' ).SquapScreen,
+        SVGtoPNGScreen:         require ( './debug/SVGtoPNGScreen.js' ).SVGtoPNGScreen,
     },
     parseSquap:                 require ( './schema/parseSquap.js' ).parseSquap,
 
