@@ -4,6 +4,7 @@ import { assert, util } from 'fgc';
 
 import * as consts                                          from './consts';
 import { AssetView }                                        from './AssetView';
+import { VectorToImageView }                                from './VectorToImageView';
 import { action, computed, extendObservable, observable }   from 'mobx';
 import { observer }                                         from 'mobx-react';
 import React, { useState }                                  from 'react';
@@ -123,26 +124,39 @@ const InventoryPageView = ( props ) => {
 
     const docWidth      = rotate90 ? pageMetrics.height : pageMetrics.width;
     const docHeight     = rotate90 ? pageMetrics.width : pageMetrics.height;
-    const transform     = rotate90 ? `translate ( 0 ${ docHeight * DPI }) rotate ( -90 )` : ``;
+
+    const width         = docWidth * DPI;
+    const height        = docHeight * DPI;
+    const transform     = rotate90 ? `translate ( 0 ${ height }) rotate ( -90 )` : ``;
     
-    return (
+    const svg = (
         <svg
-            version = "1.1"
-            baseProfile = "basic"
-            xmlns = "http://www.w3.org/2000/svg"
-            xmlnsXlink = "http://www.w3.org/1999/xlink"
-            width = { `${ docWidth }in` }
-            height = { `${ docHeight }in` }
-            viewBox = { `0 0 ${ docWidth * DPI } ${ docHeight * DPI }` }
+            version         = "1.1"
+            baseProfile     = "basic"
+            xmlns           = "http://www.w3.org/2000/svg"
+            xmlnsXlink      = "http://www.w3.org/1999/xlink"
+            width           = { `${ width }` }
+            height          = { `${ height }` }
+            viewBox         = { `0 0 ${ width } ${ height }` }
             preserveAspectRatio = "xMidYMid meet"
         >
-            <g transform = { transform }>
-                <g style = { GUIDE_LINE_STYLE }>
+            <rect width = { width } height = { height } style = {{ fill: '#ffffff' }}/>
+            <g transform    = { transform }>
+                <g style    = { GUIDE_LINE_STYLE }>
                     { guidelines }
                 </g>
                 { assets }
             </g>
         </svg>
+    );
+
+    return (
+        <VectorToImageView
+            svg             = { svg }
+            width           = { width }
+            height          = { height }
+            dpi             = { DPI }
+        />
     );
 }
 
@@ -207,12 +221,12 @@ export const InventoryPrintView = observer (( props ) => {
                         key = { `${ pageNumber }-${ i }` }
                     >
                         <InventoryPageView
-                            assetIDs = { pageAssetIDs }
-                            inventory = { inventory }
-                            assetMetrics = { assetMetrics }
-                            assetScale = { pageMetrics.scale }
-                            pageMetrics = { pageMetrics }
-                            rotate90 = { pageMetrics.rotate90 }
+                            assetIDs        = { pageAssetIDs }
+                            inventory       = { inventory }
+                            assetMetrics    = { assetMetrics }
+                            assetScale      = { pageMetrics.scale }
+                            pageMetrics     = { pageMetrics }
+                            rotate90        = { pageMetrics.rotate90 }
                         />
                     </div>
                 );
@@ -221,8 +235,10 @@ export const InventoryPrintView = observer (( props ) => {
     }
 
     return (
-        <div className = "asset-wrapper">
-            { pages }
+        <div className = 'asset-wrapper'>
+            <center>
+                { pages }
+            </center>
         </div>
     );
 });
