@@ -64,6 +64,10 @@ export class InventoryPrintController {
 
         this.cancelRefreshReaction ();
         this.revocable.finalize ();
+
+        for ( let page of this.pages ) {
+            URL.revokeObjectURL ( page.dataURL );
+        }
     }
 
     //----------------------------------------------------------------//

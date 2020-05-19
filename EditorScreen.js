@@ -23,9 +23,9 @@ import { assert, excel, hooks, RevocableContext, SingleColumnContainerView, util
 //================================================================//
 export const EditorScreen = observer (( props ) => {
 
-    const [ scanner, setScanner ]                   = useState ( false );
-    const inventory                                 = hooks.useFinalizable (() => new InventoryController ());
-    const controller                                = hooks.useFinalizable (() => new InventoryViewController ( inventory ));
+    const [ scanner, setScanner ]       = useState ( false );
+    const inventory                     = hooks.useFinalizable (() => new InventoryController ());
+    const controller                    = hooks.useFinalizable (() => new InventoryViewController ( inventory ));
 
     const loadFile = ( binary ) => {
 
