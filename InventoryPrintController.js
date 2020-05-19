@@ -7,6 +7,8 @@ import { AssetView }                                        from './AssetView';
 import { VectorToImageView }                                from './VectorToImageView';
 import * as changedpi                                       from 'changedpi';
 import { RevocableContext }                                 from 'fgc';
+import FileSaver                                            from 'file-saver';
+import JSZip                                                from 'jszip';
 import { action, computed, extendObservable, observable, observe, reaction, runInAction } from 'mobx';
 import { observer }                                         from 'mobx-react';
 import React, { useState }                                  from 'react';
@@ -100,6 +102,13 @@ export class InventoryPrintController {
             return metrics0.step >= metrics1.step ? metrics0 : metrics1;
         }
         return metrics0.scale >= metrics1.scale ? metrics0 : metrics1;
+    }
+
+    //----------------------------------------------------------------//
+    @computed get
+    hasPages () {
+
+        return (( this.pages.length > 0 ) && ( this.queue.length === 0 ));
     }
 
     //----------------------------------------------------------------//
@@ -300,5 +309,23 @@ export class InventoryPrintController {
 
         this.queue = queue;
         this.revocable.timeout (() => { this.nextPage ()}, 1 );
+    }
+
+    //----------------------------------------------------------------//
+    saveAsZip () {
+
+        if ( this.pages.length === 0 ) return;
+
+        const zip = new JSZip ();
+
+        for ( let i in this.pages ) {
+            const page = this.pages [ i ];
+            const binary = atob ( page.dataURL.split ( ',' )[ 1 ]);
+            zip.file ( `page-${ i + 1 }.png`, binary, { binary: true });
+        }
+
+        zip.generateAsync ({ type: 'blob' }).then ( function ( content ) {
+            FileSaver.saveAs ( content, 'pages.zip' );
+        });
     }
 }
