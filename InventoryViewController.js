@@ -62,7 +62,7 @@ export class InventoryViewController {
     //----------------------------------------------------------------//
     constructor ( inventory ) {
 
-        this.inventory = inventory;
+        this.inventory          = inventory;
     }
 
     //----------------------------------------------------------------//

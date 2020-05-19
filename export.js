@@ -18,6 +18,7 @@ module.exports = {
     EditorScreen:               require ( './EditorScreen.js' ).EditorScreen,
     InventoryController:        require ( './InventoryController.js' ).InventoryController,
     inventoryMenuItems:         require ( './inventoryMenuItems.js' ),
+    InventoryPrintController:   require ( './InventoryPrintController.js' ).InventoryPrintController,
     InventoryPrintView:         require ( './InventoryPrintView.js' ).InventoryPrintView,
     InventoryView:              require ( './InventoryView.js' ).InventoryView,
     InventoryViewController:    require ( './InventoryViewController.js' ).InventoryViewController,
