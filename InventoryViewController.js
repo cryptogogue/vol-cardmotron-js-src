@@ -85,6 +85,31 @@ export class InventoryViewController {
     }
 
     //----------------------------------------------------------------//
+    getSortedAssets ( hideDuplicates ) {
+
+        const availableAssetArray = this.inventory.availableAssetsArray;
+        let assetArray = availableAssetArray;
+
+        if ( hideDuplicates || this.filterFunc ) {
+
+            assetArray = [];
+
+            for ( let asset of availableAssetArray ) {
+
+                const isPrimary = (( this.layoutName == consts.WEB_LAYOUT ) && hideDuplicates ) ? this.inventory.isPrimary ( asset.assetID ) : true;
+                const isVisible = this.filterFunc ? this.filterFunc ( asset.assetID ) : true;
+
+                if ( isPrimary && isVisible ) {
+                    assetArray.push ( asset );
+                }
+            }
+        }
+
+        assetArray.sort (( asset0, asset1 ) => this.compareForSort ( asset0, asset1 ));
+        return assetArray;
+    }
+
+    //----------------------------------------------------------------//
     @computed
     get hasSelection () {
 
@@ -113,26 +138,7 @@ export class InventoryViewController {
     @computed
     get sortedAssets () {
 
-        const availableAssetArray = this.inventory.availableAssetsArray;
-        let assetArray = availableAssetArray;
-
-        if ( this.hideDuplicates || this.filterFunc ) {
-
-            assetArray = [];
-
-            for ( let asset of availableAssetArray ) {
-
-                const isPrimary = (( this.layoutName == consts.WEB_LAYOUT ) && this.hideDuplicates ) ? this.inventory.isPrimary ( asset.assetID ) : true;
-                const isVisible = this.filterFunc ? this.filterFunc ( asset.assetID ) : true;
-
-                if ( isPrimary && isVisible ) {
-                    assetArray.push ( asset );
-                }
-            }
-        }
-
-        assetArray.sort (( asset0, asset1 ) => this.compareForSort ( asset0, asset1 ));
-        return assetArray;
+        return this.getSortedAssets ( this.hideDuplicates );
     }
 
     //----------------------------------------------------------------//
