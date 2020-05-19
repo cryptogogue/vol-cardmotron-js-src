@@ -18,7 +18,7 @@ export class InventoryViewController {
     @observable sortMode            = consts.SORT_MODE.ALPHA_ATOZ;
     @observable rankDefinitions     = false;
     @observable zoom                = consts.DEFAULT_ZOOM;
-    @observable hideDuplicates      = false;
+    @observable hideDuplicates      = true;
 
     //----------------------------------------------------------------//
     @action
