@@ -15,17 +15,25 @@ import { hooks }                                            from 'fgc';
 //================================================================//
 const InventoryDownloadModalBody = observer (( props ) => {
 
-    const { inventory, assets, onClose } = props;
-    const controller = hooks.useFinalizable (() => new InventoryDownloadController ( inventory, assets ));
+    const { options } = props;
+    const controller = hooks.useFinalizable (() => new InventoryDownloadController ( options ));
+
+    const onClose = () => {
+        controller.cancel ();
+        props.onClose ();
+    }
+
+    const singular = options.assets ? 'Asset' : 'Page';
+    const plural = options.assets ? 'Assets' : 'Pages';
 
     return (
         <UI.Modal
             size = 'small'
             closeIcon
             onClose = {() => { onClose ()}}
-            open = {(( assets !== false ) && ( assets.length > 0 ))}
+            open = { true }
         >
-            <UI.Modal.Header>Download Inventory</UI.Modal.Header>
+            <UI.Modal.Header>{ `Download ${ plural }` }</UI.Modal.Header>
             
             <UI.Modal.Content>
                 <Choose>
@@ -40,7 +48,7 @@ const InventoryDownloadModalBody = observer (( props ) => {
                                 <UI.Message.Header>
                                     Your download is ready!
                                 </UI.Message.Header>
-                                { controller.total > 1 ? `Rendered ${ controller.total } Assets.` : 'Rendered 1 Asset.' }
+                                { controller.total > 1 ? `Rendered ${ controller.total } ${ plural }.` : `Rendered 1 ${ singular }.` }
                             </UI.Message.Content>
 
                         </UI.Message>
@@ -55,7 +63,7 @@ const InventoryDownloadModalBody = observer (( props ) => {
             <UI.Modal.Actions>
                 <UI.Button
                     positive
-                    disabled = { !controller.isDone }
+                    disabled = { controller.saving || !controller.isDone }
                     onClick = {() => { controller.saveAsZip ()}}
                 >
                     Download
@@ -71,21 +79,21 @@ const InventoryDownloadModalBody = observer (( props ) => {
 //================================================================//
 export const InventoryDownloadModal = observer (( props ) => {
 
-    const { assets, setAssets } = props;
+    const { options, setOptions } = props;
     const [ counter, setCounter ] = useState ( 0 );
 
     const onClose = () => {
+        setOptions ( false );
         setCounter ( counter + 1 );
-        setAssets ( false );
     }
 
     return (
         <div key = { `${ counter }` }>
-            <If condition = {(( assets !== false ) && ( assets.length > 0 ))}>
-            <InventoryDownloadModalBody
-                { ...props }
-                onClose = { onClose }
-            />
+            <If condition = {( options !== false )}>
+                <InventoryDownloadModalBody
+                    options = { options }
+                    onClose = { onClose }
+                />
             </If>
         </div>
     );

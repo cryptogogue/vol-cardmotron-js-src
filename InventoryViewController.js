@@ -30,6 +30,9 @@ export class InventoryViewController {
     //----------------------------------------------------------------//
     compareForSort ( asset0, asset1 ) {
 
+        const key0 = this.inventory.schema.getFriendlyNameForSort ( asset0 );
+        const key1 = this.inventory.schema.getFriendlyNameForSort ( asset1 );
+
         switch ( this.sortMode ) {
 
             case consts.SORT_MODE.RANK_DEFINITIONS:
@@ -46,17 +49,12 @@ export class InventoryViewController {
                 return asset0.type.localeCompare ( asset1.type );
 
             case consts.SORT_MODE.ALPHA_ZTOA:
-                return asset1.type.localeCompare ( asset0.type );
+                return key1.localeCompare ( key0 );
 
             default:
             case consts.SORT_MODE.ALPHA_ATOZ:
-                return asset0.type.localeCompare ( asset1.type );
+                return key0.localeCompare ( key1 );
         }
-
-        if ( this.sortMode === consts.SORT_MODE.ALPHA_ATOZ ) {
-            return asset0.type.localeCompare ( asset1.type );
-        }
-        return asset1.type.localeCompare ( asset0.type );
     }
 
     //----------------------------------------------------------------//

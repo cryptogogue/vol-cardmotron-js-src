@@ -4,6 +4,7 @@ import { assert, util } from 'fgc';
 
 import * as consts                                          from './consts';
 import { AssetView }                                        from './AssetView';
+import * as rendering                                       from './rendering'
 import { VectorToImageView }                                from './VectorToImageView';
 import * as changedpi                                       from 'changedpi';
 import { RevocableContext }                                 from 'fgc';
@@ -18,123 +19,6 @@ import { Dropdown, Grid, Icon, List, Menu, Card, Group, Modal, Divider } from 's
 
 const DPI = 300;
 
-// TODO: all this should be moved to a utility library
-// TODO: rewrite clunky callbacks using promises/async/await
-
-//----------------------------------------------------------------//
-function checkErrorXML ( x ) {
-
-    let xt      = '';
-    let h3OK    = 1;
-
-    const checkXML = ( n ) => {
-
-        if ( n.nodeName == 'h3' ) {
-            if ( h3OK == 0 ) return;
-            h3OK = 0;
-        }
-
-        if ( n.nodeName == '#text' ) {
-            xt = xt + n.nodeValue + "\n";
-        }
-        
-        const l = n.childNodes.length;
-        for ( let i = 0; i < l; i++ ) {
-            checkXML ( n.childNodes [ i ]);
-        }
-    }
-
-    checkXML ( x );
-    return xt;
-}
-
-//----------------------------------------------------------------//
-async function loadImageAsync ( image, src ) {
-
-    return new Promise (( resolve, reject ) => {
-
-        image.onload = () => {
-            resolve ();
-        }
-
-        image.onerror = () => {
-            reject ();
-        }
-
-        image.src = src;
-    });
-}
-
-//----------------------------------------------------------------//
-async function embedImages ( svg, callback ) {
-
-    const xmlDoc = new DOMParser ().parseFromString ( svg, 'text/xml' );
-
-    const queue = [];
-
-    const embedRecurse = ( element ) => {
-
-        if ( element.nodeName == 'image' ) {
-            queue.push ( element );
-            return;
-        }
-
-        const l = element.childNodes.length;
-        for ( let i = 0; i < l; i++ ) {
-            embedRecurse ( element.childNodes [ i ]);
-        }
-    }
-
-    embedRecurse ( xmlDoc.firstChild );
-
-    const nextElement = () => {
-
-        if ( queue.length === 0 ) {
-            callback ( new XMLSerializer ().serializeToString ( xmlDoc ));
-            return;
-        }
-    
-        const element       = queue.shift ();
-        const attributes    = element.attributes;
-
-        const width         = attributes.getNamedItem ( 'width' ).value;
-        const height        = attributes.getNamedItem ( 'height' ).value;
-        const href          = attributes.getNamedItem ( 'xlink:href' ).value;
-
-        const image         = new Image ();
-        image.width         = width;
-        image.height        = height;
-        image.crossOrigin   = 'anonymous';
-
-        image.onload = () => {
-
-            const canvas    = document.createElement ( 'canvas' );
-            canvas.width    = width;
-            canvas.height   = height;
-
-            const ctx = canvas.getContext ( '2d' );
-            ctx.drawImage ( image, 0, 0 );
-
-            const hrefAttr = xmlDoc.createAttribute( 'href' );
-            hrefAttr.value = canvas.toDataURL ();
-
-            attributes.removeNamedItem ( 'xlink:href' );
-            attributes.setNamedItem ( hrefAttr );
-
-            nextElement ();
-        }
-
-        image.onerror = () => {
-            element.parentNode.removeChild ( element );
-            nextElement ();
-        }
-
-        image.src = href;
-    }
-
-    nextElement ();
-}
-
 //================================================================//
 // InventoryDownloadController
 //================================================================//
@@ -142,17 +26,78 @@ export class InventoryDownloadController {
 
     @observable pages       = [];
     @observable total       = 0;
+    @observable abort       = false;
+    @observable saving      = false;
 
     //----------------------------------------------------------------//
-    constructor ( inventory, assets ) {
+    @action
+    cancel () {
+
+        this.abort = true;
+    }
+
+    //----------------------------------------------------------------//
+    constructor ( options ) {
 
         this.revocable = new RevocableContext ();
 
-        runInAction (() => {
-            this.total = assets.length;
-        });
+        let getPage = false;
+        let total = 0;
 
-        this.revocable.timeout (() => { this.nextAsset ( inventory, assets )}, 1 );
+        if ( options.assets && options.inventory ) {
+
+            total = options.assets.length;
+            getPage = ( i ) => {
+                return this.getAssetPage ( options.inventory, options.assets, i );
+            }
+            this.filename = 'assets.zip';
+        }
+        else if ( options.pages ) {
+
+            total = options.pages.length;
+            getPage = ( i ) => {
+                return options.pages [ i ];
+            }
+            this.filename = 'pages.zip';
+        }
+
+        if ( getPage && ( total > 0 )) {
+            this.renderAsync ( getPage, total );
+        }
+    }
+
+    //----------------------------------------------------------------//
+    getAssetPage ( inventory, assets, i ) {
+
+        const asset     = assets [ i ];
+        const assetID   = asset.assetID;
+        const metrics   = inventory.layoutController.getAssetMetrics ( assetID );
+        const width     = metrics.docSize.widthInInches * DPI;
+        const height    = metrics.docSize.heightInInches * DPI;
+
+        const svg = ReactDomServer.renderToStaticMarkup (
+            <svg
+                version         = "1.1"
+                baseProfile     = "basic"
+                xmlns           = "http://www.w3.org/2000/svg"
+                xmlnsXlink      = "http://www.w3.org/1999/xlink"
+                width           = { `${ width }` }
+                height          = { `${ height }` }
+                viewBox         = { `0 0 ${ width } ${ height }` }
+                preserveAspectRatio = "xMidYMid meet"
+            >
+                <rect width = { width } height = { height } style = {{ fill: '#ffffff' }}/>
+                <AssetView inventory = { inventory } assetID = { assetID } dpi = { DPI }/>
+            </svg>
+        );
+
+        return {
+            width:      width,
+            height:     height,
+            dpi:        DPI,
+            svg:        svg,
+            name:       asset.fields.name ? `${ asset.fields.name.value} - ${ asset.assetID }` : asset.assetID,
+        };
     }
 
     //----------------------------------------------------------------//
@@ -173,83 +118,6 @@ export class InventoryDownloadController {
     }
 
     //----------------------------------------------------------------//
-    @action
-    nextAsset ( inventory, assets ) {
-
-        if ( this.isDone ) return;
-
-        const asset     = assets [ this.pages.length ];
-        const assetID   = asset.assetID;
-        const metrics   = inventory.layoutController.getAssetMetrics ( assetID );
-        const width     = metrics.docSize.widthInInches * DPI;
-        const height    = metrics.docSize.heightInInches * DPI;
-
-        const element = (
-            <svg
-                version         = "1.1"
-                baseProfile     = "basic"
-                xmlns           = "http://www.w3.org/2000/svg"
-                xmlnsXlink      = "http://www.w3.org/1999/xlink"
-                width           = { `${ width }` }
-                height          = { `${ height }` }
-                viewBox         = { `0 0 ${ width } ${ height }` }
-                preserveAspectRatio = "xMidYMid meet"
-            >
-                <rect width = { width } height = { height } style = {{ fill: '#ffffff' }}/>
-                <AssetView inventory = { inventory } assetID = { assetID } dpi = { DPI }/>
-            </svg>
-        );
-
-        embedImages ( ReactDomServer.renderToStaticMarkup ( element ), ( svg ) => {
-
-            const svgBlob   = new Blob ([ svg ], { type: 'image/svg+xml' });
-            const svgURL    = URL.createObjectURL ( svgBlob );
-
-            const image     = new Image ();
-            image.width     = width;
-            image.height    = height;
-
-            image.onload = () => {
-
-                URL.revokeObjectURL ( svgURL );
-
-                const canvas    = document.createElement ( 'canvas' );
-                canvas.width    = width;
-                canvas.height   = height;
-
-                const ctx = canvas.getContext ( '2d' );
-                ctx.drawImage ( image, 0, 0 );
-
-                const dataURL = changedpi.changeDpiDataUrl ( canvas.toDataURL (), DPI );
-
-                const page = {
-                    name:       inventory.schema.getFriendlyNameForAsset ( asset ),
-                    assetID:    assetID,
-                    dataURL:    dataURL,
-                }
-
-                runInAction (() => {
-                    this.pages.push ( page );
-                });
-
-                this.revocable.timeout (() => { this.nextAsset ( inventory, assets )}, 1 );
-            }
-
-            image.onerror = () => {
-                console.log ( 'ERROR LOADING SVG:' );
-                const xmlDoc = new DOMParser ().parseFromString ( svg, 'text/xml' );
-                if ( xmlDoc.getElementsByTagName ( 'parsererror' ).length > 0 ) {
-                    console.log ( checkErrorXML ( xmlDoc.getElementsByTagName ( 'parsererror' )[ 0 ]));
-                }
-                console.log ( '' )
-                console.log ( svg );
-            }
-
-            image.src = svgURL;
-        });
-    }
-
-    //----------------------------------------------------------------//
     @computed get
     progress () {
         return Math.floor (( this.processed / this.total ) * 100 );
@@ -262,22 +130,61 @@ export class InventoryDownloadController {
     }
 
     //----------------------------------------------------------------//
-    saveAsZip () {
+    @action
+    async renderAsync ( getPage, total ) {
 
-        if ( this.pages.length === 0 ) return;
+        this.total = total;
 
-        const zip = new JSZip ();
+        for ( let i = 0; i < total; ++i ) {
 
-        for ( let i in this.pages ) {
-            const page = this.pages [ i ];
-            const binary = atob ( page.dataURL.split ( ',' )[ 1 ]);
-            const filename = page.name ? `${ page.name } - ${ page.assetID }` : page.assetID;
+            if ( this.abort ) return;
 
-            zip.file ( `${ filename }.png`, binary, { binary: true });
+            try {
+
+                const page = getPage ( i );
+                const dataURL = await rendering.renderSVGAsync ( page.svg, page.width, page.height, page.dpi );
+
+                runInAction (() => {
+                    this.pages.push ({
+                        filename:   page.name ? page.name : `page-${ i + 1 }.png`,
+                        dataURL:    dataURL,
+                    });
+                });
+            }
+            catch ( error ) {
+
+                console.log ( error );
+            }
+        }
+    }
+
+    //----------------------------------------------------------------//
+    @action
+    async saveAsZip () {
+
+        if ( this.saving || ( this.pages.length === 0 )) return;
+
+        this.saving = true;
+        await new Promise ( r => setTimeout ( r, 1 ));
+
+        try {
+            const zip = new JSZip ();
+
+            for ( let i in this.pages ) {
+                const page = this.pages [ i ];
+                const binary = atob ( page.dataURL.split ( ',' )[ 1 ]);
+                zip.file ( page.filename, binary, { binary: true });
+            }
+
+            const content = await zip.generateAsync ({ type: 'blob' });
+            FileSaver.saveAs ( content, this.filename );
+        }
+        catch ( error ) {
+            console.log ( error );
         }
 
-        zip.generateAsync ({ type: 'blob' }).then ( function ( content ) {
-            FileSaver.saveAs ( content, 'assets.zip' );
+        runInAction (() => {
+            this.saving = false;
         });
     }
 }

@@ -52,15 +52,30 @@ export const InventoryPrintView = observer (( props ) => {
                 key = { i }
             >
                 <div style = {{
-                    width: `${ page.width / page.dpi }in`,
-                    height: `${ page.height / page.dpi }in`,
+                    width:              '100%',
+                    height:             '100%',
                 }}>
-                    <img
-                        src     = { page.dataURL }
-                        width   = { page.width }
-                        height  = { page.height }
-                        style   = {{ width: '100%', height: '100%' }}
-                    />
+                    <center>
+
+                        <div style = {{
+                            width: `${ page.width / page.dpi }in`,
+                            height: `${ page.height / page.dpi }in`,
+                        }}>
+                            <svg
+                                version         = "1.1"
+                                baseProfile     = "basic"
+                                xmlns           = "http://www.w3.org/2000/svg"
+                                xmlnsXlink      = "http://www.w3.org/1999/xlink"
+                                width           = { `${ page.width / page.dpi }in` }
+                                height          = { `${ page.height / page.dpi }in` }
+                                viewBox         = { `0 0 ${ page.width } ${ page.height }` }
+                                preserveAspectRatio = "xMidYMid meet"
+                            >
+                                <g dangerouslySetInnerHTML = {{ __html: page.svg }}/>
+                            </svg>
+                        </div>
+
+                    </center>
                 </div>
             </div>
         );
@@ -68,9 +83,7 @@ export const InventoryPrintView = observer (( props ) => {
 
     return (
         <div className = 'asset-wrapper'>
-            <center>
-                { pageViews }
-            </center>
+            { pageViews }
         </div>
     );
 });

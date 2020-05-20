@@ -13,8 +13,8 @@ import { assert, excel, hooks, RevocableContext, SingleColumnContainerView, util
 function getIconNameForSortMode ( sortMode ) {
 
     switch ( sortMode ) {
-        case consts.SORT_MODE.ALPHA_ATOZ:           return 'sort alphabet up';
-        case consts.SORT_MODE.ALPHA_ZTOA:           return 'sort alphabet down';
+        case consts.SORT_MODE.ALPHA_ATOZ:           return 'sort alphabet down';
+        case consts.SORT_MODE.ALPHA_ZTOA:           return 'sort alphabet up';
         case consts.SORT_MODE.RANK_DEFINITIONS:     return 'book';
     }
     return '';

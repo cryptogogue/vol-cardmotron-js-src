@@ -4,6 +4,7 @@ import { assert, util } from 'fgc';
 
 import * as consts                                          from './consts';
 import { AssetView }                                        from './AssetView';
+import * as rendering                                       from './rendering'
 import { VectorToImageView }                                from './VectorToImageView';
 import * as changedpi                                       from 'changedpi';
 import { RevocableContext }                                 from 'fgc';
@@ -201,47 +202,15 @@ export class InventoryPrintController {
             </svg>
         );
 
-        this.revocable.timeout (() => { this.rasterize ( svg, width, height, DPI )}, 1 );
-    }
-
-    //----------------------------------------------------------------//
-    @action
-    rasterize ( svg, width, height, dpi ) {
-
-        const svgBlob   = new Blob ([ svg ], { type: 'image/svg+xml' });
-        const svgURL    = URL.createObjectURL ( svgBlob );
-
-        const image     = new Image ();
-        image.width     = width;
-        image.height    = height;
-        image.src       = svgURL;
-
-        image.onload = () => {
-
-            URL.revokeObjectURL ( svgURL );
-
-            const canvas    = document.createElement ( 'canvas' );
-            canvas.width    = width;
-            canvas.height   = height;
-
-            const ctx = canvas.getContext ( '2d' );
-            ctx.drawImage ( image, 0, 0 );
-
-            const dataURL = changedpi.changeDpiDataUrl ( canvas.toDataURL (), dpi );
-
-            const page = {
-                width:      width,
-                height:     height,
-                dpi:        dpi,
-                dataURL:    dataURL,
-            }
-
-            runInAction (() => {
-                this.pages.push ( page );
-            });
-
-            this.revocable.timeout (() => { this.nextPage ()}, 1 );
+        const page = {
+            width:      width,
+            height:     height,
+            dpi:        DPI,
+            svg:        svg,
         }
+
+        this.pages.push ( page );
+        this.revocable.timeout (() => { this.nextPage ()}, 1 );
     }
 
     //----------------------------------------------------------------//
@@ -318,18 +287,18 @@ export class InventoryPrintController {
     //----------------------------------------------------------------//
     saveAsZip () {
 
-        if ( this.pages.length === 0 ) return;
+        // if ( this.pages.length === 0 ) return;
 
-        const zip = new JSZip ();
+        // const zip = new JSZip ();
 
-        for ( let i in this.pages ) {
-            const page = this.pages [ i ];
-            const binary = atob ( page.dataURL.split ( ',' )[ 1 ]);
-            zip.file ( `page-${ i + 1 }.png`, binary, { binary: true });
-        }
+        // for ( let i in this.pages ) {
+        //     const page = this.pages [ i ];
+        //     const binary = atob ( page.dataURL.split ( ',' )[ 1 ]);
+        //     zip.file ( `page-${ i + 1 }.png`, binary, { binary: true });
+        // }
 
-        zip.generateAsync ({ type: 'blob' }).then ( function ( content ) {
-            FileSaver.saveAs ( content, 'pages.zip' );
-        });
+        // zip.generateAsync ({ type: 'blob' }).then ( function ( content ) {
+        //     FileSaver.saveAs ( content, 'pages.zip' );
+        // });
     }
 }

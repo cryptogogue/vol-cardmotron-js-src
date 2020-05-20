@@ -144,6 +144,14 @@ export class Schema {
     }
 
     //----------------------------------------------------------------//
+    getFriendlyNameForSort ( asset ) {
+
+        const definition = this.definitions [ asset.type ];
+        const fallback = definition.fields.name ? definition.fields.name.value : asset.assetID;
+        return asset.fields.name ? asset.fields.name.value : fallback;
+    }
+
+    //----------------------------------------------------------------//
     getFriendlyNameForType ( type ) {
 
         const definition = this.definitions [ type ];
