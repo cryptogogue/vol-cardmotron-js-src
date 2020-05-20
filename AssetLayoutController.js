@@ -53,6 +53,8 @@ export class AssetLayoutController {
 
     //----------------------------------------------------------------//
     constructor () {
+
+        this.revocable = new RevocableContext ();
     }
 
     //----------------------------------------------------------------//
@@ -223,6 +225,7 @@ export class AssetLayoutController {
         runInAction (() => {
             this.layouts    = layouts;
             this.fonts      = fonts;
+            this.icons      = schema.icons;
         });
     }
 

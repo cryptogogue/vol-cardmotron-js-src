@@ -36,7 +36,7 @@ export const AssetView = ( props ) => {
             viewBox = { `0 0 ${ assetWidth } ${ assetHeight }` }
             preserveAspectRatio = 'xMidYMid meet'
         >
-            <g transform = { `scale ( ${ dpiScale } ${ dpiScale })` } dangerouslySetInnerHTML = {{ __html: layout.svg }}/>
+            <g transform = { `scale ( ${ dpiScale } ${ dpiScale })` } dangerouslySetInnerHTML = {{ __html: layout.svg }}></g>
         </svg>
     );
 }

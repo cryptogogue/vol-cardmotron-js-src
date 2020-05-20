@@ -18,6 +18,123 @@ import { Dropdown, Grid, Icon, List, Menu, Card, Group, Modal, Divider } from 's
 
 const DPI = 300;
 
+// TODO: all this should be moved to a utility library
+// TODO: rewrite clunky callbacks using promises/async/await
+
+//----------------------------------------------------------------//
+function checkErrorXML ( x ) {
+
+    let xt      = '';
+    let h3OK    = 1;
+
+    const checkXML = ( n ) => {
+
+        if ( n.nodeName == 'h3' ) {
+            if ( h3OK == 0 ) return;
+            h3OK = 0;
+        }
+
+        if ( n.nodeName == '#text' ) {
+            xt = xt + n.nodeValue + "\n";
+        }
+        
+        const l = n.childNodes.length;
+        for ( let i = 0; i < l; i++ ) {
+            checkXML ( n.childNodes [ i ]);
+        }
+    }
+
+    checkXML ( x );
+    return xt;
+}
+
+//----------------------------------------------------------------//
+async function loadImageAsync ( image, src ) {
+
+    return new Promise (( resolve, reject ) => {
+
+        image.onload = () => {
+            resolve ();
+        }
+
+        image.onerror = () => {
+            reject ();
+        }
+
+        image.src = src;
+    });
+}
+
+//----------------------------------------------------------------//
+async function embedImages ( svg, callback ) {
+
+    const xmlDoc = new DOMParser ().parseFromString ( svg, 'text/xml' );
+
+    const queue = [];
+
+    const embedRecurse = ( element ) => {
+
+        if ( element.nodeName == 'image' ) {
+            queue.push ( element );
+            return;
+        }
+
+        const l = element.childNodes.length;
+        for ( let i = 0; i < l; i++ ) {
+            embedRecurse ( element.childNodes [ i ]);
+        }
+    }
+
+    embedRecurse ( xmlDoc.firstChild );
+
+    const nextElement = () => {
+
+        if ( queue.length === 0 ) {
+            callback ( new XMLSerializer ().serializeToString ( xmlDoc ));
+            return;
+        }
+    
+        const element       = queue.shift ();
+        const attributes    = element.attributes;
+
+        const width         = attributes.getNamedItem ( 'width' ).value;
+        const height        = attributes.getNamedItem ( 'height' ).value;
+        const href          = attributes.getNamedItem ( 'xlink:href' ).value;
+
+        const image         = new Image ();
+        image.width         = width;
+        image.height        = height;
+        image.crossOrigin   = 'anonymous';
+
+        image.onload = () => {
+
+            const canvas    = document.createElement ( 'canvas' );
+            canvas.width    = width;
+            canvas.height   = height;
+
+            const ctx = canvas.getContext ( '2d' );
+            ctx.drawImage ( image, 0, 0 );
+
+            const hrefAttr = xmlDoc.createAttribute( 'href' );
+            hrefAttr.value = canvas.toDataURL ();
+
+            attributes.removeNamedItem ( 'xlink:href' );
+            attributes.setNamedItem ( hrefAttr );
+
+            nextElement ();
+        }
+
+        image.onerror = () => {
+            element.parentNode.removeChild ( element );
+            nextElement ();
+        }
+
+        image.src = href;
+    }
+
+    nextElement ();
+}
+
 //================================================================//
 // InventoryDownloadController
 //================================================================//
@@ -83,40 +200,53 @@ export class InventoryDownloadController {
             </svg>
         );
 
-        const svg       = ReactDomServer.renderToStaticMarkup ( element );
-        const svgBlob   = new Blob ([ svg ], { type: 'image/svg+xml' });
-        const svgURL    = URL.createObjectURL ( svgBlob );
+        embedImages ( ReactDomServer.renderToStaticMarkup ( element ), ( svg ) => {
 
-        const image     = new Image ();
-        image.width     = width;
-        image.height    = height;
-        image.src       = svgURL;
+            const svgBlob   = new Blob ([ svg ], { type: 'image/svg+xml' });
+            const svgURL    = URL.createObjectURL ( svgBlob );
 
-        image.onload = () => {
+            const image     = new Image ();
+            image.width     = width;
+            image.height    = height;
 
-            URL.revokeObjectURL ( svgURL );
+            image.onload = () => {
 
-            const canvas    = document.createElement ( 'canvas' );
-            canvas.width    = width;
-            canvas.height   = height;
+                URL.revokeObjectURL ( svgURL );
 
-            const ctx = canvas.getContext ( '2d' );
-            ctx.drawImage ( image, 0, 0 );
+                const canvas    = document.createElement ( 'canvas' );
+                canvas.width    = width;
+                canvas.height   = height;
 
-            const dataURL = changedpi.changeDpiDataUrl ( canvas.toDataURL (), DPI );
+                const ctx = canvas.getContext ( '2d' );
+                ctx.drawImage ( image, 0, 0 );
 
-            const page = {
-                name:       inventory.schema.getFriendlyNameForAsset ( asset ),
-                assetID:    assetID,
-                dataURL:    dataURL,
+                const dataURL = changedpi.changeDpiDataUrl ( canvas.toDataURL (), DPI );
+
+                const page = {
+                    name:       inventory.schema.getFriendlyNameForAsset ( asset ),
+                    assetID:    assetID,
+                    dataURL:    dataURL,
+                }
+
+                runInAction (() => {
+                    this.pages.push ( page );
+                });
+
+                this.revocable.timeout (() => { this.nextAsset ( inventory, assets )}, 1 );
             }
 
-            runInAction (() => {
-                this.pages.push ( page );
-            });
+            image.onerror = () => {
+                console.log ( 'ERROR LOADING SVG:' );
+                const xmlDoc = new DOMParser ().parseFromString ( svg, 'text/xml' );
+                if ( xmlDoc.getElementsByTagName ( 'parsererror' ).length > 0 ) {
+                    console.log ( checkErrorXML ( xmlDoc.getElementsByTagName ( 'parsererror' )[ 0 ]));
+                }
+                console.log ( '' )
+                console.log ( svg );
+            }
 
-            this.revocable.timeout (() => { this.nextAsset ( inventory, assets )}, 1 );
-        }
+            image.src = svgURL;
+        });
     }
 
     //----------------------------------------------------------------//

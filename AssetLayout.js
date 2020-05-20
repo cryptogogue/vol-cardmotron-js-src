@@ -105,7 +105,7 @@ export class AssetLayout {
                     }
 
                     svg = `
-                        <rect x = ${ x } y = ${ y } width = ${ w } height = ${ h } fill = 'white'/>
+                        <rect x = '${ x }' y = '${ y }' width = '${ w }' height = '${ h }' fill = 'white'/>
                         ${ svgTag }
                     `;
                     break;
