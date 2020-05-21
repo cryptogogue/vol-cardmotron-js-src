@@ -146,7 +146,7 @@ export class InventoryDownloadController {
 
                 runInAction (() => {
                     this.pages.push ({
-                        filename:   page.name ? page.name : `page-${ i + 1 }.png`,
+                        filename:   page.name ? `${ page.name }.png` : `page-${ i + 1 }.png`,
                         dataURL:    dataURL,
                     });
                 });
