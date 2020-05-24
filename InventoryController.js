@@ -22,7 +22,6 @@ export class InventoryController {
     @observable schema              = new Schema (); // empty schema
     @observable layoutController    = new AssetLayoutController ();
     @observable primaries           = {};
-    @observable duplicates          = {};
 
     //----------------------------------------------------------------//
     @computed get
@@ -46,88 +45,10 @@ export class InventoryController {
     }
 
     //----------------------------------------------------------------//
-    countDuplicates ( assetID, filterFunc ) {
-
-        const primary = this.primaries [ this.duplicates [ assetID ]];
-        
-        let count = 0;
-        for ( let duplicate of primary.duplicates ) {
-            if ( filterFunc && !filterFunc ( duplicate.assetID )) continue;
-            count++;
-        }
-        return count;
-    }
-
-    //----------------------------------------------------------------//
     finalize () {
 
         this.revocable.finalize ();
     }
-
-    //----------------------------------------------------------------//
-    getDuplicateIDs ( assetID, filterFunc ) {
-
-        const primary = this.primaries [ this.duplicates [ assetID ]];
-        
-        const duplicateIDs = [];
-        for ( let duplicate of primary.duplicates ) {
-            if ( filterFunc && !filterFunc ( duplicate.assetID )) continue;
-            duplicateIDs.push ( duplicate.assetID );
-        }
-        return duplicateIDs;
-    }
-
-    //----------------------------------------------------------------//
-    isPrimary ( assetID ) {
-
-        return ( this.primaries [ assetID ] !== undefined );
-    }
-
-    //----------------------------------------------------------------//
-    @action
-    processDuplicates ( assets ) {
-
-        // these are sets of metadata objects. each object contains the
-        // primary asset itself along with the total number of duplicates and an
-        // array of assetIDs.
-        // bot sets share the same metadata entires and only represent different
-        // ways of indexing them.
-        this.primaries = {};
-        this.duplicates = {};
-
-        const isDuplicate = ( asset0, asset1 ) => {
-            return (( asset0.type === asset1.type ) && _.isEqual ( asset0.fields, asset1.fields ));
-        }
-
-        const findPrimary = ( asset ) => {
-            for ( let primaryID in this.primaries ) {
-                const primary = this.primaries [ primaryID ];
-                if ( isDuplicate ( asset, primary.asset )) return primary;
-            }
-            return false;
-        }
-
-        for ( let assetID in assets ) {
-            const asset = assets [ assetID ];
-            const primary = findPrimary ( asset );
-
-            if ( primary === false ) {
-                const newPrimary = {
-                    asset: asset,
-                    count: 1,
-                    duplicates: [ asset ],
-                }
-                this.primaries [ assetID ] = newPrimary;
-                this.duplicates [ assetID ] = asset.assetID;
-            }
-            else {
-                primary.count = primary.count + 1;
-                primary.duplicates.push ( asset );
-                this.duplicates [ assetID ] = primary.asset.assetID;
-            }
-        }
-    }
-
     //----------------------------------------------------------------//
     async reset ( template, assets, inventory ) {
 
@@ -141,8 +62,6 @@ export class InventoryController {
     //----------------------------------------------------------------//
     @action
     async update ( template, assets, inventory ) {
-
-        this.processDuplicates ( assets );
 
         this.schema = new Schema ( template );
         this.layoutController = new AssetLayoutController ();

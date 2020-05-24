@@ -24,6 +24,7 @@ module.exports = {
     InventoryPrintView:             require ( './InventoryPrintView.js' ).InventoryPrintView,
     InventoryView:                  require ( './InventoryView.js' ).InventoryView,
     InventoryViewController:        require ( './InventoryViewController.js' ).InventoryViewController,
+    MethodBinding:                  require ( './schema/MethodBinding.js' ).MethodBinding,
     ScannerReportModal:             require ( './ScannerReportModal.js' ).ScannerReportModal,
     Schema:                         require ( './schema/Schema.js' ).Schema,
     SchemaScannerXLSX:              require ( './schema/SchemaScannerXLSX.js' ).SchemaScannerXLSX,

@@ -597,10 +597,11 @@ export class SchemaScannerXLSX {
                 const params = this.readParams ( sheet, row, paramNames, [
                     stringParam ( 'name' ),
                     stringParam ( 'script' ),
-                    stringParam ( 'description', false ),
+                    stringParam ( 'friendlyName', '' ),
+                    stringParam ( 'description', '' ),
                 ]);
 
-                this.schemaBuilder.method ( params.name, params.description );
+                this.schemaBuilder.method ( params.name, params.friendlyName, params.description );
                 this.schemaBuilder.lua ( params.script );
                 continue;
             }
@@ -615,6 +616,19 @@ export class SchemaScannerXLSX {
                 const squap = parseSquap ( params.qualifier );
                 this.schemaBuilder.assetArg ( params.param, squap );
                 continue;
+            }
+            else {
+
+                const qualifier = util.toStringOrFalse ( sheet.getValueByCoord ( paramNames.qualifier, row ));
+
+                if ( qualifier ) {
+                    const params = this.readParams ( sheet, row, paramNames, [
+                        stringParam ( 'qualifier', '' ),
+                    ]);
+                    const squap = parseSquap ( params.qualifier );
+                    this.schemaBuilder.constraint ( squap );
+                    continue;
+                }
             }
         }
     }

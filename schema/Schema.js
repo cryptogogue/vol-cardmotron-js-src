@@ -1,8 +1,8 @@
 /* eslint-disable no-whitespace-before-property */
 
-import { assert, excel, hooks, RevocableContext, SingleColumnContainerView, util } from 'fgc';
 import { Binding }          from './Binding';
-import { SchemaMethod }     from './SchemaMethod';
+import * as squap           from './Squap';
+import { assert, excel, hooks, RevocableContext, SingleColumnContainerView, util } from 'fgc';
 import _                    from 'lodash';
 
 //----------------------------------------------------------------//
@@ -81,54 +81,32 @@ export class Schema {
         this.upgrades       = json ? _.cloneDeep ( json.upgrades ) : {};
 
         this.methods = {};
-            if ( json && json.methods ) {
+
+        if ( json && json.methods ) {
             for ( let methodName in json.methods ) {
-                this.methods [ methodName ] = new SchemaMethod ( methodName, json.methods [ methodName ]);
+
+                const method = _.cloneDeep ( json.methods [ methodName ]);
+
+                method.name = methodName;
+
+                for ( let argname in method.assetArgs ) {
+                    method.assetArgs [ argname ] = squap.makeSquap ( method.assetArgs [ argname ]);
+                }
+
+                for ( let argname in method.constArgs ) {
+                    method.constArgs [ argname ] = squap.makeSquap ( method.constArgs [ argname ]);
+                }
+
+                for ( let i in method.constraints ) {
+                    method.constraints [ i ] = squap.makeSquap ( method.constraints [ i ]);
+                }
+
+                method.totalAssetsArgs = _.size ( method.assetArgs );
+                method.totalConstArgs = _.size ( method.constArgs );
+
+                this.methods [ methodName ] = method;
             }
         }
-    }
-
-    //----------------------------------------------------------------//
-    generateBinding ( assets ) {
-
-        console.log ( 'GENERATE BINDING', assets );
-
-        let methodBindingsByAssetID     = {};
-        let methodBindingsByName        = {};
-
-        // generate all the empty method bindings.
-        for ( let methodName in this.methods ) {
-            methodBindingsByName [ methodName ] = this.methods [ methodName ].newBinding ();
-        }
-
-        // bind each asset and each method...
-        for ( let assetID in assets ) {
-
-            methodBindingsByAssetID [ assetID ] = {};
-
-            for ( let methodName in this.methods ) {
-
-                this.methods [ methodName ].bindAsset (
-                    this,
-                    assets [ assetID ],
-                    methodBindingsByName [ methodName ],
-                    methodBindingsByAssetID [ assetID ]
-                );
-            }
-        }
-
-        // at this stage, assets are populated and linked to methods.
-        // all methods and method params track assets that qualify.
-        // now we have to iterate through all the methods and find out if they can be executed.
-        for ( let methodName in this.methods ) {
-
-            console.log ( 'METHOD:', methodName );
-
-            // create a relationship if the asset qualifies.
-            this.methods [ methodName ].validate ( methodBindingsByName [ methodName ]);
-        }
-
-        return new Binding ( methodBindingsByName, methodBindingsByAssetID );
     }
 
     //----------------------------------------------------------------//

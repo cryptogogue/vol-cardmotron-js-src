@@ -215,6 +215,8 @@ class IndexSquap extends AbstractIndexSquap {
         const arg           = opArgs.assets [ this.paramID || 0 ];
         const fieldName     = this.value;
 
+        if ( !arg ) return false;
+
         if ( fieldName === '@' ) {
             return arg.type;
         }

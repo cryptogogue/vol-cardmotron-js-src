@@ -8,10 +8,10 @@ export class MultiCounter {
     //----------------------------------------------------------------//
     constructor ( size ) {
 
-        this.size = size;
-        this.counters = [];
-        this.limits = [];
-        this.cycles = 0;
+        this.size       = size || 0;
+        this.counters   = [];
+        this.limits     = [];
+        this.cycles     = 0;
 
         for ( let i = 0; i < size; ++i ) {
             this.counters [ i ] = 0;
@@ -55,6 +55,14 @@ export class MultiCounter {
                 this.cycles++;
             }
         }
+    }
+
+    //----------------------------------------------------------------//
+    push ( limit ) {
+        
+        this.counters.push ( 0 );
+        this.limits.push ( limit );
+        this.size++;
     }
 
     //----------------------------------------------------------------//

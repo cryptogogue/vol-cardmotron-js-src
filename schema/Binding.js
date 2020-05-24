@@ -1,7 +1,9 @@
 /* eslint-disable no-whitespace-before-property */
 
-import { assert, excel, hooks, RevocableContext, SingleColumnContainerView, util } from 'fgc';
+import { MethodBinding }    from './MethodBinding';
+import { MultiCounter }     from './MultiCounter';
 import { Schema }           from './Schema';
+import { assert, excel, hooks, RevocableContext, SingleColumnContainerView, util } from 'fgc';
 import { action, computed, extendObservable, observable, observe, runInAction } from 'mobx';
 
 //================================================================//
@@ -9,107 +11,97 @@ import { action, computed, extendObservable, observable, observe, runInAction } 
 //================================================================//
 export class Binding {
 
-    @observable methodBindingsByName        = {}
-    @observable methodBindingsByAssetID     = {}
-    @observable methodsByName               = {}
+    @observable methodBindingsByName        = {};
+    @observable methodBindingsByAssetID     = {};
+    @observable methodsByName               = {};
 
     //----------------------------------------------------------------//
-    constructor ( schema, assets, primaryFilter, secondaryFilter ) {
-
-        this.rebuild ( schema, assets, primaryFilter, secondaryFilter );
-    }
-
-    //----------------------------------------------------------------//
-    getCraftingMethodBindings () {
-        return this.methodBindingsByName;
-    }
-
-    //----------------------------------------------------------------//
-    getCraftingMethodBindingsForAssetID ( assetID ) {
-        return this.methodBindingsByAssetID [ assetID ];
-    }
-
-    //----------------------------------------------------------------//
-    getMethodParamBindings ( methodName ) {
-
-        return this.methodBindingsByName [ methodName ].paramBindings;
+    constructor () {
     }
 
     //----------------------------------------------------------------//
     methodIsValid ( methodName, assetID ) {
 
-        if ( methodName == '' ) return false;
+        if ( !methodName ) return false;
 
         if ( assetID ) {
-            let methodBinding = this.methodBindingsByAssetID [ assetID ][ methodName ];
-            return methodBinding ? methodBinding.valid : false;
+            return _.has ( this.methodBindingsByAssetID, assetID ) && _.has ( this.methodBindingsByAssetID [ assetID ], methodName ) || false;
         }
-        return ( methodName in this.methodBindingsByName ) && this.methodBindingsByName [ methodName ].valid;
+        return _.has ( this.methodBindingsByName, methodName );
     }
 
     //----------------------------------------------------------------//
     @action
-    rebuild ( schema, assets, primaryFilter, secondaryFilter ) {
+    processQueue ( state ) {
 
-        this.methodBindingsByName        = {};
-        this.methodBindingsByAssetID     = {};
-        this.methodsByName               = {};
+        if ( !state.busy ) return;
 
-        // generate all the empty method bindings.
-        for ( let methodName in schema.methods ) {
-            const method = schema.methods [ methodName ];
-            this.methodsByName [ methodName ] = method;
-            this.methodBindingsByName [ methodName ] = method.newBinding ();
-        }
+        const method = state.queue.shift ();
+        const methodBinding = new MethodBinding ( state.schema, method );
 
-        // bind each asset and each method...
-        for ( let assetID in assets ) {
+        if ( methodBinding.rebuild ( state.assets, state.filter )) {
 
-            if ( primaryFilter && ( primaryFilter ( assetID ) === false )) continue;
+            state.methodBindingsByName [ method.name ] = methodBinding;
 
-            this.methodBindingsByAssetID [ assetID ] = {};
+            const optionsByParamName = methodBinding.optionsByParamName;
+            for ( let paramName in optionsByParamName ) {
+                for ( let assetID of optionsByParamName [ paramName ]) {
 
-            for ( let methodName in this.methodsByName ) {
-
-                this.methodsByName [ methodName ].bindAsset (
-                    schema,
-                    assets [ assetID ],
-                    this.methodBindingsByName [ methodName ],
-                    this.methodBindingsByAssetID [ assetID ]
-                );
-            }
-        }
-
-        // at this stage, assets are populated and linked to methods.
-        // all methods and method params track assets that qualify.
-        // now we have to iterate through all the methods and find out if they can be executed.
-        for ( let methodName in this.methodsByName ) {
-
-            // create a relationship if the asset qualifies.
-            this.methodsByName [ methodName ].validate ( this.methodBindingsByName [ methodName ], secondaryFilter );
-        }
-
-        for ( let methodName in this.methodBindingsByName ) {
-
-            // we'll need the method template (from the schema) *and* the binding
-            const methodBinding = this.methodBindingsByName [ methodName ];
-
-            // form fields, by name
-            const paramBindings = {};
-
-            // for each asset field, set the type and the list of qualified assets
-            for ( let argname in methodBinding.assetIDsByArgName ) {
-
-                const options = [];
-                const assetIDsForArg = methodBinding.assetIDsByArgName [ argname ];
-                for ( let i in assetIDsForArg ) {
-                    const assetID = assetIDsForArg [ i ];
-                    options.push ( assetID );
+                    const methodBindingsByName = state.methodBindingsByAssetID [ assetID ] || {};
+                    methodBindingsByName [ method.name ] = methodBinding;
+                    state.methodBindingsByAssetID [ assetID ] = methodBindingsByName;
                 }
-                paramBindings [ argname ] = options;
-            }
+            } 
+        }
 
-            methodBinding.paramBindings = paramBindings;
+        if ( state.queue.length > 0 ) {
+            // setTimeout (() => { this.processQueue ( state )}, 1 );
+            this.processQueue ( state );
+        }
+        else {
+            state.busy = false;
+        }
+    }
+
+    //----------------------------------------------------------------//
+    @action
+    rebuild ( schema, assets, filter ) {
+
+        if ( this.state ) {
+            this.state.busy = false;
+            this.state = false;
+        }
+
+        this.schema = schema;
+        this.assets = assets;
+
+        this.methodBindingsByName       = {};
+        this.methodBindingsByAssetID    = {};
+        this.methodsByName              = {};
+
+        // enqueue all the methods
+        const queue = [];
+        for ( let methodName in this.schema.methods ) {
+
+            const method = this.schema.methods [ methodName ];
+            const methodBinding = new MethodBinding ( this.schema, method );
+
+            this.methodsByName [ methodName ] = method;
+            queue.push ( method ); // push mobx proxy
+        }
+
+        if ( queue.length > 0 ) {
+            this.state = {
+                busy:                       true,
+                queue:                      queue,
+                schema:                     schema,
+                assets:                     assets,
+                filter:                     filter,
+                methodBindingsByName:       this.methodBindingsByName,
+                methodBindingsByAssetID:    this.methodBindingsByAssetID,
+            };
+            // setTimeout (() => { this.processQueue ( this.state )}, 1 );
+            this.processQueue ( this.state );
         }
     }
 
@@ -117,13 +109,6 @@ export class Binding {
     @computed get
     validMethods () {
 
-        let methods = [];
-        const bindingsByName = this.methodBindingsByName;
-        for ( let name in bindingsByName ) {
-            if ( bindingsByName [ name ].valid ) {
-                methods.push ( name );
-            }
-        }
-        return methods;
+        return Object.values ( this.methodBindingsByName );
     }
 }

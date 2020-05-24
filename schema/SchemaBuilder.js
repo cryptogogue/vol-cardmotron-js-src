@@ -112,13 +112,10 @@ class SchemaBuilder {
     }
 
     //----------------------------------------------------------------//
-    constraint ( name, description, qualifier ) {
+    constraint ( qualifier ) {
 
         assert ( this.popTo ( SCHEMA_BUILDER_ADDING_METHOD ));
-        this.top ().constraints.push ({
-            description:    description,
-            constraint:     qualifier,
-        });
+        this.top ().constraints.push ( qualifier );
         return this;
     }
 
@@ -462,7 +459,7 @@ class SchemaBuilder {
     }
 
     //----------------------------------------------------------------//
-    method ( name, description ) {
+    method ( name, friendlyName, description ) {
 
         assert ( this.popTo ( SCHEMA_BUILDER_ADDING_SCHEMA ));
 
@@ -471,6 +468,7 @@ class SchemaBuilder {
             {
                 weight:         1,
                 maturity:       0,
+                friendlyName:   friendlyName || '',
                 description:    description || '',
                 assetArgs:      {},
                 constArgs:      {},

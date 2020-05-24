@@ -176,7 +176,8 @@ const grammar = ohm.grammar ( `
            | FieldExpr
 
         FieldExpr
-            = "[" ( fieldname | symbol ) "]"        -- field
+            = "[" ( string | symbol ) "]"               -- field
+            | identifier "[" ( string | symbol ) "]"    -- index
             | PrimaryExpr
 
         PrimaryExpr
@@ -189,7 +190,7 @@ const grammar = ohm.grammar ( `
         symbol
             = "@"
 
-        fieldname
+        identifier
             = letter ( "_" | alnum )*
 
         literal
@@ -328,7 +329,13 @@ semantics.addOperation ( 'eval', {
     },
 
     FieldExpr_field: function ( lb, e, rb ) {
-        return SQUAP.INDEX ( e.sourceString ); // can be a fieldname or a symbol
+        e = e.sourceString;
+        return SQUAP.INDEX ( e === '@' ? e : e.slice ( 1, -1 )); // can be a fieldname or a symbol
+    },
+
+    FieldExpr_index: function ( id, lb, e, rb ) {
+        e = e.sourceString;
+        return SQUAP.INDEX ( id.sourceString, e === '@' ? e : e.slice ( 1, -1 )); // can be a fieldname or a symbol
     },
 
     PrimaryExpr_parens: function ( lp, e, rp ) {
@@ -358,6 +365,8 @@ semantics.addOperation ( 'eval', {
 
 //----------------------------------------------------------------//
 export function parseSquap ( str ) {
+
+    if ( !str ) return SQUAP.CONST ( true );
 
     const matchResult = grammar.match ( str );
     if ( !matchResult.succeeded ()) throw new Error ( matchResult.message );
