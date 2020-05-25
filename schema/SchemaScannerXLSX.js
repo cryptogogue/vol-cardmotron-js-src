@@ -174,8 +174,9 @@ export class SchemaScannerXLSX {
             const name = sheet.getValueByCoord ( col, row, false );
             if ( !name ) continue;
 
-            let type = false;
-            let isDeck = false;
+            let type        = false;
+            let mutable     = false;
+            let isDeck      = false;
 
             const firstChar = name.charAt ( 0 );
 
@@ -201,6 +202,10 @@ export class SchemaScannerXLSX {
 
                 default:
                     type = sheet.getValueByCoord ( col, row + 1, 'string' );
+                    if ( type.charAt ( 0 ) === '*' ) {
+                        mutable = true;
+                        type = type.slice ( 1 );
+                    }
                     break;
             };
 
@@ -210,6 +215,7 @@ export class SchemaScannerXLSX {
                 fieldDefs [ col ] = {
                     name:       name,
                     type:       type,
+                    mutable:    mutable,
                     isDeck:     isDeck,
                 }
             }
@@ -255,7 +261,7 @@ export class SchemaScannerXLSX {
                     definitionType = value;
                 }
                 else {
-                    definition [ fieldDef.name ] = value;
+                    definition [ fieldDef.name ] = { value: value, mutable: fieldDef.mutable };
                     fieldCount++;
                 }   
             }
@@ -298,7 +304,8 @@ export class SchemaScannerXLSX {
                             continue;
 
                         default:
-                            this.schemaBuilder.field ( fieldName, definition [ fieldName ]);
+                            const field = definition [ fieldName ];
+                            this.schemaBuilder.field ( fieldName, field.value, field.mutable );
                             break;
                     }
                 }

@@ -39,7 +39,7 @@ export const LAYOUT_COMMAND = {
 };
 
 //----------------------------------------------------------------//
-function makeAssetFieldValue ( value ) {
+function makeAssetFieldValue ( value, mutable ) {
     
     let type = TYPE_UNDEFINED;
 
@@ -60,9 +60,7 @@ function makeAssetFieldValue ( value ) {
     return {
         type:           type,
         value:          value,
-        mutable:        false,
-        scriptable:     true,
-        alternates:     {},
+        mutable:        mutable || false,
     }
 }
 
@@ -322,12 +320,11 @@ class SchemaBuilder {
     }
 
     //----------------------------------------------------------------//
-    field ( name, value ) {
+    field ( name, value, mutable ) {
 
         assert ( this.popTo ( SCHEMA_BUILDER_ADDING_ASSET_DEFINITION ));
 
-        let field = makeAssetFieldValue ( value );
-        field.mutable = false;
+        let field = makeAssetFieldValue ( value, mutable );
 
         this.push (
             SCHEMA_BUILDER_ADDING_ASSET_DEFINITION_FIELD,
