@@ -1,8 +1,9 @@
 /* eslint-disable no-whitespace-before-property */
 
-import { MethodBinding }    from './MethodBinding';
-import { MultiCounter }     from './MultiCounter';
-import { Schema }           from './Schema';
+import { InventoryDuplicatesController }    from '../InventoryDuplicatesController';
+import { MethodBinding }                    from './MethodBinding';
+import { MultiCounter }                     from './MultiCounter';
+import { Schema }                           from './Schema';
 import { assert, excel, hooks, RevocableContext, SingleColumnContainerView, util } from 'fgc';
 import { action, computed, extendObservable, observable, observe, runInAction } from 'mobx';
 
@@ -55,7 +56,7 @@ export class Binding {
         }
 
         if ( state.queue.length > 0 ) {
-            // setTimeout (() => { this.processQueue ( state )}, 1 );
+            // setTimeout (() => { this.processQueue ( state )}, 10 );
             this.processQueue ( state );
         }
         else {
@@ -100,7 +101,7 @@ export class Binding {
                 methodBindingsByName:       this.methodBindingsByName,
                 methodBindingsByAssetID:    this.methodBindingsByAssetID,
             };
-            // setTimeout (() => { this.processQueue ( this.state )}, 1 );
+            // setTimeout (() => { this.processQueue ( this.state )}, 10 );
             this.processQueue ( this.state );
         }
     }

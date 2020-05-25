@@ -12,6 +12,8 @@ import handlebars                               from 'handlebars';
 import _                                        from 'lodash';
 import * as opentype                            from 'opentype.js';
 
+const LAYOUT_LIST_SEPARATOR_REGEX = /[\s,]+/;
+
 //================================================================//
 // AssetLayoutController
 //================================================================//
@@ -137,42 +139,58 @@ export class AssetLayoutController {
 
     //----------------------------------------------------------------//
     @action
-    setAssets ( assets ) {
+    async setAssets ( assets, progress ) {
+
+        this.layoutCache = {};
+        this.docSizes = {};
+        this.metrics = {};
+
+        await progress.onProgress ( 'Setting Assets' );
 
         const schema = this.schema;
 
         // TODO: properly handle layout field alternatives; doing this here is a big, fat hack
-        let assetsWithLayouts = {};
+        const assetsWithLayouts = {};
         for ( let assetID in assets ) {
             const asset = assets [ assetID ];
+
             if ( this.hasLayoutsForAsset ( asset )) {
                 assetsWithLayouts [ assetID ] = asset;
             }
         }
-        this.assets = assetsWithLayouts;
 
-        // empty the layout and metrics caches
-        this.layoutCache = {};
-        this.metricsCahe = {};
+        assets = assetsWithLayouts;
 
-        // rebuild the docSizes and metrics
-        this.docSizes = {};
+        await progress.onProgress ( 'Calculating Asset Metrics' );
 
-        for ( let assetID in this.assets ) {
-            const asset = this.assets [ assetID ];
-            const metrics = new AssetMetrics ( this, asset );
-            this.metrics [ assetID ] = metrics;
-            const docSizeName = metrics.docSizeName;
+        const docSizes = {};
+        const metrics = {};
 
-            if ( !_.has ( this.docSizes, docSizeName )) {
-                this.docSizes [ docSizeName ] = metrics.docSize;
+        for ( let assetID in assets ) {
+            const asset = assets [ assetID ];
+            
+            const assetMetrics = new AssetMetrics ( this, asset );
+            metrics [ assetID ] = assetMetrics;
+
+            const docSizeName = assetMetrics.docSizeName;
+
+            if ( !_.has ( docSizes, docSizeName )) {
+                docSizes [ docSizeName ] = assetMetrics.docSize;
             }
         }
+
+        await progress.onProgress ( 'Updating View' );
+
+        runInAction (() => {
+            this.docSizes   = docSizes;
+            this.metrics    = metrics;
+            this.assets     = assetsWithLayouts;
+        });
     }
 
     //----------------------------------------------------------------//
     @action
-    async setSchema ( schema ) {
+    async setSchema ( schema, progress ) {
 
         this.schema         = schema;
         this.assets         = {};
@@ -182,6 +200,8 @@ export class AssetLayoutController {
         this.icons          = {};
         this.metrics        = {};
         this.docSizes       = {};
+
+        await progress.onProgress ( 'Processing Schema' );
 
         const COMPILE_OPTIONS = {
             noEscape: true,
@@ -216,7 +236,6 @@ export class AssetLayoutController {
 
             for ( let face in fontDesc ) {
                 const url = fontDesc [ face ];
-                console.log ( 'FETCHING FONT', name, face, url );
                 faces [ face ] = await this.fetchFontAsync ( url );
             }
             fonts [ name ] = faces;
@@ -232,7 +251,10 @@ export class AssetLayoutController {
     //----------------------------------------------------------------//
     tokenizeLayoutNames ( layoutNameList ) {
 
-        const LAYOUT_LIST_SEPARATOR_REGEX   = /[\s,]+/;
-        return layoutNameList.split ( LAYOUT_LIST_SEPARATOR_REGEX );
+        this.layoutNameListCache = this.layoutNameListCache || {};
+        if ( !this.layoutNameListCache [ layoutNameList ]) {
+            this.layoutNameListCache [ layoutNameList ] = layoutNameList.split ( LAYOUT_LIST_SEPARATOR_REGEX );
+        }
+        return this.layoutNameListCache [ layoutNameList ];
     }
 }

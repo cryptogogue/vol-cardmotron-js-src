@@ -63,14 +63,28 @@ export class InventoryController {
     @action
     async update ( template, assets, inventory ) {
 
-        this.schema = new Schema ( template );
-        this.layoutController = new AssetLayoutController ();
+        await this.progress.onProgress ( 'Preparing Inventory' );
 
-        this.progress.onProgress ( 'Building Layouts' );
-        
-        await this.layoutController.setSchema ( this.schema );
+        for ( let assetID in assets ) {
+            const asset = assets [ assetID ];
 
-        this.progress.onProgress ( 'Setting Assets' );
+            const definition = template.definitions [ asset.type ];
+            if ( !definition ) continue;
+
+            for ( let fieldName in definition.fields ) {
+
+                if ( !asset.fields [ fieldName ]) {
+
+                    const field = definition.fields [ fieldName ];
+                    asset.fields [ fieldName ] = {
+                        type:   field.type,
+                        value:  field.value,
+                    };
+                }
+            }
+        }
+
+        const schema = new Schema ( template );
 
         if ( !( assets || inventory )) {
             inventory = {};
@@ -89,6 +103,14 @@ export class InventoryController {
                 }
             }
         }
-        this.layoutController.setAssets ( assets );
+
+        const layoutController = new AssetLayoutController ();
+        await layoutController.setSchema ( schema, this.progress );
+        await layoutController.setAssets ( assets, this.progress );
+
+        runInAction (() => {
+            this.schema = schema;
+            this.layoutController = layoutController;
+        });
     }
 }

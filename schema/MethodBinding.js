@@ -5,6 +5,8 @@ import { Schema }           from './Schema';
 import { assert, excel, hooks, RevocableContext, SingleColumnContainerView, util } from 'fgc';
 import { action, computed, extendObservable, observable, observe, runInAction } from 'mobx';
 
+const PERMUTATIONS = false; // disabled; for future work.
+
 //================================================================//
 // Binding
 //================================================================//
@@ -30,6 +32,29 @@ export class MethodBinding {
             if ( !options.includes ( asset.assetID )) {
                 options.push ( asset.assetID );
             }
+        }
+        return true;
+    }
+
+    //----------------------------------------------------------------//
+    checkParams ( paramsByName ) {
+
+        const schema = this.schema;
+        const method = this.method;
+        const constraints = method.constraints;
+
+        const assetsByParamName = {};
+        for ( let paramName in paramsByName ) {
+
+            const asset = this.assetsByAssetID [ paramsByName [ paramName ]];
+            assetsByParamName [ paramName ] = asset;
+            
+            if ( !method.assetArgs [ paramName ].eval ({ schema: schema, assets: [ asset ]})) return false;
+        }
+
+        // check the constraints
+        for ( let constraint of constraints ) {
+            if ( !constraint.eval ({ schema: schema, assets: assetsByParamName })) return false;
         }
         return true;
     }
@@ -96,7 +121,7 @@ export class MethodBinding {
             utilizedByParamName = _.cloneDeep ( utilizedByParamName );
             utilizedByParamName [ paramName ] = false;
 
-            const options = this.checkPermutations ( utilizedByParamName )[ paramName ] || [];
+            const options = ( PERMUTATIONS ? this.checkPermutations ( utilizedByParamName )[ paramName ] : this.optionsByParamName [ paramName ]) || [];
             const utilized = Object.values ( utilizedByParamName );
 
             return options.filter (( assetID ) => { return !utilized.includes ( assetID )});
@@ -148,20 +173,27 @@ export class MethodBinding {
             }
         }
 
-        this.paramNamesByIndex  = Object.keys ( assetArgs );
-        this.paramListsByIndex  = [];
-        this.multiCounter       = new MultiCounter ();
+        if ( PERMUTATIONS ) {
 
-        for ( let paramName of this.paramNamesByIndex ) {
+            this.paramNamesByIndex  = Object.keys ( assetArgs );
+            this.paramListsByIndex  = [];
+            this.multiCounter       = new MultiCounter ();
 
-            const paramList = this.paramListsByName [ paramName ];
-            if ( paramList.length === 0 ) return false;
+            for ( let paramName of this.paramNamesByIndex ) {
 
-            this.multiCounter.push ( paramList.length );
-            this.paramListsByIndex.push ( paramList );
+                const paramList = this.paramListsByName [ paramName ];
+                if ( paramList.length === 0 ) return false;
+
+                this.multiCounter.push ( paramList.length );
+                this.paramListsByIndex.push ( paramList );
+            }
+
+            this.optionsByParamName = this.checkPermutations ();
         }
+        else {
 
-        this.optionsByParamName = this.checkPermutations ();
+            this.optionsByParamName = this.paramListsByName; 
+        }
         return this.isValid;
     }
 }
