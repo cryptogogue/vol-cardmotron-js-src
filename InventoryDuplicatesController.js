@@ -3,9 +3,7 @@
 import { AssetView }                                        from './AssetView';
 import * as consts                                          from './consts';
 import _                                                    from 'lodash';
-import { action, computed, extendObservable, observable }   from 'mobx';
-import { observer }                                         from 'mobx-react';
-import { computedFn }                                       from 'mobx-utils'
+import { action, computed, extendObservable, observable, reaction } from 'mobx';
 import { assert, excel, hooks, RevocableContext, SingleColumnContainerView, util } from 'fgc';
 
 //================================================================//
@@ -28,9 +26,16 @@ export class InventoryDuplicatesController {
     }
 
     //----------------------------------------------------------------//
-    constructor ( assets ) {
+    constructor ( getAssetsFunc ) {
 
-        this.rebuild ( assets );
+        this.cancelRebuildReaction = reaction (
+            () => {
+                return getAssetsFunc (); // gotta access the computed value *inside* the reaction query
+            },
+            ( params ) => {
+                this.rebuild ( params );
+            }
+        );
     }
 
     //----------------------------------------------------------------//
@@ -44,6 +49,12 @@ export class InventoryDuplicatesController {
             count++;
         }
         return count;
+    }
+
+    //----------------------------------------------------------------//
+    finalize () {
+
+        this.cancelRebuildReaction && this.cancelRebuildReaction ();
     }
 
     //----------------------------------------------------------------//

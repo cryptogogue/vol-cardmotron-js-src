@@ -65,6 +65,8 @@ export class InventoryController {
 
         await this.progress.onProgress ( 'Preparing Inventory' );
 
+        assets = _.cloneDeep ( assets );
+
         for ( let assetID in assets ) {
             const asset = assets [ assetID ];
 

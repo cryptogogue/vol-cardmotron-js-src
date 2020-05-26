@@ -62,12 +62,13 @@ export class InventoryViewController {
     constructor ( inventory ) {
 
         this.inventory = inventory;
+        this.duplicatesController = new InventoryDuplicatesController (() => { return this.filteredAssetsByID });
     }
 
     //----------------------------------------------------------------//
     countDuplicates ( assetID, filterFunc ) {
 
-        return this.duplicatesMeta.countDuplicates ( assetID, filterFunc );
+        return this.duplicatesController.countDuplicates ( assetID, filterFunc );
     }
 
     //----------------------------------------------------------------//
@@ -75,7 +76,7 @@ export class InventoryViewController {
     deselectAsset ( asset ) {
 
         if ( this.hideDuplicates && this.isPrimary ( asset.assetID )) {
-            const duplicates = this.duplicatesMeta.getDuplicateAssets ( asset.assetID );
+            const duplicates = this.duplicatesController.getDuplicateAssets ( asset.assetID );
             for ( let duplicate of duplicates ) {
                 delete this.selection [ duplicate.assetID ];
             }
@@ -87,19 +88,26 @@ export class InventoryViewController {
 
     //----------------------------------------------------------------//
     @computed get
-    duplicatesMeta () {
+    filteredAssetsByID () {
 
-        return new InventoryDuplicatesController ( this.inventory.assets, this.filterFunc );
+        const filteredAssets = {};
+        for ( let assetID in this.inventory.assets ) {
+            if ( this.filterFunc && !this.filterFunc ( assetID )) continue;
+            filteredAssets [ assetID ] = this.inventory.assets [ assetID ];
+        }
+        return filteredAssets;
     }
 
     //----------------------------------------------------------------//
     finalize () {
+
+        this.duplicatesController.finalize ();
     }
 
     //----------------------------------------------------------------//
     getDuplicateIDs ( assetID, filterFunc ) {
 
-        return this.duplicatesMeta.getDuplicateIDs ( assetID, filterFunc );
+        return this.duplicatesController.getDuplicateIDs ( assetID, filterFunc );
     }
 
     //----------------------------------------------------------------//
@@ -131,7 +139,7 @@ export class InventoryViewController {
     @computed get
     hasDuplicates () {
 
-        return this.duplicatesMeta.hasDuplicates;
+        return this.duplicatesController.hasDuplicates;
     }
 
     //----------------------------------------------------------------//
@@ -144,7 +152,7 @@ export class InventoryViewController {
     //----------------------------------------------------------------//
     isPrimary ( assetID ) {
 
-        return this.duplicatesMeta.isPrimary ( assetID );
+        return this.duplicatesController.isPrimary ( assetID );
     }
 
     //----------------------------------------------------------------//
@@ -179,7 +187,7 @@ export class InventoryViewController {
     selectAsset ( asset ) {
 
         if ( this.hideDuplicates && this.isPrimary ( asset.assetID )) {
-            const duplicates = this.duplicatesMeta.getDuplicateAssets ( asset.assetID );
+            const duplicates = this.duplicatesController.getDuplicateAssets ( asset.assetID );
             for ( let duplicate of duplicates ) {
                 this.selection [ duplicate.assetID ] = duplicate;
             }

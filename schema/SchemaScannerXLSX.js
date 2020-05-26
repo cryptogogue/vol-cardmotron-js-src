@@ -183,6 +183,7 @@ export class SchemaScannerXLSX {
             switch ( firstChar ) {
                 case '#':
                 case '*':
+
                     type = 'number';
                     isDeck = true;
                     if ( name.length > 1 ) {
@@ -284,7 +285,7 @@ export class SchemaScannerXLSX {
 
                             if ( fieldName.length > 1 ) {
                                 
-                                const deckCount = definition [ fieldName ] || 0;
+                                const deckCount = definition [ fieldName ].value || 0;
                                 if ( deckCount > 0 ) {
 
                                     const deckName = fieldName.slice ( 1 );

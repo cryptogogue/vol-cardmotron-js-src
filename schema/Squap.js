@@ -222,7 +222,7 @@ class IndexSquap extends AbstractIndexSquap {
         }
 
         if ( arg.fields.hasOwnProperty ( fieldName )) {
-            return arg.fields [ fieldName ];
+            return arg.fields [ fieldName ].value;
         }
         return false;
     }
