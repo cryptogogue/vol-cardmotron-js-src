@@ -210,6 +210,7 @@ export class AssetLayoutController {
         const layouts = {};
         const fonts = {};
 
+        // compile all the layouts
         for ( let layoutName in schema.layouts ) {
             
             const layout = _.cloneDeep ( schema.layouts [ layoutName ]);
@@ -229,6 +230,7 @@ export class AssetLayoutController {
             layouts [ layoutName ] = layout;
         }
 
+        // get all the fonts
         for ( let name in schema.fonts ) {
 
             const fontDesc = schema.fonts [ name ];
