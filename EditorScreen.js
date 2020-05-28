@@ -26,6 +26,8 @@ import { assert, excel, hooks, RevocableContext, SingleColumnContainerView, util
 //================================================================//
 export const EditorScreen = observer (( props ) => {
 
+    const version = props.version || '';
+
     const [ scanner, setScanner ]       = useState ( false );
     const inventory                     = hooks.useFinalizable (() => new InventoryController ());
     const controller                    = hooks.useFinalizable (() => new InventoryViewController ( inventory, false ));
@@ -149,6 +151,10 @@ export const EditorScreen = observer (( props ) => {
                             height: 'auto',
                         }}
                     />
+                    <div style = {{ width: '100%', textAlign: 'center' }}>
+                        <p>{ version }</p>
+                    </div>
+
                 </Otherwise>
 
             </Choose>
