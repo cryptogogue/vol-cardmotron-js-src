@@ -4,7 +4,7 @@ import { AssetView }                                        from './AssetView';
 import * as consts                                          from './consts';
 import { InventoryDuplicatesController }                    from './InventoryDuplicatesController';
 import _                                                    from 'lodash';
-import { action, computed, extendObservable, observable }   from 'mobx';
+import { action, computed, extendObservable, observable, runInAction } from 'mobx';
 import { observer }                                         from 'mobx-react';
 import { computedFn }                                       from 'mobx-utils'
 import { assert, excel, hooks, RevocableContext, SingleColumnContainerView, util } from 'fgc';
@@ -59,10 +59,14 @@ export class InventoryViewController {
     }
 
     //----------------------------------------------------------------//
-    constructor ( inventory ) {
+    constructor ( inventory, hideDuplicates ) {
 
         this.inventory = inventory;
         this.duplicatesController = new InventoryDuplicatesController (() => { return this.filteredAssetsByID });
+
+        runInAction (() => {
+            this.hideDuplicates = hideDuplicates === undefined ? true : hideDuplicates;
+        })
     }
 
     //----------------------------------------------------------------//

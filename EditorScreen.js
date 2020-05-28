@@ -2,14 +2,17 @@
 
 import './EditorScreen.css';
 
+import { AssetModal }                                       from './AssetModal';
 import { AssetView }                                        from './AssetView';
 import { EditorMenu }                                       from './EditorMenu';
 import { InventoryController }                              from './InventoryController';
+import { InventoryPrintController }                         from './InventoryPrintController';
 import { InventoryPrintView }                               from './InventoryPrintView';
 import { InventoryView }                                    from './InventoryView';
 import { InventoryViewController }                          from './InventoryViewController';
 import { ScannerReportModal }                               from './ScannerReportModal';
 import { SchemaScannerXLSX }                                from './schema/SchemaScannerXLSX';
+import KeyboardEventHandler                                 from 'react-keyboard-event-handler';
 import _                                                    from 'lodash';
 import { action, computed, extendObservable, observable }   from 'mobx';
 import { observer }                                         from 'mobx-react';
@@ -25,7 +28,11 @@ export const EditorScreen = observer (( props ) => {
 
     const [ scanner, setScanner ]       = useState ( false );
     const inventory                     = hooks.useFinalizable (() => new InventoryController ());
-    const controller                    = hooks.useFinalizable (() => new InventoryViewController ( inventory ));
+    const controller                    = hooks.useFinalizable (() => new InventoryViewController ( inventory, false ));
+    const printController               = hooks.useFinalizable (() => new InventoryPrintController ( controller ));
+
+    const [ batchSelect, setBatchSelect ]           = useState ( false );
+    const [ zoomedAssetID, setZoomedAssetID ]       = useState ( false );
 
     const loadFile = ( binary ) => {
 
@@ -41,6 +48,20 @@ export const EditorScreen = observer (( props ) => {
         }
     }
 
+    const onAssetSelect = ( asset, toggle ) => {
+        controller.toggleAssetSelection ( asset );
+    }
+
+    const onAssetMagnify = ( asset ) => {
+        setZoomedAssetID ( asset.assetID );
+    }
+
+    const onDeselect = () => {
+        if ( !batchSelect ) {
+            controller.clearSelection ();
+        }
+    }
+
     const hasAssets = (( inventory.progress.loading === false ) && ( inventory.availableAssetsArray.length > 0 ));
     const hasMessages = (( inventory.progress.loading === false ) && ( scanner && scanner.hasMessages ()));
 
@@ -52,8 +73,9 @@ export const EditorScreen = observer (( props ) => {
         }}>
             <div className = "no-print">
                 <EditorMenu
-                    controller = { controller }
-                    loadFile = { loadFile }
+                    controller          = { controller }
+                    printController     = { printController}
+                    loadFile            = { loadFile }
                 />
             </div>
 
@@ -76,21 +98,45 @@ export const EditorScreen = observer (( props ) => {
 
                 <When condition = { hasAssets }>
                     <Choose>
+
                         <When condition = { controller.isPrintLayout }>
                             <InventoryPrintView
-                                key             = { controller.sortMode }
-                                inventory       = { controller.inventory }
-                                assetArray      = { controller.sortedAssets }
-                                layoutName      = { controller.layoutName }
+                                key = { printController.pages.length }
+                                pages = { printController.pages }
                             />
                         </When>
+
                         <Otherwise>
+                            <KeyboardEventHandler
+                                handleKeys      = {[ 'shift', 'alt' ]}
+                                handleEventType = 'keydown'
+                                onKeyEvent      = {( key, e ) => {
+                                    console.log ( 'DOWN' );
+                                    setBatchSelect ( true );
+                                }}
+                            />
+                            <KeyboardEventHandler
+                                handleKeys      = {[ 'shift', 'alt' ]}
+                                handleEventType = 'keyup'
+                                onKeyEvent      = {( key, e ) => {
+                                    console.log ( 'UP' );
+                                    setBatchSelect ( false );
+                                }}
+                            />
                             <div style = {{ flex: 1 }}>
                                 <InventoryView
                                     key         = { `${ controller.sortMode } ${ controller.zoom }` }
                                     controller  = { controller }
+                                    onSelect    = { onAssetSelect }
+                                    onMagnify   = { batchSelect ? undefined : onAssetMagnify }
+                                    onDeselect  = { onDeselect }
                                 />
                             </div>
+                            <AssetModal
+                                controller      = { controller }
+                                assetID         = { zoomedAssetID }
+                                onClose         = {() => { setZoomedAssetID ( false )}}
+                            />
                         </Otherwise>
                     </Choose>
                 </When>

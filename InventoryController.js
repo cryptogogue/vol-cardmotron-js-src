@@ -41,7 +41,7 @@ export class InventoryController {
     constructor ( progressController ) {
 
         this.revocable = new RevocableContext ();
-        this.progress = progressController || new ProgressController ();
+        this.progress = progressController || new ProgressController ( false );
     }
 
     //----------------------------------------------------------------//
