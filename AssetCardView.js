@@ -27,9 +27,8 @@ export const AssetCardView = observer (( props ) => {
 
     const asset         = inventory.assets [ assetID ];
 
-    const controller = props.controller || false;
-    const isSelected = props.isSelected || controller && controller.isSelected ( assetID ); // because mobX
-    const color = isSelected ? 'cyan' : 'white';
+    const isSelected    = props.isSelected; // because mobX
+    const color         = isSelected ? 'cyan' : 'white';
 
     const onClickCard = ( event ) => {
         event.stopPropagation ();

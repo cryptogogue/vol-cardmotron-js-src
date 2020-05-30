@@ -77,8 +77,10 @@ export const InventoryView = observer (( props ) => {
                     onSelect        = { props.onSelect || false }
                     onMagnify       = { props.onMagnify || false }
                     onEllipsis      = { props.onEllipsis || false }
-                    controller      = { controller }
                     count           = { controller.hideDuplicates ? controller.countDuplicates ( assetID, controller.filterFunc ) : 1 }
+
+                    isSelected      = { props.isSelected ? props.isSelected ( assetID ) : controller.isSelected ( assetID )}
+                    disabled        = { props.isDisabled ? props.isDisabled ( assetID ) : false }
                 />
             );
         }
