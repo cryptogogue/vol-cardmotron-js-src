@@ -117,27 +117,10 @@ export class AssetLayoutController {
     }
 
     //----------------------------------------------------------------//
-    async getAssetLayout ( assetID ) {
+    getAssetLayout ( assetID ) {
 
-        // const layout = const schemaRecord = await this.db.schemas.get ({ networkID: networkID, key: schemaKey });
-
-        if ( !_.has ( this.layoutCache, assetID )) {
-            const asset = _.has ( this.assets, assetID ) ? this.assets [ assetID ] : this.schema.newAsset ( assetID, assetID );
-            this.layoutCache [ assetID ] = new AssetLayout ( this, asset );
-        }
-        return this.layoutCache [ assetID ];
-    }
-
-    //----------------------------------------------------------------//
-    async getAssetLayoutAsync ( assetID ) {
-
-        // const layout = const schemaRecord = await this.db.schemas.get ({ networkID: networkID, key: schemaKey });
-
-        if ( !_.has ( this.layoutCache, assetID )) {
-            const asset = _.has ( this.assets, assetID ) ? this.assets [ assetID ] : this.schema.newAsset ( assetID, assetID );
-            this.layoutCache [ assetID ] = new AssetLayout ( this, asset );
-        }
-        return this.layoutCache [ assetID ];
+        const asset = _.has ( this.assets, assetID ) ? this.assets [ assetID ] : this.schema.newAsset ( assetID, assetID );
+        return new AssetLayout ( this, asset );
     }
 
     //----------------------------------------------------------------//
@@ -172,7 +155,6 @@ export class AssetLayoutController {
 
         const schema = this.schema;
 
-        // TODO: properly handle layout field alternatives; doing this here is a big, fat hack
         const assetsWithLayouts = {};
         for ( let assetID in assets ) {
             const asset = assets [ assetID ];
@@ -186,13 +168,22 @@ export class AssetLayoutController {
 
         await progress.onProgress ( 'Calculating Asset Metrics' );
 
-        const docSizes = {};
-        const metrics = {};
+        const docSizes      = {};
+        const metrics       = {};
+        const metricsCache  = {};
 
         for ( let assetID in assets ) {
             const asset = assets [ assetID ];
             
-            const assetMetrics = new AssetMetrics ( this, asset );
+            const layoutNameList = this.schema.getAssetField ( asset, 'layout', '' );
+            if ( !layoutNameList ) continue;
+
+            let assetMetrics = metricsCache [ layoutNameList ];
+            if ( !assetMetrics ) {
+                assetMetrics = new AssetMetrics ( this, asset );
+                metricsCache [ layoutNameList ] = assetMetrics;
+            }
+
             metrics [ assetID ] = assetMetrics;
 
             const docSizeName = assetMetrics.docSizeName;

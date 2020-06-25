@@ -11,14 +11,13 @@ import React, { useState }          from 'react';
 export const AssetView = ( props ) => {
 
     const { inventory, assetID, inches } = props;
-    const [ layout, setLayout ] = useState ( false );
-
-    const dpi           = props.dpi || 300;
 
     const layouts       = inventory.layoutController;
 
-    const metrics       = layouts.getAssetMetrics ( assetID );
+    const [ layout ]    = useState ( layouts.getAssetLayout ( assetID ));
+    const [ metrics ]   = useState ( layouts.getAssetMetrics ( assetID ));
 
+    const dpi           = props.dpi || 300;
     const dpiScale      = dpi / metrics.dpi;
 
     const assetWidth    = metrics.width * dpiScale;
@@ -30,11 +29,6 @@ export const AssetView = ( props ) => {
 
     const docWidthInInches      = ( metrics.width * scale ) / metrics.dpi;
     const docHeightInInches     = ( metrics.height * scale ) / metrics.dpi;
-
-    const getLayout = async () => {
-        setLayout ( await layouts.getAssetLayoutAsync ( assetID ));
-    }
-    getLayout ();
 
     return (
         <svg

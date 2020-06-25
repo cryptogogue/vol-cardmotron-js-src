@@ -2,7 +2,6 @@
 
 import './EditorScreen.css';
 
-import { AssetView }                                        from './AssetView';
 import { EditorMenu }                                       from './EditorMenu';
 import { InventoryController }                              from './InventoryController';
 import { InventoryPrintView }                               from './InventoryPrintView';

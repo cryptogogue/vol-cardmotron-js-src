@@ -3,7 +3,6 @@
 import { assert, InfiniteScrollView, util } from 'fgc';
 
 import { AssetCardView }                                    from './AssetCardView';
-import { AssetView }                                        from './AssetView';
 import { AssetSizer }                                       from './AssetSizer';
 import { InventoryController }                              from './InventoryController';
 import handlebars                                           from 'handlebars';
@@ -87,24 +86,19 @@ export const InventoryView = observer (( props ) => {
         return metrics.docSizeName;
     }
 
-    const assetLayoutCache = [];
     const getAsset = ( i ) => {
-        
-        if ( !assetLayoutCache.includes ( i )) {
-            
-            const assetID = assetArray [ i ].assetID;
+                    
+        const assetID = assetArray [ i ].assetID;
 
-            assetLayoutCache [ i ] = (
-                <ControlledAssetCardView
-                    { ...props }
-                    key             = { assetID }
-                    assetID         = { assetID }
-                    controller      = { controller }
-                    zoom            = { zoom }
-                />
-            );
-        }
-        return assetLayoutCache [ i ];
+        return (
+            <ControlledAssetCardView
+                { ...props }
+                key             = { assetID }
+                assetID         = { assetID }
+                controller      = { controller }
+                zoom            = { zoom }
+            />
+        );
     }
 
     return (

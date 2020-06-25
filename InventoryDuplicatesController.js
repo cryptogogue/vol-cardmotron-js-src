@@ -1,6 +1,5 @@
 // Copyright (c) 2019 Cryptogogue, Inc. All Rights Reserved.
 
-import { AssetView }                                        from './AssetView';
 import * as consts                                          from './consts';
 import _                                                    from 'lodash';
 import { action, computed, extendObservable, observable, reaction } from 'mobx';

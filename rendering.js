@@ -3,7 +3,6 @@
 import { assert, util } from 'fgc';
 
 import * as consts                                          from './consts';
-import { AssetView }                                        from './AssetView';
 import { VectorToImageView }                                from './VectorToImageView';
 import * as changedpi                                       from 'changedpi';
 import { RevocableContext }                                 from 'fgc';

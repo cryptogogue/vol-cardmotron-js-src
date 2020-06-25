@@ -1,6 +1,5 @@
 // Copyright (c) 2019 Cryptogogue, Inc. All Rights Reserved.
 
-import { AssetView }                                        from './AssetView';
 import * as consts                                          from './consts';
 import { InventoryDuplicatesController }                    from './InventoryDuplicatesController';
 import _                                                    from 'lodash';

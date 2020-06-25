@@ -6,7 +6,7 @@ import { observer }                 from 'mobx-react';
 import React                        from 'react';
 
 //================================================================//
-// AssetView
+// AssetSizer
 //================================================================//
 export const AssetSizer = ( props ) => {
 

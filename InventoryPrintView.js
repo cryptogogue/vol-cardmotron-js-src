@@ -3,7 +3,6 @@
 import { assert, util } from 'fgc';
 
 import * as consts                                          from './consts';
-import { AssetView }                                        from './AssetView';
 import { InventoryPrintController }                         from './InventoryPrintController';
 import { hooks }                                            from 'fgc';
 import { action, computed, extendObservable, observable }   from 'mobx';
