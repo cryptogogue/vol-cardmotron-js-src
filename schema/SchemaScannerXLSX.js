@@ -84,7 +84,7 @@ export class SchemaScannerXLSX {
     //----------------------------------------------------------------//
     constructor ( book ) {
 
-        this.schemaBuilder = buildSchema ();
+        this.schemaBuilder          = buildSchema ();
         this.decks                  = {};
         this.sets                   = {};
         this.macros                 = {};
@@ -259,7 +259,10 @@ export class SchemaScannerXLSX {
                 }
 
                 if ( fieldDef.name === '@' ) {
-                    definitionType = value;
+                    definitionType = this.escapeDefinitionType ( value );
+                    if ( definitionType !== value ) {
+                        this.reportWarning ( `Definition type '${ value }' contained illegal characters. Escaped to '${ definitionType }'.`, col, row ); 
+                    }
                 }
                 else {
                     definition [ fieldDef.name ] = { value: value, mutable: fieldDef.mutable };
@@ -269,7 +272,6 @@ export class SchemaScannerXLSX {
 
             if ( definitionType && ( definitionCount > 0 ) && ( fieldCount > 0 )) {
 
-                definitionType = this.escapeDefinitionType ( definitionType );
                 this.rankDefinitions [ definitionType ] = Object.keys ( this.inventory ).length;
                 this.inventory [ definitionType ] = definitionCount;
 
@@ -597,6 +599,15 @@ export class SchemaScannerXLSX {
 
         const paramNames = this.readParamNames ( sheet, row++ );
 
+        const parseSquapSafe = ( test, row, col ) => {
+            try {
+                return parseSquap ( test );
+            }
+            catch ( error ) {
+                this.reportError ( error.message, col, row );
+            }
+        }
+
         for ( ; scanMore ( sheet, row ); ++row ) {
 
             const name = util.toStringOrFalse ( sheet.getValueByCoord ( paramNames.name, row ));
@@ -621,7 +632,7 @@ export class SchemaScannerXLSX {
                     stringParam ( 'param' ),
                     stringParam ( 'qualifier', '' ),
                 ]);
-                const squap = parseSquap ( params.qualifier );
+                const squap = parseSquapSafe ( params.qualifier, row, paramNames.qualifier );
                 this.schemaBuilder.assetArg ( params.param, squap );
                 continue;
             }
@@ -633,7 +644,7 @@ export class SchemaScannerXLSX {
                     const params = this.readParams ( sheet, row, paramNames, [
                         stringParam ( 'qualifier', '' ),
                     ]);
-                    const squap = parseSquap ( params.qualifier );
+                    const squap = parseSquapSafe ( params.qualifier, row, paramNames.qualifier );
                     this.schemaBuilder.constraint ( squap );
                     continue;
                 }

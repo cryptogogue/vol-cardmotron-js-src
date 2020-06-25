@@ -3,7 +3,7 @@
 import { LAYOUT_COMMAND }           from './schema/SchemaBuilder';
 import handlebars                   from 'handlebars';
 import { observer }                 from 'mobx-react';
-import React                        from 'react';
+import React, { useState }          from 'react';
 
 //================================================================//
 // AssetView
@@ -11,21 +11,30 @@ import React                        from 'react';
 export const AssetView = ( props ) => {
 
     const { inventory, assetID, inches } = props;
-    const dpi = props.dpi || 300;
+    const [ layout, setLayout ] = useState ( false );
 
-    const layout        = inventory.layoutController.getAssetLayout ( assetID );
+    const dpi           = props.dpi || 300;
 
-    const dpiScale      = dpi / layout.dpi;
+    const layouts       = inventory.layoutController;
 
-    const assetWidth    = layout.width * dpiScale;
-    const assetHeight   = layout.height * dpiScale;
+    const metrics       = layouts.getAssetMetrics ( assetID );
+
+    const dpiScale      = dpi / metrics.dpi;
+
+    const assetWidth    = metrics.width * dpiScale;
+    const assetHeight   = metrics.height * dpiScale;
 
     const docX          = props.x || 0;
     const docY          = props.y || 0;
     const scale         = props.scale || 1;
 
-    const docWidthInInches      = ( layout.width * scale ) / layout.dpi;
-    const docHeightInInches     = ( layout.height * scale ) / layout.dpi;
+    const docWidthInInches      = ( metrics.width * scale ) / metrics.dpi;
+    const docHeightInInches     = ( metrics.height * scale ) / metrics.dpi;
+
+    const getLayout = async () => {
+        setLayout ( await layouts.getAssetLayoutAsync ( assetID ));
+    }
+    getLayout ();
 
     return (
         <svg
@@ -36,7 +45,14 @@ export const AssetView = ( props ) => {
             viewBox = { `0 0 ${ assetWidth } ${ assetHeight }` }
             preserveAspectRatio = 'xMidYMid meet'
         >
-            <g transform = { `scale ( ${ dpiScale } ${ dpiScale })` } dangerouslySetInnerHTML = {{ __html: layout.svg }}></g>
-        </svg>
+            <Choose>
+                <When condition = { layout }>
+                    <g transform = { `scale ( ${ dpiScale } ${ dpiScale })` } dangerouslySetInnerHTML = {{ __html: layout.svg }}></g>
+                </When>
+                <Otherwise>
+                    <rect width = { docWidthInInches * dpi } height = { docHeightInInches * dpi  } fill = "gray"/>
+                </Otherwise>
+            </Choose>
+        </svg>   
     );
 }

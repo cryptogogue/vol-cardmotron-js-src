@@ -8,6 +8,7 @@ import * as consts                              from './consts';
 import { action, computed, extendObservable, observable, observe, runInAction } from 'mobx';
 import { Schema }                               from './schema/Schema';
 import { buildSchema, op, LAYOUT_COMMAND }      from './schema/SchemaBuilder';
+import Dexie                                    from 'dexie';
 import handlebars                               from 'handlebars';
 import _                                        from 'lodash';
 import * as opentype                            from 'opentype.js';
@@ -54,7 +55,16 @@ export class AssetLayoutController {
     }
 
     //----------------------------------------------------------------//
-    constructor () {
+    constructor ( dbName ) {
+
+        if ( dbName ) {
+            this.db = new Dexie ( dbName ); 
+            this.db.version ( 1 ).stores ({
+                layoutVersions: 'assetID',
+                layouts: 'assetID',
+            });
+            this.db.open ();
+        }
 
         this.revocable = new RevocableContext ();
     }
@@ -107,12 +117,25 @@ export class AssetLayoutController {
     }
 
     //----------------------------------------------------------------//
-    @action
-    getAssetLayout ( assetID ) {
+    async getAssetLayout ( assetID ) {
+
+        // const layout = const schemaRecord = await this.db.schemas.get ({ networkID: networkID, key: schemaKey });
 
         if ( !_.has ( this.layoutCache, assetID )) {
             const asset = _.has ( this.assets, assetID ) ? this.assets [ assetID ] : this.schema.newAsset ( assetID, assetID );
-            this.layoutCache [ assetID ] = new AssetLayout ( this, asset, this.filters );
+            this.layoutCache [ assetID ] = new AssetLayout ( this, asset );
+        }
+        return this.layoutCache [ assetID ];
+    }
+
+    //----------------------------------------------------------------//
+    async getAssetLayoutAsync ( assetID ) {
+
+        // const layout = const schemaRecord = await this.db.schemas.get ({ networkID: networkID, key: schemaKey });
+
+        if ( !_.has ( this.layoutCache, assetID )) {
+            const asset = _.has ( this.assets, assetID ) ? this.assets [ assetID ] : this.schema.newAsset ( assetID, assetID );
+            this.layoutCache [ assetID ] = new AssetLayout ( this, asset );
         }
         return this.layoutCache [ assetID ];
     }
