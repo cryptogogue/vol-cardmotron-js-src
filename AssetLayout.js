@@ -12,10 +12,9 @@ const { TextFitter, JUSTIFY } = textLayout;
 export class AssetLayout {
 
     //----------------------------------------------------------------//
-    constructor ( layoutController, asset ) {
+    constructor ( schema, asset ) {
 
-        const schema    = layoutController.schema;
-        const context   = schema.composeAssetContext ( asset, {[ '$' ]: asset.assetID });
+        const context   = schema.composeAssetContext ( asset );
 
         this.width      = 0;
         this.height     = 0;
@@ -23,26 +22,26 @@ export class AssetLayout {
         this.context    = context;
 
         const layoutNameList = schema.getAssetField ( asset, 'layout', '' );
-        this.svg = this.layoutList ( layoutNameList, context, layoutController, []);
+        this.svg = this.layoutList ( layoutNameList, context, schema, []);
     }
 
     //----------------------------------------------------------------//
-    layoutList ( layoutNameList, context, layoutController, stack ) {
+    layoutList ( layoutNameList, context, schema, stack ) {
 
-        const layoutNames = layoutController.tokenizeLayoutNames ( layoutNameList );
+        const layoutNames = schema.tokenizeLayoutNames ( layoutNameList );
 
         let items = [];
         for ( const layoutName of layoutNames ) {
             context [ '$$' ] = '';
-            items.push ( this.layoutSingle ( layoutName, context, layoutController, stack ));
+            items.push ( this.layoutSingle ( layoutName, context, schema, stack ));
         }
         return `<g>${ items.join ( '' )}</g>`;
     }
 
     //----------------------------------------------------------------//
-    layoutSingle ( layoutName, context, layoutController, stack ) {
+    layoutSingle ( layoutName, context, schema, stack ) {
 
-        const layout = layoutController.layouts [ layoutName ]; 
+        const layout = schema.templates [ layoutName ]; 
         if ( !layout ) return;
 
         if ( this.dpi && ( layout.dpi !== this.dpi )) return;
@@ -114,7 +113,7 @@ export class AssetLayout {
                 case LAYOUT_COMMAND.DRAW_LAYOUT: {
 
                     const layoutNameList = command.template ( context );
-                    svg = this.layoutList ( layoutNameList, context, layoutController, stack );
+                    svg = this.layoutList ( layoutNameList, context, schema, stack );
 
                     break;
                 }
@@ -128,8 +127,8 @@ export class AssetLayout {
                 case LAYOUT_COMMAND.DRAW_TEXT_BOX: {
 
                     const resources = {
-                        fonts:  layoutController.fonts,
-                        icons:  layoutController.icons,
+                        fonts:  schema.fonts,
+                        icons:  schema.icons,
                     };
 
                     const fitter = new TextFitter ( resources, x, y, w, h, command.vJustify );

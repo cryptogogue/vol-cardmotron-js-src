@@ -3,8 +3,6 @@
 import { assert, InfiniteScrollView, RevocableContext, util } from 'fgc';
 
 import { AssetLayout }                          from './AssetLayout';
-import { AssetLayoutController }                from './AssetLayoutController';
-import { AssetMetrics }                         from './AssetMetrics';
 import * as consts                              from './consts';
 import { ProgressController }                   from 'fgc';
 import { action, computed, extendObservable, observable, observe, runInAction } from 'mobx';
@@ -20,14 +18,19 @@ import * as opentype                            from 'opentype.js';
 export class InventoryController {
 
     @observable schema              = new Schema (); // empty schema
-    @observable layoutController    = new AssetLayoutController ();
+    @observable assets              = {};
     @observable primaries           = {};
 
     //----------------------------------------------------------------//
-    @computed get
-    assets () {
+    @action
+    addAsset ( asset ) {
 
-        return this.layoutController.assets; // assets with layouts
+        if ( !this.schema ) return;
+
+        asset = this.schema.expandAsset ( asset );
+        if ( asset && this.schema.hasLayoutsForAsset ( asset )) {
+            this.assets [ asset.assetID ] = asset;
+        }
     }
 
     //----------------------------------------------------------------//
@@ -49,44 +52,38 @@ export class InventoryController {
 
         this.revocable.finalize ();
     }
+
     //----------------------------------------------------------------//
-    async reset ( template, assets, inventory ) {
+    async reset ( schema, assets, inventory ) {
 
         if ( !template ) return;
 
         this.progress.setLoading ( true );
-        await this.update ( template, assets, inventory );
+        await this.update ( schema, assets, inventory );
         this.progress.setLoading ( false );
     }
 
     //----------------------------------------------------------------//
     @action
-    async update ( template, assets, inventory ) {
-
-        await this.progress.onProgress ( 'Preparing Inventory' );
-
-        assets = _.cloneDeep ( assets );
+    setAssets ( assets ) {
 
         for ( let assetID in assets ) {
-            const asset = assets [ assetID ];
-
-            const definition = template.definitions [ asset.type ];
-            if ( !definition ) continue;
-
-            for ( let fieldName in definition.fields ) {
-
-                if ( !asset.fields [ fieldName ]) {
-
-                    const field = definition.fields [ fieldName ];
-                    asset.fields [ fieldName ] = {
-                        type:   field.type,
-                        value:  field.value,
-                    };
-                }
-            }
+            this.addAsset ( assets [ assetID ]);
         }
+    }
 
-        const schema = new Schema ( template );
+    //----------------------------------------------------------------//
+    @action
+    setSchema ( schema ) {
+
+        this.schema = schema;
+    }
+
+    //----------------------------------------------------------------//
+    @action
+    async update ( schema, assets, inventory ) {
+
+        await this.progress.onProgress ( 'Preparing Inventory' );
 
         if ( !( assets || inventory )) {
             inventory = {};
@@ -106,13 +103,7 @@ export class InventoryController {
             }
         }
 
-        const layoutController = new AssetLayoutController ();
-        await layoutController.setSchema ( schema, this.progress );
-        await layoutController.setAssets ( assets, this.progress );
-
-        runInAction (() => {
-            this.schema = schema;
-            this.layoutController = layoutController;
-        });
+        this.setSchema ( schema );
+        this.setAssets ( assets );
     }
 }

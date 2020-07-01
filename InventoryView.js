@@ -50,6 +50,7 @@ export const InventoryView = observer (( props ) => {
 
     const controller            = props.controller;
     const inventory             = controller.inventory;
+    const schema                = inventory.schema;
     const layoutController      = inventory.layoutController;
     const assetArray            = controller.sortedAssets || inventory.availableAssetsArray;
     const zoom                  = controller.zoom || 1;
@@ -62,7 +63,8 @@ export const InventoryView = observer (( props ) => {
     }
 
     const sizers = {};
-    for ( let docSizeName in layoutController.docSizes ) {
+    for ( let docSizeName in schema.docSizes ) {
+
         sizers [ docSizeName ] = (
             <Card
                 style = {{
@@ -72,7 +74,7 @@ export const InventoryView = observer (( props ) => {
                 }}
             >
                 <AssetSizer
-                    docSizes = { layoutController.docSizes }
+                    docSizes = { schema.docSizes }
                     docSizeName = { docSizeName }
                     scale = { zoom }
                 />
@@ -81,8 +83,8 @@ export const InventoryView = observer (( props ) => {
     }
 
     const getSizerName = ( i ) => {
-        const assetID = assetArray [ i ].assetID;
-        const metrics = layoutController.getAssetMetrics ( assetID );
+        const asset = assetArray [ i ];
+        const metrics = schema.getAssetDocSize ( asset );
         return metrics.docSizeName;
     }
 

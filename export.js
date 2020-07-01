@@ -10,7 +10,6 @@ module.exports = {
 
     AssetCardView:                  require ( './AssetCardView.js' ).AssetCardView,
     AssetLayout:                    require ( './AssetLayout.js' ).AssetLayout,
-    AssetMetrics:                   require ( './AssetMetrics.js' ).AssetMetrics,
     AssetModal:                     require ( './AssetModal.js' ).AssetModal,
     AssetSizer:                     require ( './AssetSizer.js' ).AssetSizer,
     AssetView:                      require ( './AssetView.js' ).AssetView,

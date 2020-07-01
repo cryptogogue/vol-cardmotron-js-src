@@ -1,5 +1,6 @@
 // Copyright (c) 2019 Cryptogogue, Inc. All Rights Reserved.
 
+import { AssetLayout }              from './AssetLayout';
 import { LAYOUT_COMMAND }           from './schema/SchemaBuilder';
 import handlebars                   from 'handlebars';
 import { observer }                 from 'mobx-react';
@@ -12,10 +13,13 @@ export const AssetView = ( props ) => {
 
     const { inventory, assetID, inches } = props;
 
+    const schema        = inventory.schema;
     const layouts       = inventory.layoutController;
 
-    const [ layout ]    = useState ( layouts.getAssetLayout ( assetID ));
-    const [ metrics ]   = useState ( layouts.getAssetMetrics ( assetID ));
+    const asset         = _.has ( inventory.assets, assetID ) ? inventory.assets [ assetID ] : schema.newAsset ( assetID, assetID );
+
+    const [ layout ]    = useState ( new AssetLayout ( schema, asset ));
+    const [ metrics ]   = useState ( schema.getAssetDocSize ( asset ));
 
     const dpi           = props.dpi || 300;
     const dpiScale      = dpi / metrics.dpi;

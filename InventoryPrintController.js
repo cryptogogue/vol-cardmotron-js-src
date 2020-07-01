@@ -231,7 +231,7 @@ export class InventoryPrintController {
 
         for ( let asset of assetArray ) {
 
-            const metrics = inventory.layoutController.getAssetMetrics ( asset.assetID );
+            const metrics = inventory.layoutController.getAssetDocSize ( asset );
             let batch = batchesByName [ metrics.docSizeName ];
 
             if ( !batch ) {
