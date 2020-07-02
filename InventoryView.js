@@ -51,7 +51,6 @@ export const InventoryView = observer (( props ) => {
     const controller            = props.controller;
     const inventory             = controller.inventory;
     const schema                = inventory.schema;
-    const layoutController      = inventory.layoutController;
     const assetArray            = controller.sortedAssets || inventory.availableAssetsArray;
     const zoom                  = controller.zoom || 1;
 

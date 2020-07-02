@@ -71,9 +71,9 @@ export class InventoryDownloadController {
 
         const asset     = assets [ i ];
         const assetID   = asset.assetID;
-        const metrics   = inventory.schema.getAssetDocSize ( asset );
-        const width     = metrics.docSize.widthInInches * DPI;
-        const height    = metrics.docSize.heightInInches * DPI;
+        const docSize   = inventory.schema.getAssetDocSize ( asset );
+        const width     = docSize.widthInInches * DPI;
+        const height    = docSize.heightInInches * DPI;
 
         const svg = ReactDomServer.renderToStaticMarkup (
             <svg

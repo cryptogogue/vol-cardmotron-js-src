@@ -22,18 +22,6 @@ export class InventoryController {
     @observable primaries           = {};
 
     //----------------------------------------------------------------//
-    @action
-    addAsset ( asset ) {
-
-        if ( !this.schema ) return;
-
-        asset = this.schema.expandAsset ( asset );
-        if ( asset && this.schema.hasLayoutsForAsset ( asset )) {
-            this.assets [ asset.assetID ] = asset;
-        }
-    }
-
-    //----------------------------------------------------------------//
     @computed get
     availableAssetsArray () {
 
@@ -45,6 +33,13 @@ export class InventoryController {
 
         this.revocable = new RevocableContext ();
         this.progress = progressController || new ProgressController ( false );
+    }
+
+    //----------------------------------------------------------------//
+    @action
+    deleteAsset ( assetID ) {
+
+        delete this.assets [ assetID ];
     }
 
     //----------------------------------------------------------------//
@@ -65,10 +60,23 @@ export class InventoryController {
 
     //----------------------------------------------------------------//
     @action
+    setAsset ( asset ) {
+
+        if ( !this.schema ) return;
+
+        asset = this.schema.expandAsset ( asset );
+        if ( asset && this.schema.hasLayoutsForAsset ( asset )) {
+            this.assets [ asset.assetID ] = asset;
+        }
+    }
+
+    //----------------------------------------------------------------//
+    @action
     setAssets ( assets ) {
 
+        this.assets = {};
         for ( let assetID in assets ) {
-            this.addAsset ( assets [ assetID ]);
+            this.setAsset ( assets [ assetID ]);
         }
     }
 

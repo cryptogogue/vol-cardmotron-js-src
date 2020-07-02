@@ -50,7 +50,7 @@ export class InventoryPrintController {
             () => {
                 return {
                     layoutName:     inventoryViewController.layoutName,
-                    inventory:  inventoryViewController.inventory,
+                    inventory:      inventoryViewController.inventory,
                     assetArray:     inventoryViewController.sortedAssets,
                 };
             },
@@ -231,14 +231,14 @@ export class InventoryPrintController {
 
         for ( let asset of assetArray ) {
 
-            const metrics = inventory.layoutController.getAssetDocSize ( asset );
-            let batch = batchesByName [ metrics.docSizeName ];
+            const docSize = inventory.schema.getAssetDocSize ( asset );
+            let batch = batchesByName [ docSize.docSizeName ];
 
             if ( !batch ) {
 
                 const assetMetrics = {
-                    width:      metrics.docSize.widthInInches,
-                    height:     metrics.docSize.heightInInches,
+                    width:      docSize.widthInInches,
+                    height:     docSize.heightInInches,
                 };
 
                 batch = {
@@ -246,7 +246,7 @@ export class InventoryPrintController {
                     assetMetrics:   assetMetrics,
                 };
 
-                batchesByName [ metrics.docSizeName ] = batch;
+                batchesByName [ docSize.docSizeName ] = batch;
                 batches.push ( batch );
             }
             batch.assets.push ( asset );

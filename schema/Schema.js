@@ -1,10 +1,12 @@
 /* eslint-disable no-whitespace-before-property */
 
 import { Binding }          from './Binding';
+import { LAYOUT_COMMAND }   from './SchemaBuilder';
 import * as squap           from './Squap';
 import { assert, excel, hooks, RevocableContext, SingleColumnContainerView, util } from 'fgc';
 import handlebars           from 'handlebars';
 import _                    from 'lodash';
+import * as opentype        from 'opentype.js';
 
 const LAYOUT_LIST_SEPARATOR_REGEX = /[\s,]+/;
 
@@ -77,6 +79,8 @@ export class Schema {
 
     //----------------------------------------------------------------//
     constructor ( json ) {
+
+        this.revocable      = new RevocableContext ();
 
         this.definitions    = json ? _.cloneDeep ( json.definitions ) : {};
         this.fonts          = json ? _.cloneDeep ( json.fonts ) : {};

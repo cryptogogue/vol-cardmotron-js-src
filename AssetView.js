@@ -14,7 +14,6 @@ export const AssetView = ( props ) => {
     const { inventory, assetID, inches } = props;
 
     const schema        = inventory.schema;
-    const layouts       = inventory.layoutController;
 
     const asset         = _.has ( inventory.assets, assetID ) ? inventory.assets [ assetID ] : schema.newAsset ( assetID, assetID );
 
