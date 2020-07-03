@@ -42,14 +42,7 @@ export const AssetView = ( props ) => {
             viewBox = { `0 0 ${ assetWidth } ${ assetHeight }` }
             preserveAspectRatio = 'xMidYMid meet'
         >
-            <Choose>
-                <When condition = { layout }>
-                    <g transform = { `scale ( ${ dpiScale } ${ dpiScale })` } dangerouslySetInnerHTML = {{ __html: layout.svg }}></g>
-                </When>
-                <Otherwise>
-                    <rect width = { docWidthInInches * dpi } height = { docHeightInInches * dpi  } fill = "gray"/>
-                </Otherwise>
-            </Choose>
+            <g transform = { `scale ( ${ dpiScale } ${ dpiScale })` } dangerouslySetInnerHTML = {{ __html: layout.svg }}></g>
         </svg>   
     );
 }
