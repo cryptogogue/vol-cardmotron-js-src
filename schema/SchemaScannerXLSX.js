@@ -168,6 +168,7 @@ export class SchemaScannerXLSX {
     readDefinitions ( sheet, row ) {
 
         // read in the field definitions
+        let definitionTypeCol = false;
         const fieldDefs = {};
         for ( let col = 1; col < sheet.width; ++col ) {
 
@@ -199,6 +200,7 @@ export class SchemaScannerXLSX {
 
                 case '@':
                     type = 'string';
+                    definitionTypeCol = col;
                     break;
 
                 default:
@@ -210,22 +212,34 @@ export class SchemaScannerXLSX {
                     break;
             };
 
-            if ( !type ) continue;
-
-            if ( name && type ) {
-                fieldDefs [ col ] = {
-                    name:       name,
-                    type:       type,
-                    mutable:    mutable,
-                    isDeck:     isDeck,
-                }
+            if ( !type ) {
+                this.reportWarning ( `Could not find type for field '${ name }'. Field will be ignored.`, col, row );
+                continue; 
             }
+
+            if ( !(( type === 'number' ) || ( type === 'string' ))) {
+                this.reportError ( `Unrecognized type '${ type }'. Type must be 'number' or 'string'.`, col, row ); 
+                continue;
+            }
+
+            fieldDefs [ col ] = {
+                name:       name,
+                type:       type,
+                mutable:    mutable,
+                isDeck:     isDeck,
+            }
+        }
+
+        if ( definitionTypeCol === false ) {
+            this.reportError ( `No '@' definition type found on field name row.`, 1, row ); 
         }
 
         // skip the field definitions
         row += 2;
 
         for ( ; scanMore ( sheet, row ); ++row ) {
+
+            if ( !String ( sheet.getValueByCoord ( definitionTypeCol, row, '' ))) continue;
 
             let definition = {};
             let fieldCount = 0;
@@ -241,17 +255,28 @@ export class SchemaScannerXLSX {
                 let value;
 
                 switch ( fieldDef.type ) {
+
                     case 'number':
-                        value = Number ( raw );
-                        if ( typeof ( value ) !== fieldDef.type ) continue;
+                        value = Number ( raw ? raw : '' );
+                        if ( isNaN ( value )) {
+                            this.reportError ( `Type mismatch: could not coerce '${ raw }' to number.`, col, row ); 
+                            continue;
+                        }
                         break;
+
                     case 'string':
                         value = String ( raw );
-                        if ( typeof ( value ) !== fieldDef.type ) continue;
                         value = handlebars.compile ( value, COMPILE_OPTIONS )( this.macros );
                         break;
+
                     default:
+                        this.reportError ( `Unrecognized field type '${ fieldDef.type }'.`, col, row ); 
                         continue;
+                }
+
+                if ( !(( typeof ( value ) === 'number' ) || ( typeof ( value ) === 'string' ))) {
+                    this.reportError ( `Type of '${ raw }' is '${ typeof ( value )}'.`, col, row ); 
+                    continue;
                 }
 
                 if ( fieldDef.isDeck ) {

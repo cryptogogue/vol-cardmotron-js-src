@@ -84,6 +84,7 @@ function makeIndexOp ( opname ) {
         }
         return {
             op:         opname,
+            paramID:    '',
             value:      arg0,
         };
     };
