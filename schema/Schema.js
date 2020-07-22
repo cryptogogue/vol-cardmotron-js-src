@@ -124,11 +124,11 @@ export class Schema {
                 method.name = methodName;
 
                 for ( let argname in method.assetArgs ) {
-                    method.assetArgs [ argname ] = squap.makeSquap ( method.assetArgs [ argname ]);
+                    method.assetArgs [ argname ].qualifier = squap.makeSquap ( method.assetArgs [ argname ].qualifier );
                 }
 
                 for ( let argname in method.constArgs ) {
-                    method.constArgs [ argname ] = squap.makeSquap ( method.constArgs [ argname ]);
+                    method.constArgs [ argname ].qualifier = squap.makeSquap ( method.constArgs [ argname ].qualifier );
                 }
 
                 for ( let i in method.constraints ) {

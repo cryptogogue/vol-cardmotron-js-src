@@ -622,6 +622,10 @@ export class SchemaScannerXLSX {
     //----------------------------------------------------------------//
     readMethods ( sheet, row ) {
 
+        // NOTE: the inputType field is used here to derive the input base type
+        // (ASSET or CONST) and ALSO the 'input scheme,' which is an opaque field
+        // used only by the wallet.
+
         const paramNames = this.readParamNames ( sheet, row++ );
 
         const parseSquapSafe = ( test, row, col ) => {

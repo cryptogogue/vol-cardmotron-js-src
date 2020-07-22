@@ -49,7 +49,7 @@ export class MethodBinding {
             const asset = this.assetsByAssetID [ paramsByName [ paramName ]];
             assetsByParamName [ paramName ] = asset;
             
-            if ( !method.assetArgs [ paramName ].eval ({ schema: schema, assets: [ asset ]})) return false;
+            if ( !method.assetArgs [ paramName ].qualifier.eval ({ schema: schema, assets: [ asset ]})) return false;
         }
 
         // check the constraints
@@ -160,7 +160,7 @@ export class MethodBinding {
             this.paramListsByName [ paramName ] = [];
 
             // check every asset
-            const squap = assetArgs [ paramName ]; // arg qualifier
+            const squap = assetArgs [ paramName ].qualifier; // arg qualifier
             for ( let assetID in assetsByAssetID ) {
 
                 if ( filter && ( filter ( assetID ) === false )) continue;

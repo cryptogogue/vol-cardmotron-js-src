@@ -81,7 +81,9 @@ class SchemaBuilder {
     assetArg ( name, qualifier ) {
 
         assert ( this.popTo ( SCHEMA_BUILDER_ADDING_METHOD ));
-        this.top ().assetArgs [ name ] = qualifier;
+        this.top ().assetArgs [ name ] = {
+            qualifier:  qualifier,
+        }
         return this;
     }
 
@@ -102,10 +104,15 @@ class SchemaBuilder {
     }
 
     //----------------------------------------------------------------//
-    constArg ( name, qualifier ) {
+    constArg ( name, qualifier, inputType ) {
 
         assert ( this.popTo ( SCHEMA_BUILDER_ADDING_METHOD ));
-        this.top ().constArgs [ name ] = qualifier;
+        this.top ().constArgs [ name ] = {
+            qualifier:  qualifier,
+            inputScheme: {
+                type:   inputType,
+            },
+        }
         return this;
     }
 

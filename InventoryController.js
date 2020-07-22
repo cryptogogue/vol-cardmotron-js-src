@@ -19,7 +19,6 @@ export class InventoryController {
 
     @observable schema              = new Schema (); // empty schema
     @observable assets              = {};
-    @observable primaries           = {};
 
     //----------------------------------------------------------------//
     @computed get
