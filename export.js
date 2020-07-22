@@ -18,6 +18,7 @@ module.exports = {
     InventoryController:            require ( './InventoryController.js' ).InventoryController,
     InventoryDownloadController:    require ( './InventoryDownloadController.js' ).InventoryDownloadController,
     InventoryDownloadModal:         require ( './InventoryDownloadModal.js' ).InventoryDownloadModal,
+    InventoryFilter:                require ( './InventoryFilter.js' ).InventoryFilter,
     inventoryMenuItems:             require ( './inventoryMenuItems.js' ),
     InventoryPrintController:       require ( './InventoryPrintController.js' ).InventoryPrintController,
     InventoryPrintView:             require ( './InventoryPrintView.js' ).InventoryPrintView,

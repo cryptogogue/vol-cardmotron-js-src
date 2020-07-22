@@ -1,6 +1,5 @@
 /* eslint-disable no-whitespace-before-property */
 
-import { InventoryDuplicatesController }    from '../InventoryDuplicatesController';
 import { MethodBinding }                    from './MethodBinding';
 import { MultiCounter }                     from './MultiCounter';
 import { Schema }                           from './Schema';

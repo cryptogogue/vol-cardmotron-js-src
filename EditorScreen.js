@@ -64,7 +64,7 @@ export const EditorScreen = observer (( props ) => {
         }
     }
 
-    const hasAssets = (( inventory.progress.loading === false ) && ( inventory.availableAssetsArray.length > 0 ));
+    const hasAssets = (( inventory.progress.loading === false ) && ( inventory.assetsArray.length > 0 ));
     const hasMessages = (( inventory.progress.loading === false ) && ( scanner && scanner.hasMessages ()));
 
     return (

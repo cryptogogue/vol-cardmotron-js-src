@@ -219,7 +219,7 @@ export class InventoryPrintController {
 
         layoutName    = layoutName || consts.PAGE_TYPE.US_LETTER;
         inventory     = inventory;
-        assetArray    = assetArray || inventory.availableAssetsArray;
+        assetArray    = assetArray || inventory.assetsArray;
 
         this.queue = [];
         this.pages = [];

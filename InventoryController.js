@@ -22,7 +22,7 @@ export class InventoryController {
 
     //----------------------------------------------------------------//
     @computed get
-    availableAssetsArray () {
+    assetsArray () {
 
         return Object.values ( this.assets );
     }

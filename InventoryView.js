@@ -24,7 +24,7 @@ const ControlledAssetCardView = observer (( props ) => {
     const { assetID, controller } = props;
 
     const inventory             = controller.inventory;
-    const assetArray            = controller.sortedAssets || inventory.availableAssetsArray;
+    const assetArray            = controller.sortedAssets || inventory.assetsArray;
     const zoom                  = controller.zoom || 1;
 
     return (
@@ -35,7 +35,7 @@ const ControlledAssetCardView = observer (( props ) => {
             onSelect        = { props.onSelect || false }
             onMagnify       = { props.onMagnify || false }
             onEllipsis      = { props.onEllipsis || false }
-            count           = { controller.hideDuplicates ? controller.countDuplicates ( assetID, controller.filterFunc ) : 1 }
+            count           = { controller.hideDuplicates ? controller.countDuplicates ( assetID ) : 1 }
 
             isSelected      = { props.isSelected ? props.isSelected ( assetID ) : controller.isSelected ( assetID )}
             disabled        = { props.isDisabled ? props.isDisabled ( assetID ) : false }
@@ -51,7 +51,7 @@ export const InventoryView = observer (( props ) => {
     const controller            = props.controller;
     const inventory             = controller.inventory;
     const schema                = inventory.schema;
-    const assetArray            = controller.sortedAssets || inventory.availableAssetsArray;
+    const assetArray            = controller.sortedAssets || inventory.assetsArray;
     const zoom                  = controller.zoom || 1;
 
     const onAssetEvent = ( handler, asset, event ) => {

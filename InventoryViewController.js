@@ -1,7 +1,6 @@
 // Copyright (c) 2019 Cryptogogue, Inc. All Rights Reserved.
 
 import * as consts                                          from './consts';
-import { InventoryDuplicatesController }                    from './InventoryDuplicatesController';
 import _                                                    from 'lodash';
 import { action, computed, extendObservable, observable, runInAction } from 'mobx';
 import { observer }                                         from 'mobx-react';
@@ -13,6 +12,7 @@ import { assert, excel, hooks, RevocableContext, SingleColumnContainerView, util
 //================================================================//
 export class InventoryViewController {
 
+    @observable inventory           = false;
     @observable layoutName          = consts.WEB_LAYOUT;
     @observable selection           = {};
     @observable sortMode            = consts.SORT_MODE.ALPHA_ATOZ;
@@ -60,18 +60,18 @@ export class InventoryViewController {
     //----------------------------------------------------------------//
     constructor ( inventory, hideDuplicates ) {
 
-        this.inventory = inventory;
-        this.duplicatesController = new InventoryDuplicatesController (() => { return this.filteredAssetsByID });
-
         runInAction (() => {
+            this.inventory = inventory || false;
             this.hideDuplicates = hideDuplicates === undefined ? true : hideDuplicates;
         })
     }
 
     //----------------------------------------------------------------//
-    countDuplicates ( assetID, filterFunc ) {
+    countDuplicates ( assetID ) {
 
-        return this.duplicatesController.countDuplicates ( assetID, filterFunc );
+        const report = this.duplicatesReport;
+        const primary = report.primaries [ report.duplicates [ assetID ]];
+        return primary.count;
     }
 
     //----------------------------------------------------------------//
@@ -79,7 +79,7 @@ export class InventoryViewController {
     deselectAsset ( asset ) {
 
         if ( this.hideDuplicates && this.isPrimary ( asset.assetID )) {
-            const duplicates = this.duplicatesController.getDuplicateAssets ( asset.assetID );
+            const duplicates = this.getDuplicateAssets ( asset.assetID );
             for ( let duplicate of duplicates ) {
                 delete this.selection [ duplicate.assetID ];
             }
@@ -91,46 +91,93 @@ export class InventoryViewController {
 
     //----------------------------------------------------------------//
     @computed get
-    filteredAssetsByID () {
+    duplicatesReport () {
 
-        const filteredAssets = {};
-        for ( let assetID in this.inventory.assets ) {
-            if ( this.filterFunc && !this.filterFunc ( assetID )) continue;
-            filteredAssets [ assetID ] = this.inventory.assets [ assetID ];
+        const primaries = {};
+        const duplicates = {};
+
+        const isDuplicate = ( asset0, asset1 ) => {
+            return (( asset0.type === asset1.type ) && _.isEqual ( asset0.fields, asset1.fields ));
         }
-        return filteredAssets;
+
+        const findPrimary = ( asset ) => {
+            for ( let primaryID in primaries ) {
+                const primary = primaries [ primaryID ];
+                if ( isDuplicate ( asset, primary.asset )) return primary;
+            }
+            return false;
+        }
+
+        const assets = this.inventory.assets;
+        for ( let assetID in assets ) {
+
+            const asset = assets [ assetID ];
+            const primary = findPrimary ( asset );
+
+            if ( primary === false ) {
+                const newPrimary = {
+                    asset: asset,
+                    count: 1,
+                    duplicates: [ asset ],
+                }
+                primaries [ assetID ] = newPrimary;
+                duplicates [ assetID ] = asset.assetID;
+            }
+            else {
+                primary.count = primary.count + 1;
+                primary.duplicates.push ( asset );
+                duplicates [ assetID ] = primary.asset.assetID;
+            }
+        }
+
+        return {
+            primaries:      primaries,
+            duplicates:     duplicates,
+        }
     }
 
     //----------------------------------------------------------------//
     finalize () {
-
-        this.duplicatesController.finalize ();
     }
 
     //----------------------------------------------------------------//
-    getDuplicateIDs ( assetID, filterFunc ) {
+    getDuplicateAssets ( assetID ) {
 
-        return this.duplicatesController.getDuplicateIDs ( assetID, filterFunc );
+        const report = this.duplicatesReport;
+        const primary = report.primaries [ report.duplicates [ assetID ]];
+        
+        const duplicates = [];
+        for ( let duplicate of primary.duplicates ) {
+            duplicates.push ( duplicate );
+        }
+        return duplicates;
+    }
+
+    //----------------------------------------------------------------//
+    getDuplicateIDs ( assetID, ) {
+
+        const report = this.duplicatesReport;
+        const primary = report.primaries [ report.duplicates [ assetID ]];
+        
+        const duplicateIDs = [];
+        for ( let duplicate of primary.duplicates ) {
+            duplicateIDs.push ( duplicate.assetID );
+        }
+        return duplicateIDs;
     }
 
     //----------------------------------------------------------------//
     getSortedAssets ( hideDuplicates ) {
 
-        const availableAssetArray = this.inventory.availableAssetsArray;
+        const availableAssetArray = this.inventory.assetsArray;
         let assetArray = availableAssetArray;
 
-        if ( hideDuplicates || this.filterFunc ) {
+        if ( hideDuplicates && this.hasDuplicates ) {
 
             assetArray = [];
 
-            for ( let asset of availableAssetArray ) {
-
-                const isPrimary = (( this.layoutName == consts.WEB_LAYOUT ) && hideDuplicates ) ? this.isPrimary ( asset.assetID ) : true;
-                const isVisible = this.filterFunc ? this.filterFunc ( asset.assetID ) : true;
-
-                if ( isPrimary && isVisible ) {
-                    assetArray.push ( asset );
-                }
+            for ( let assetID in this.duplicatesReport.primaries ) {
+                assetArray.push ( this.inventory.assets [ assetID ]);
             }
         }
 
@@ -142,7 +189,8 @@ export class InventoryViewController {
     @computed get
     hasDuplicates () {
 
-        return this.duplicatesController.hasDuplicates;
+        const report = this.duplicatesReport;
+        return ( _.size ( report.duplicates ) > _.size ( report.primaries ));
     }
 
     //----------------------------------------------------------------//
@@ -155,7 +203,7 @@ export class InventoryViewController {
     //----------------------------------------------------------------//
     isPrimary ( assetID ) {
 
-        return this.duplicatesController.isPrimary ( assetID );
+        return ( this.duplicatesReport.primaries [ assetID ] !== undefined );
     }
 
     //----------------------------------------------------------------//
@@ -182,7 +230,7 @@ export class InventoryViewController {
     @computed get
     sortedAssets () {
 
-        return this.getSortedAssets ( this.hideDuplicates );
+        return this.getSortedAssets (( this.layoutName == consts.WEB_LAYOUT ) && this.hideDuplicates );
     }
 
     //----------------------------------------------------------------//
@@ -190,7 +238,7 @@ export class InventoryViewController {
     selectAsset ( asset ) {
 
         if ( this.hideDuplicates && this.isPrimary ( asset.assetID )) {
-            const duplicates = this.duplicatesController.getDuplicateAssets ( asset.assetID );
+            const duplicates = this.getDuplicateAssets ( asset.assetID );
             for ( let duplicate of duplicates ) {
                 this.selection [ duplicate.assetID ] = duplicate;
             }
@@ -201,12 +249,6 @@ export class InventoryViewController {
     }
 
     //----------------------------------------------------------------//
-    setFilterFunc ( filterFunc ) {
-
-        this.filterFunc = filterFunc;
-    }
-
-    //----------------------------------------------------------------//
     @action
     setHideDuplicates ( hidden ) {
 
@@ -214,6 +256,13 @@ export class InventoryViewController {
         if ( hidden ) {
             this.clearSelection ();
         }
+    }
+
+    //----------------------------------------------------------------//
+    @action
+    setInventory ( inventory ) {
+
+        this.inventory = inventory;
     }
 
     //----------------------------------------------------------------//
