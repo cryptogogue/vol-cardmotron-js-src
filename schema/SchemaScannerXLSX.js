@@ -659,10 +659,21 @@ export class SchemaScannerXLSX {
             if ( param ) {
                 const params = this.readParams ( sheet, row, paramNames, [
                     stringParam ( 'param' ),
+                    stringParam ( 'inputType', 'asset' ),
                     stringParam ( 'qualifier', '' ),
                 ]);
                 const squap = parseSquapSafe ( params.qualifier, row, paramNames.qualifier );
-                this.schemaBuilder.assetArg ( params.param, squap );
+
+
+                switch ( params.inputType ) {
+                    case 'asset':
+                        this.schemaBuilder.assetArg ( params.param, squap );
+                        break;
+
+                    case 'image':
+                        this.schemaBuilder.constArg ( params.param, squap, { type: 'STRING', value: '' }, 'image' );
+                        break;
+                }
                 continue;
             }
             else {

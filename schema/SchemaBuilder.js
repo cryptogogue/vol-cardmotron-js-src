@@ -104,11 +104,12 @@ class SchemaBuilder {
     }
 
     //----------------------------------------------------------------//
-    constArg ( name, qualifier, inputType ) {
+    constArg ( name, qualifier, defaultValue, inputType ) {
 
         assert ( this.popTo ( SCHEMA_BUILDER_ADDING_METHOD ));
         this.top ().constArgs [ name ] = {
-            qualifier:  qualifier,
+            qualifier:      qualifier,
+            defaultValue:   defaultValue,
             inputScheme: {
                 type:   inputType,
             },
