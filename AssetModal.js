@@ -23,9 +23,25 @@ export const AssetModal = observer (( props ) => {
 
     const isOpen = (( typeof ( assetID ) === 'string' ) && ( assetID.length > 0 ));
 
-    let description = assetID;
+    let formatAssetID = props.formatAssetID || (( assetID ) => { return assetID; });
+
+    let footer = formatAssetID ( assetID );
     if (( assetID !== false ) && controller.hideDuplicates ) {
-        description = controller.getDuplicateIDs ( assetID ).join ( ', ' );
+
+        footer = [];
+
+        const duplicates = controller.getDuplicateIDs ( assetID );
+        for ( let i = 0; i < duplicates.length; ++i ) {
+
+            footer.push (
+                <span key = { i }>
+                    <span>{ formatAssetID ( duplicates [ i ])}</span>
+                    <If condition = { i < ( duplicates.length - 1 )}>
+                        <span>{ ', ' }</span>
+                    </If>
+                </span>
+            );
+        }
     }
 
     return (
@@ -44,7 +60,7 @@ export const AssetModal = observer (( props ) => {
                         inventory = { inventory }
                         inches = 'true'
                     />
-                    <p>{ description }</p>
+                    <p>{ footer }</p>
                 </center>
             </Modal.Content>
         </Modal>
