@@ -755,6 +755,30 @@ export class SchemaScannerXLSX {
     }
 
     //----------------------------------------------------------------//
+    readRewards ( sheet, row ) {
+
+        const paramNames = this.readParamNames ( sheet, row++ );
+
+        for ( ; scanMore ( sheet, row ); ++row ) {
+
+            const name = util.toStringOrFalse ( sheet.getValueByCoord ( paramNames.name, row ));
+
+            if ( name ) {
+                const params = this.readParams ( sheet, row, paramNames, [
+                    stringParam ( 'name' ),
+                    stringParam ( 'script' ),
+                    stringParam ( 'friendlyName', '' ),
+                    stringParam ( 'description', '' ),
+                ]);
+
+                this.schemaBuilder.reward ( params.name, params.friendlyName, params.description );
+                this.schemaBuilder.lua ( params.script );
+                continue;
+            }
+        }
+    }
+
+    //----------------------------------------------------------------//
     readSheet ( sheetName ) {
 
         const sheet = this.book.getSheet ( sheetName );
@@ -768,6 +792,7 @@ export class SchemaScannerXLSX {
             LAYOUTS:        ( name, row ) => { this.readLayouts         ( sheet, row )},
             MACROS:         ( name, row ) => { this.readMacros          ( sheet, row )},
             METHODS:        ( name, row ) => { this.readMethods         ( sheet, row )},
+            REWARDS:        ( name, row ) => { this.readRewards         ( sheet, row )},
             UPGRADES:       ( name, row ) => { this.readUpgrades        ( sheet, row )},
             VERSION:        ( name, row ) => { this.readVersion         ( sheet, row )},
         }
