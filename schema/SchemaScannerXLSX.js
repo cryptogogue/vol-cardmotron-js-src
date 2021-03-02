@@ -766,12 +766,13 @@ export class SchemaScannerXLSX {
             if ( name ) {
                 const params = this.readParams ( sheet, row, paramNames, [
                     stringParam ( 'name' ),
+                    numberParam ( 'quantity' ),
                     stringParam ( 'script' ),
                     stringParam ( 'friendlyName', '' ),
                     stringParam ( 'description', '' ),
                 ]);
 
-                this.schemaBuilder.reward ( params.name, params.friendlyName, params.description );
+                this.schemaBuilder.reward ( params.name, params.friendlyName, params.description, params.quantity );
                 this.schemaBuilder.lua ( params.script );
                 continue;
             }
@@ -814,8 +815,8 @@ export class SchemaScannerXLSX {
         for ( ; scanMore ( sheet, row ); ++row ) {
 
             const params = this.readParams ( sheet, row, paramNames, [
-                stringParam ( 'type' ),
-                stringParam ( 'upgrade' ),
+                stringParam ( 'type', false ),
+                stringParam ( 'upgrade', false ),
             ]);
 
             if ( !( params.type && params.upgrade )) continue;

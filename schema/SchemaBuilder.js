@@ -539,7 +539,7 @@ class SchemaBuilder {
     }
 
     //----------------------------------------------------------------//
-    reward ( name, friendlyName, description ) {
+    reward ( name, friendlyName, description, quantity ) {
 
         assert ( this.popTo ( SCHEMA_BUILDER_ADDING_SCHEMA ));
 
@@ -549,6 +549,7 @@ class SchemaBuilder {
                 friendlyName:   friendlyName || '',
                 description:    description || '',
                 lua:            '',
+                quantity:       quantity || 0,
             },
             ( schema, method ) => {
                 schema.rewards [ name ] = method;
