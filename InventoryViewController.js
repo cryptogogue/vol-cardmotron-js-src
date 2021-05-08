@@ -5,7 +5,9 @@ import _                                                    from 'lodash';
 import { action, computed, extendObservable, observable, runInAction } from 'mobx';
 import { observer }                                         from 'mobx-react';
 import { computedFn }                                       from 'mobx-utils'
-import { assert, excel, hooks, RevocableContext, SingleColumnContainerView, util } from 'fgc';
+import { assert, excel, hooks, RevocableContext, SingleColumnContainerView, StorageContext, util } from 'fgc';
+
+const STORE_INVENTORY_VIEW_PREFS        = '.cadmotron.inventoryViewPrefs';
 
 //================================================================//
 // InventoryViewController
@@ -13,12 +15,13 @@ import { assert, excel, hooks, RevocableContext, SingleColumnContainerView, util
 export class InventoryViewController {
 
     @observable inventory           = false;
-    @observable layoutName          = consts.WEB_LAYOUT;
     @observable selection           = {};
-    @observable sortMode            = consts.SORT_MODE.ALPHA_ATOZ;
     @observable rankDefinitions     = false;
-    @observable zoom                = consts.DEFAULT_ZOOM;
-    @observable hideDuplicates      = true;
+
+    @computed get hideDuplicates    () { return this.prefs.hideDuplicates; }
+    @computed get layoutName        () { return this.prefs.layoutName; }
+    @computed get sortMode          () { return this.prefs.sortMode; }
+    @computed get zoom              () { return this.prefs.zoom; }
 
     //----------------------------------------------------------------//
     @action
@@ -58,11 +61,28 @@ export class InventoryViewController {
     }
 
     //----------------------------------------------------------------//
-    constructor ( inventory, hideDuplicates ) {
+    constructor ( inventory, hideDuplicates, persist ) {
+
+        const prefs = {
+            hideDuplicates:     hideDuplicates === undefined ? true : hideDuplicates,
+            layoutName:         consts.WEB_LAYOUT,
+            sortMode:           consts.SORT_MODE.ALPHA_ATOZ,
+            zoom:               consts.DEFAULT_ZOOM,
+        };
+
+        this.storage = new StorageContext ();
+
+        if ( persist ) {
+            this.storage.persist ( this, 'prefs',   STORE_INVENTORY_VIEW_PREFS, prefs );
+        }
+        else {
+            extendObservable ( this, {
+                prefs: prefs,
+            });
+        }
 
         runInAction (() => {
             this.inventory = inventory || false;
-            this.hideDuplicates = hideDuplicates === undefined ? true : hideDuplicates;
         })
     }
 
@@ -138,6 +158,8 @@ export class InventoryViewController {
 
     //----------------------------------------------------------------//
     finalize () {
+
+        this.storage.finalize ();
     }
 
     //----------------------------------------------------------------//
@@ -252,7 +274,7 @@ export class InventoryViewController {
     @action
     setHideDuplicates ( hidden ) {
 
-        this.hideDuplicates = hidden;
+        this.prefs.hideDuplicates = hidden;
         if ( hidden ) {
             this.clearSelection ();
         }
@@ -269,7 +291,7 @@ export class InventoryViewController {
     @action
     setLayoutMode ( layoutName ) {
 
-        this.layoutName = layoutName;
+        this.prefs.layoutName = layoutName;
     }
 
     //----------------------------------------------------------------//
@@ -283,14 +305,14 @@ export class InventoryViewController {
     @action
     setSortMode ( sortMode ) {
 
-        this.sortMode = ( this.sortMode === sortMode ) ? consts.SORT_MODE.RANK_DEFINITIONS : sortMode;
+        this.prefs.sortMode = ( this.prefs.sortMode === sortMode ) ? consts.SORT_MODE.RANK_DEFINITIONS : sortMode;
     }
 
     //----------------------------------------------------------------//
     @action
     setZoom ( zoom ) {
 
-        this.zoom = zoom;
+        this.prefs.zoom = zoom;
     }
 
     //----------------------------------------------------------------//
