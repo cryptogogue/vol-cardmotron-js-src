@@ -42,10 +42,20 @@ export class InventoryFilter {
     //----------------------------------------------------------------//
     constructor ( inventory, filterFunc ) {
 
+        assert ( inventory );
+        assert ( inventory.schema );
+
         runInAction (() => {
             this.inventory = inventory;
             this.filterFunc = filterFunc;
         });
+    }
+
+    //----------------------------------------------------------------//
+    @computed get
+    rawAssets () {
+
+        return this.inventory.assets;
     }
 
     //----------------------------------------------------------------//
