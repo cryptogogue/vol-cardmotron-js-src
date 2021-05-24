@@ -13,9 +13,9 @@ import _                                        from 'lodash';
 import * as opentype                            from 'opentype.js';
 
 //================================================================//
-// InventoryController
+// Inventory
 //================================================================//
-export class InventoryController {
+export class Inventory {
 
     @observable schema              = new Schema (); // empty schema
     @observable assets              = {};
@@ -45,6 +45,24 @@ export class InventoryController {
     finalize () {
 
         this.revocable.finalize ();
+    }
+
+    //----------------------------------------------------------------//
+    isDisabled ( assetID ) {
+
+        return false;
+    }
+
+    //----------------------------------------------------------------//
+    isVisible ( assetID ) {
+
+        return true;
+    }
+
+    //----------------------------------------------------------------//
+    @computed get
+    rawAssets () {
+        return this.assets;
     }
 
     //----------------------------------------------------------------//

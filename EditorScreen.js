@@ -5,7 +5,7 @@ import './EditorScreen.css';
 import { AssetModal }                                       from './AssetModal';
 import { AssetView }                                        from './AssetView';
 import { EditorMenu }                                       from './EditorMenu';
-import { InventoryController }                              from './InventoryController';
+import { Inventory }                                        from './Inventory';
 import { InventoryPrintController }                         from './InventoryPrintController';
 import { InventoryPrintView }                               from './InventoryPrintView';
 import { InventoryView }                                    from './InventoryView';
@@ -29,8 +29,8 @@ export const EditorScreen = observer (( props ) => {
     const version = props.version || '';
 
     const [ scanner, setScanner ]       = useState ( false );
-    const inventory                     = hooks.useFinalizable (() => new InventoryController ());
-    const controller                    = hooks.useFinalizable (() => new InventoryViewController ( inventory, false ));
+    const inventory                     = hooks.useFinalizable (() => new Inventory ());
+    const controller                    = hooks.useFinalizable (() => new InventoryViewController ( inventory, false, false ));
     const printController               = hooks.useFinalizable (() => new InventoryPrintController ( controller ));
 
     const [ batchSelect, setBatchSelect ]           = useState ( false );

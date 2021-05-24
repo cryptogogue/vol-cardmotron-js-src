@@ -12,10 +12,16 @@ import handlebars                               from 'handlebars';
 import _                                        from 'lodash';
 import * as opentype                            from 'opentype.js';
 
+export const INVENTORY_FILTER_STATUS = {
+    HIDDEN:         'HIDDEN',
+    DISABLED:       'DISABLED',
+    VISIBLE:        'VISIBLE',
+};
+
 //================================================================//
-// InventoryFilter
+// InventoryWithFilter
 //================================================================//
-export class InventoryFilter {
+export class InventoryWithFilter {
 
     @observable inventory           = false;
     @observable filterFunc          = false;
@@ -26,7 +32,7 @@ export class InventoryFilter {
 
         const filteredAssets = {};
         for ( let assetID in this.inventory.assets ) {
-            if ( this.filterFunc && !this.filterFunc ( assetID )) continue;
+            if ( !this.isVisible ( assetID )) continue;
             filteredAssets [ assetID ] = this.inventory.assets [ assetID ];
         }
         return filteredAssets;
@@ -42,13 +48,26 @@ export class InventoryFilter {
     //----------------------------------------------------------------//
     constructor ( inventory, filterFunc ) {
 
-        assert ( inventory );
-        assert ( inventory.schema );
-
         runInAction (() => {
-            this.inventory = inventory;
-            this.filterFunc = filterFunc;
+            this.inventory      = inventory;
+            this.filterFunc     = filterFunc;
         });
+    }
+
+    //----------------------------------------------------------------//
+    isDisabled ( assetID ) {
+
+        const status = this.filterFunc ? this.filterFunc ( assetID ) : false;
+        if ( typeof ( status ) === 'boolean' ) return false;
+        return status === INVENTORY_FILTER_STATUS.DISABLED;
+    }
+
+    //----------------------------------------------------------------//
+    isVisible ( assetID ) {
+
+        const status = this.filterFunc ? this.filterFunc ( assetID ) : true;
+        if ( typeof ( status ) === 'boolean' ) return status;
+        return status !== INVENTORY_FILTER_STATUS.HIDDEN;
     }
 
     //----------------------------------------------------------------//

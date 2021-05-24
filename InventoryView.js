@@ -4,7 +4,7 @@ import { assert, InfiniteScrollView, util } from 'fgc';
 
 import { AssetCardView }                                    from './AssetCardView';
 import { AssetSizer }                                       from './AssetSizer';
-import { InventoryController }                              from './InventoryController';
+import { Inventory }                                        from './Inventory';
 import handlebars                                           from 'handlebars';
 import { action, computed, extendObservable, observable }   from 'mobx';
 import { observer }                                         from 'mobx-react';
@@ -38,7 +38,7 @@ const ControlledAssetCardView = observer (( props ) => {
             count           = { controller.hideDuplicates ? controller.countDuplicates ( assetID ) : 1 }
 
             isSelected      = { props.isSelected ? props.isSelected ( assetID ) : controller.isSelected ( assetID )}
-            disabled        = { props.isDisabled ? props.isDisabled ( assetID ) : false }
+            disabled        = { props.isDisabled ? props.isDisabled ( assetID ) : controller.isDisabled ( assetID )}
         />
     );
 });

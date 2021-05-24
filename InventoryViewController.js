@@ -9,6 +9,9 @@ import { assert, excel, hooks, RevocableContext, SingleColumnContainerView, Stor
 
 const STORE_INVENTORY_VIEW_PREFS        = '.cadmotron.inventoryViewPrefs';
 
+//const debugLog = function () {}
+const debugLog = function ( ...args ) { console.log ( '@INVENTORY VIEW:', ...args ); }
+
 //================================================================//
 // InventoryViewController
 //================================================================//
@@ -22,6 +25,20 @@ export class InventoryViewController {
     @computed get layoutName        () { return this.prefs.layoutName; }
     @computed get sortMode          () { return this.prefs.sortMode; }
     @computed get zoom              () { return this.prefs.zoom; }
+
+    //----------------------------------------------------------------//
+    @computed get
+    assets () {
+
+        return this.inventory ? this.inventory.assets : {};
+    }
+
+    //----------------------------------------------------------------//
+    @computed get
+    assetsArray () {
+
+        return Object.values ( this.assets );
+    }
 
     //----------------------------------------------------------------//
     @action
@@ -82,7 +99,7 @@ export class InventoryViewController {
         }
 
         runInAction (() => {
-            this.inventory = inventory || false;
+            this.inventory      = inventory || false;
         })
     }
 
@@ -128,27 +145,34 @@ export class InventoryViewController {
             return false;
         }
 
-        const assets = this.inventory.assets;
-        for ( let assetID in assets ) {
+        const processAssets = ( assets, skipDisabled ) => {
 
-            const asset = assets [ assetID ];
-            const primary = findPrimary ( asset );
+            for ( let assetID in assets ) {
 
-            if ( primary === false ) {
-                const newPrimary = {
-                    asset: asset,
-                    count: 1,
-                    duplicates: [ asset ],
+                if ( skipDisabled === this.inventory.isDisabled ( assetID )) continue;
+
+                const asset = assets [ assetID ];
+                const primary = findPrimary ( asset );
+
+                if ( primary === false ) {
+                    const newPrimary = {
+                        asset: asset,
+                        count: 1,
+                        duplicates: [ asset ],
+                    }
+                    primaries [ assetID ] = newPrimary;
+                    duplicates [ assetID ] = asset.assetID;
                 }
-                primaries [ assetID ] = newPrimary;
-                duplicates [ assetID ] = asset.assetID;
-            }
-            else {
-                primary.count = primary.count + 1;
-                primary.duplicates.push ( asset );
-                duplicates [ assetID ] = primary.asset.assetID;
+                else {
+                    primary.count = primary.count + 1;
+                    primary.duplicates.push ( asset );
+                    duplicates [ assetID ] = primary.asset.assetID;
+                }
             }
         }
+
+        processAssets ( this.assets, true );
+        processAssets ( this.assets, false );
 
         return {
             primaries:      primaries,
@@ -191,7 +215,7 @@ export class InventoryViewController {
     //----------------------------------------------------------------//
     getSortedAssets ( hideDuplicates ) {
 
-        const availableAssetArray = this.inventory.assetsArray;
+        const availableAssetArray = this.assetsArray;
         let assetArray = availableAssetArray;
 
         if ( hideDuplicates && this.hasDuplicates ) {
@@ -199,7 +223,7 @@ export class InventoryViewController {
             assetArray = [];
 
             for ( let assetID in this.duplicatesReport.primaries ) {
-                assetArray.push ( this.inventory.assets [ assetID ]);
+                assetArray.push ( this.assets [ assetID ]);
             }
         }
 
@@ -220,6 +244,12 @@ export class InventoryViewController {
     hasSelection () {
 
         return Object.keys ( this.selection ).length !== 0;
+    }
+
+    //----------------------------------------------------------------//
+    isDisabled ( assetID ) {
+
+        return this.inventory ? this.inventory.isDisabled ( assetID ) : false;
     }
 
     //----------------------------------------------------------------//
@@ -262,7 +292,9 @@ export class InventoryViewController {
         if ( this.hideDuplicates && this.isPrimary ( asset.assetID )) {
             const duplicates = this.getDuplicateAssets ( asset.assetID );
             for ( let duplicate of duplicates ) {
-                this.selection [ duplicate.assetID ] = duplicate;
+                if ( !this.inventory.isDisabled ( duplicate.assetID )) {
+                    this.selection [ duplicate.assetID ] = duplicate;
+                }
             }
         }
         else {
@@ -284,7 +316,7 @@ export class InventoryViewController {
     @action
     setInventory ( inventory ) {
 
-        this.inventory = inventory;
+        this.inventory = inventory || false;
     }
 
     //----------------------------------------------------------------//

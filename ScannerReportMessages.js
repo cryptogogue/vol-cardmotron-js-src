@@ -3,10 +3,6 @@
 import './EditorScreen.css';
 
 import { EditorMenu }                                       from './EditorMenu';
-import { InventoryController }                              from './InventoryController';
-import { InventoryPrintView }                               from './InventoryPrintView';
-import { InventoryView }                                    from './InventoryView';
-import { InventoryViewController }                          from './InventoryViewController';
 import { SchemaScannerXLSX }                                from './schema/SchemaScannerXLSX';
 import _                                                    from 'lodash';
 import { action, computed, extendObservable, observable }   from "mobx";
