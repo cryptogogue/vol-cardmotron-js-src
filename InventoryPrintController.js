@@ -283,22 +283,4 @@ export class InventoryPrintController {
         this.queue = queue;
         this.revocable.timeout (() => { this.nextPage ()}, 1 );
     }
-
-    //----------------------------------------------------------------//
-    saveAsZip () {
-
-        // if ( this.pages.length === 0 ) return;
-
-        // const zip = new JSZip ();
-
-        // for ( let i in this.pages ) {
-        //     const page = this.pages [ i ];
-        //     const binary = atob ( page.dataURL.split ( ',' )[ 1 ]);
-        //     zip.file ( `page-${ i + 1 }.png`, binary, { binary: true });
-        // }
-
-        // zip.generateAsync ({ type: 'blob' }).then ( function ( content ) {
-        //     FileSaver.saveAs ( content, 'pages.zip' );
-        // });
-    }
 }
