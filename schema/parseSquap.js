@@ -59,7 +59,6 @@ function makeConstOp ( opname ) {
 //----------------------------------------------------------------//
 function makeFuncOp () {
     return ( funcName, args ) => {
-
         return {
             op:        'FUNC',
             func:       funcName,
@@ -71,21 +70,10 @@ function makeFuncOp () {
 //----------------------------------------------------------------//
 function makeIndexOp ( opname ) {
     return ( arg0, arg1 ) => {
-
-        // index args are always assumed to be string literals for now.
-        // can add support for operator args later. if we need it.
-
-        if ( arg0 && arg1 ) {
-            return {
-                op:         opname,
-                paramID:    arg0,
-                value:      arg1,
-            };
-        }
         return {
             op:         opname,
-            paramID:    '',
-            value:      arg0,
+            argName:    arg0 === 'this' ? '' : arg0,
+            indexer:    arg1 || '',
         };
     };
 }
@@ -95,7 +83,7 @@ function makeUnaryOp ( opname ) {
     return ( param ) => {
         return {
             op:         opname,
-            param:      wrapLiteral ( param ),
+            operand:    wrapLiteral ( param ),
         };
     };
 }
@@ -111,6 +99,9 @@ function wrapLiteral ( param ) {
 //================================================================//
 
 //https://raw.githubusercontent.com/harc/ohm/master/examples/ecmascript/es5.ohm
+
+// the comments here (in the grammer) get appended to the rule results; they aren't just for meaning (see
+// 'semantics.addOperation' below.
 
 const grammar = ohm.grammar ( `
     Squap {
@@ -170,6 +161,7 @@ const grammar = ohm.grammar ( `
             = "-"    UnaryExpr  -- neg
             | "~"    UnaryExpr  -- bitwiseNot
             | "!"    UnaryExpr  -- logicalNot
+            | "#"    UnaryExpr  -- length
             | FuncExpr
 
         FuncExpr
@@ -177,8 +169,8 @@ const grammar = ohm.grammar ( `
            | FieldExpr
 
         FieldExpr
-            = "[" ( string | symbol ) "]"               -- field
-            | identifier "[" ( string | symbol ) "]"    -- index
+            = identifier "[" ( string ) "]"         -- index
+            | identifier                            -- param
             | PrimaryExpr
 
         PrimaryExpr
@@ -187,9 +179,6 @@ const grammar = ohm.grammar ( `
 
         funcname
             = "has"
-
-        symbol
-            = "@"
 
         identifier
             = letter ( "_" | alnum )*
@@ -228,6 +217,7 @@ const SQUAP = {
     INDEX:              makeIndexOp     ( 'INDEX' ),
     LESS:               makeBinaryOp    ( 'LESS' ),                 // <
     LESS_OR_EQUAL:      makeBinaryOp    ( 'LESS_OR_EQUAL' ),        // <=
+    LENGTH:             makeUnaryOp     ( 'LENGTH' ),               // #
     MOD:                makeBinaryOp    ( 'MOD' ),                  // %
     MUL:                makeBinaryOp    ( 'MUL' ),                  // *
     NEG:                makeUnaryOp     ( 'NEG' ),                  // -
@@ -313,6 +303,10 @@ semantics.addOperation ( 'eval', {
         return SQUAP.MOD ( l.eval (), r.eval ());
     },
 
+    UnaryExpr_length: function ( op, v ) {
+        return SQUAP.LENGTH ( v.eval ());
+    },
+
     UnaryExpr_neg: function ( op, v ) {
         return SQUAP.NEG ( v.eval ());
     },
@@ -329,14 +323,13 @@ semantics.addOperation ( 'eval', {
         return SQUAP.FUNC ( funcname.sourceString, args.asIteration ().eval ());
     },
 
-    FieldExpr_field: function ( lb, e, rb ) {
-        e = e.sourceString;
-        return SQUAP.INDEX ( e === '@' ? e : e.slice ( 1, -1 )); // can be a fieldname or a symbol
-    },
-
     FieldExpr_index: function ( id, lb, e, rb ) {
         e = e.sourceString;
         return SQUAP.INDEX ( id.sourceString, e === '@' ? e : e.slice ( 1, -1 )); // can be a fieldname or a symbol
+    },
+
+    FieldExpr_param: function ( v ) {
+        return SQUAP.INDEX ( this.sourceString );
     },
 
     PrimaryExpr_parens: function ( lp, e, rp ) {

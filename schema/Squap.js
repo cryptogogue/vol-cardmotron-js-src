@@ -1,5 +1,7 @@
 /* eslint-disable no-whitespace-before-property */
 
+import _                                    from 'lodash';
+
 //================================================================//
 // AbstractSquap
 //================================================================//
@@ -48,8 +50,8 @@ class AbstractIndexSquap extends AbstractSquap {
     //----------------------------------------------------------------//
     constructor ( template ) {
         super ( template );
-        this.paramID = template.paramID;
-        this.value = template.value;
+        this.argName    = template.argName;
+        this.indexer    = template.indexer;
     }
 }
 
@@ -61,7 +63,7 @@ class AbstractUnarySquap extends AbstractSquap {
     //----------------------------------------------------------------//
     constructor ( template ) {
         super ( template );
-        this.param = makeSquap ( template.param );
+        this.operand = makeSquap ( template.operand );
     }
 }
 
@@ -212,19 +214,28 @@ class IndexSquap extends AbstractIndexSquap {
     //----------------------------------------------------------------//
     eval ( opArgs ) {
 
-        const arg           = opArgs.assets [ this.paramID || 0 ];
-        const fieldName     = this.value;
+        const argName       = this.argName || '';
+        const indexer       = this.indexer;
 
+        const arg = opArgs [ argName ];
         if ( !arg ) return false;
 
-        if ( fieldName === '@' ) {
-            return arg.type;
+        if ( indexer ) {
+            return arg.fields && _.has ( arg.fields, indexer ) ? arg.fields [ indexer ].value : false;
         }
+        return arg.type ? arg.type : arg;
+    }
+}
 
-        if ( arg.fields.hasOwnProperty ( fieldName )) {
-            return arg.fields [ fieldName ].value;
-        }
-        return false;
+//================================================================//
+// LengthSquap
+//================================================================//
+class LengthSquap extends AbstractUnarySquap {
+
+    //----------------------------------------------------------------//
+    eval ( opArgs ) {
+        const val = this.operand.eval ( opArgs );
+        return typeof ( val ) === 'string' ? val.length : false;
     }
 }
 
@@ -287,7 +298,7 @@ class NotSquap extends AbstractUnarySquap {
 
     //----------------------------------------------------------------//
     eval ( opArgs ) {
-        const val = this.param.eval ( opArgs );
+        const val = this.operand.eval ( opArgs );
         return !val;
     }
 }
@@ -383,6 +394,7 @@ const factoryTable = {
     GREATER:            ( template ) => new GreaterSquap ( template ),
     GREATER_OR_EQUAL:   ( template ) => new GreaterOrEqualSquap ( template ),
     INDEX:              ( template ) => new IndexSquap ( template ),
+    LENGTH:             ( template ) => new LengthSquap ( template ),
     LESS:               ( template ) => new LessSquap ( template ),
     LESS_OR_EQUAL:      ( template ) => new LessOrEqualSquap ( template ),
     MOD:                ( template ) => new ModSquap ( template ),

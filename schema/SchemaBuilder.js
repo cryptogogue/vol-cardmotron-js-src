@@ -83,7 +83,7 @@ class SchemaBuilder {
 
         assert ( this.popTo ( SCHEMA_BUILDER_ADDING_METHOD ));
         this.top ().assetArgs [ name ] = {
-            qualifier:  qualifier,
+            qualifier:  qualifier
         }
         return this;
     }

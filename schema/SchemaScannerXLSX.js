@@ -664,14 +664,22 @@ export class SchemaScannerXLSX {
                 ]);
                 const squap = parseSquapSafe ( params.qualifier, row, paramNames.qualifier );
 
-
                 switch ( params.inputType ) {
+
                     case 'asset':
                         this.schemaBuilder.assetArg ( params.param, squap );
                         break;
 
                     case 'image':
                         this.schemaBuilder.constArg ( params.param, squap, { type: 'STRING', value: '' }, 'image' );
+                        break;
+
+                    case 'string':
+                        this.schemaBuilder.constArg ( params.param, squap, { type: 'STRING', value: '' }, 'string' );
+                        break;
+
+                    case 'text':
+                        this.schemaBuilder.constArg ( params.param, squap, { type: 'STRING', value: '' }, 'text' );
                         break;
                 }
                 continue;

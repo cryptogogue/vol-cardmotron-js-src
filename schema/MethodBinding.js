@@ -21,7 +21,7 @@ export class MethodBinding {
 
         // check the constraints
         for ( let constraint of constraints ) {
-            if ( !constraint.eval ({ schema: this.schema, assets: paramsByName })) return false;
+            if ( !constraint.eval ( paramsByName )) return false;
         }
 
         for ( let paramName in paramsByName ) {
@@ -37,26 +37,60 @@ export class MethodBinding {
     }
 
     //----------------------------------------------------------------//
-    checkParams ( paramsByName ) {
+    checkParams ( assetParamsByName, constParamsByName ) {
 
         const schema = this.schema;
         const method = this.method;
         const constraints = method.constraints;
 
-        const assetsByParamName = {};
-        for ( let paramName in paramsByName ) {
+        const argsByParamName = {};
 
-            const asset = this.assetsByAssetID [ paramsByName [ paramName ]];
-            assetsByParamName [ paramName ] = asset;
+        const errorReport = {
+            paramErrors:        {},
+            constraintErrors:   0,
+            totalErrors:        0,
+        }
+
+        let isComplete = true;
+        for ( let paramName in assetParamsByName ) {            
+
+            if ( assetParamsByName [ paramName ] === false ) {
+                isComplete = false;
+                continue;
+            }
+
+            const asset = this.assetsByAssetID [ assetParamsByName [ paramName ]];
+            argsByParamName [ paramName ] = asset;
+
+            if ( !method.assetArgs [ paramName ].qualifier.eval ({[ '' ]: asset })) {
+                errorReport.paramErrors [ paramName ] = true;
+                errorReport.totalErrors++;
+            }
+        }
+
+        for ( let paramName in constParamsByName ) {
+
+            const argDesc = method.constArgs [ paramName ];
+            const param = constParamsByName [ paramName ];
+
+            argsByParamName [ paramName ] = param;
             
-            if ( !method.assetArgs [ paramName ].qualifier.eval ({ schema: schema, assets: [ asset ]})) return false;
+            if ( !argDesc.qualifier.eval ({[ '' ]: param.value })) {
+                errorReport.paramErrors [ paramName ] = true;
+                errorReport.totalErrors++;
+            }
         }
 
         // check the constraints
-        for ( let constraint of constraints ) {
-            if ( !constraint.eval ({ schema: schema, assets: assetsByParamName })) return false;
+        if ( isComplete ) {
+            for ( let constraint of constraints ) {
+                if ( !constraint.eval ( argsByParamName )) {
+                    errorReport.constraintErrors++;
+                    errorReport.totalErrors++;
+                }
+            }
         }
-        return true;
+        return errorReport.totalErrors ? errorReport : undefined;
     }
 
     //----------------------------------------------------------------//
@@ -166,7 +200,7 @@ export class MethodBinding {
                 if ( filter && ( filter ( assetID ) === false )) continue;
 
                 const asset = assetsByAssetID [ assetID ];
-                if ( squap.eval ({ schema: schema, assets: [ asset ]})) {
+                if ( squap.eval ({[ 'this' ]: asset })) {
                     this.paramListsByName [ paramName ].push ( assetID ); // asset is qualified!
                     this.assetsByAssetID [ assetID ] = asset;
                 }
