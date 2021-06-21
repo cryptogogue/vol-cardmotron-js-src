@@ -351,7 +351,7 @@ export class InventoryViewController {
     @action
     toggleAssetSelection ( asset ) {
 
-        if ( this.isSelected ( asset.assetID ) ) {
+        if ( this.isSelected ( asset.assetID )) {
             this.deselectAsset ( asset );
         }
         else {

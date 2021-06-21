@@ -67,7 +67,6 @@ export const AssetCardView = observer (( props ) => {
                         inventory = { inventory }
                         inches = { true }
                         scale = { zoom }
-                        
                     />
                 </div>
 
