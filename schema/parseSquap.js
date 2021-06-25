@@ -170,6 +170,7 @@ const grammar = ohm.grammar ( `
 
         FieldExpr
             = identifier "[" ( string ) "]"         -- index
+            | "[" ( string ) "]"                    -- indexThis
             | identifier                            -- param
             | PrimaryExpr
 
@@ -326,6 +327,11 @@ semantics.addOperation ( 'eval', {
     FieldExpr_index: function ( id, lb, e, rb ) {
         e = e.sourceString;
         return SQUAP.INDEX ( id.sourceString, e === '@' ? e : e.slice ( 1, -1 )); // can be a fieldname or a symbol
+    },
+
+    FieldExpr_indexThis: function ( lb, e, rb ) {
+        e = e.sourceString;
+        return SQUAP.INDEX ( 'this', e === '@' ? e : e.slice ( 1, -1 )); // can be a fieldname or a symbol
     },
 
     FieldExpr_param: function ( v ) {
