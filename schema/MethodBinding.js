@@ -200,7 +200,7 @@ export class MethodBinding {
                 if ( filter && ( filter ( assetID ) === false )) continue;
 
                 const asset = assetsByAssetID [ assetID ];
-                if ( squap.eval ({[ 'this' ]: asset })) {
+                if ( squap.eval ({[ '' ]: asset })) {
                     this.paramListsByName [ paramName ].push ( assetID ); // asset is qualified!
                     this.assetsByAssetID [ assetID ] = asset;
                 }
