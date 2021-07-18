@@ -667,7 +667,11 @@ export class SchemaScannerXLSX {
                 switch ( params.inputType ) {
 
                     case 'asset':
-                        this.schemaBuilder.assetArg ( params.param, squap );
+                        this.schemaBuilder.assetArg ( params.param, squap, true );
+                        break;
+
+                    case 'sponsor':
+                        this.schemaBuilder.assetArg ( params.param, squap, false );
                         break;
 
                     case 'image':

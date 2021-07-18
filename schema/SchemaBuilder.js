@@ -79,11 +79,12 @@ class SchemaBuilder {
     }
 
     //----------------------------------------------------------------//
-    assetArg ( name, qualifier ) {
+    assetArg ( name, qualifier, isSubject ) {
 
         assert ( this.popTo ( SCHEMA_BUILDER_ADDING_METHOD ));
         this.top ().assetArgs [ name ] = {
-            qualifier:  qualifier
+            qualifier:  qualifier,
+            isSubject:  isSubject,
         }
         return this;
     }
