@@ -3,7 +3,7 @@
 import { MethodBinding }                    from './MethodBinding';
 import { MultiCounter }                     from './MultiCounter';
 import { Schema }                           from './Schema';
-import { assert, excel, hooks, RevocableContext, SingleColumnContainerView, util } from 'fgc';
+import { assert }                           from 'fgc-core';
 import { action, computed, extendObservable, observable, observe, runInAction } from 'mobx';
 
 //================================================================//

@@ -1,6 +1,6 @@
 // Copyright (c) 2019 Cryptogogue, Inc. All Rights Reserved.
 
-import { assert, pdf417, qrcode, textLayout } from 'fgc';
+import { assert, pdf417, qrcode, textLayout } from 'fgc-core';
 import { LAYOUT_COMMAND }           from './schema/SchemaBuilder';
 import _                            from 'lodash';
 

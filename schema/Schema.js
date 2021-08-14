@@ -1,12 +1,14 @@
 /* eslint-disable no-whitespace-before-property */
 
-import { Binding }          from './Binding';
-import { LAYOUT_COMMAND }   from './SchemaBuilder';
-import * as squap           from './Squap';
-import { assert, excel, hooks, RevocableContext, SingleColumnContainerView, util } from 'fgc';
-import handlebars           from 'handlebars';
-import _                    from 'lodash';
-import * as opentype        from 'opentype.js';
+import { AssetLayout }                  from '../AssetLayout';
+import { Binding }                      from './Binding';
+import { LAYOUT_COMMAND }               from './SchemaBuilder';
+import * as squap                       from './Squap';
+import { assert, RevocableContext }     from 'fgc-core';
+import handlebars                       from 'handlebars';
+import _                                from 'lodash';
+import { action, computed, extendObservable, observable, observe, runInAction } from 'mobx';
+import * as opentype                    from 'opentype.js';
 
 const LAYOUT_LIST_SEPARATOR_REGEX = /[\s,]+/;
 
@@ -34,6 +36,27 @@ function randomAssetID () {
 // Schema
 //================================================================//
 export class Schema {
+
+    //----------------------------------------------------------------//
+    async affirmFontsAsync () {
+
+        this.fonts = this.fonts || {};
+
+        // get all the fonts
+        for ( let name in this.json.fonts ) {
+
+            if ( this.fonts [ name ]) continue;
+
+            const fontDesc = this.json.fonts [ name ];
+            const faces = {};
+
+            for ( let face in fontDesc ) {
+                const url = fontDesc [ face ];
+                faces [ face ] = await this.fetchFontAsync ( url );
+            }
+            this.fonts [ name ] = faces;
+        }
+    }
 
     //----------------------------------------------------------------//
     addTestAsset ( assets, typeName, assetID ) {
@@ -82,68 +105,25 @@ export class Schema {
 
         this.revocable      = new RevocableContext ();
 
-        this.definitions    = json ? _.cloneDeep ( json.definitions ) : {};
-        this.fonts          = json ? _.cloneDeep ( json.fonts ) : {};
-        this.icons          = json ? _.cloneDeep ( json.icons ) : {};
-        this.layouts        = json ? _.cloneDeep ( json.layouts ) : {};
-        this.upgrades       = json ? _.cloneDeep ( json.upgrades ) : {};
+        this.json           = json ? _.cloneDeep ( json ) : false;
+
+        this.definitions    = this.json ? this.json.definitions : {};
+        this.icons          = this.json ? this.json.icons : {};
+        this.layouts        = this.json ? this.json.layouts : {};
+        this.upgrades       = this.json ? this.json.upgrades : {};
+
+        this.docSizesCache  = {};
+    }
+
+    //----------------------------------------------------------------//
+    @computed get
+    docSizes () {
+
+        const docSizes = {};
 
         const COMPILE_OPTIONS = {
             noEscape: true,
         }
-
-        this.templates = {};
-
-        for ( let layoutName in this.layouts ) {
-            
-            const layout = _.cloneDeep ( this.layouts [ layoutName ]);
-
-            for ( let command of layout.commands ) {
-                if ( command.type === LAYOUT_COMMAND.DRAW_TEXT_BOX ) {
-                    for ( let segment of command.segments ) {
-                        segment.template = handlebars.compile ( segment.template, COMPILE_OPTIONS );
-                    }
-                }
-                else {
-                    command.template = handlebars.compile ( command.template, COMPILE_OPTIONS );
-                }
-                command.wrap = command.wrap && handlebars.compile ( command.wrap, COMPILE_OPTIONS );
-            }
-            layout.wrap = layout.wrap && handlebars.compile ( layout.wrap, COMPILE_OPTIONS );
-
-            this.templates [ layoutName ] = layout;
-        }
-
-        this.methods = {};
-
-        if ( json && json.methods ) {
-            for ( let methodName in json.methods ) {
-
-                const method = _.cloneDeep ( json.methods [ methodName ]);
-
-                method.name = methodName;
-
-                for ( let argname in method.assetArgs ) {
-                    method.assetArgs [ argname ].qualifier = squap.makeSquap ( method.assetArgs [ argname ].qualifier );
-                }
-
-                for ( let argname in method.constArgs ) {
-                    console.log ( 'CONST ARG SQUAP:', JSON.stringify ( method.constArgs [ argname ].qualifier, null, 4 ));
-                    method.constArgs [ argname ].qualifier = squap.makeSquap ( method.constArgs [ argname ].qualifier );
-                }
-
-                for ( let i in method.constraints ) {
-                    method.constraints [ i ] = squap.makeSquap ( method.constraints [ i ]);
-                }
-
-                method.totalAssetsArgs = _.size ( method.assetArgs );
-                method.totalConstArgs = _.size ( method.constArgs );
-
-                this.methods [ methodName ] = method;
-            }
-        }
-
-        this.docSizes = {};
 
         for ( let layoutName in this.templates ) {
 
@@ -151,19 +131,21 @@ export class Schema {
             if ( this.dpi && ( layout.dpi !== this.dpi )) continue;
 
             const docSize = Schema.makeDocSize ( layout.width, layout.height, layout.dpi );
-            this.docSizes [ docSize.docSizeName ] = docSize;
+            docSizes [ docSize.docSizeName ] = docSize;
         }
 
-        this.docSizesCache = {};
+        return docSizes;
     }
 
     //----------------------------------------------------------------//
     expandAsset ( asset ) {
 
+        if ( asset.isExpanded ) return asset;
+
         asset = _.cloneDeep ( asset );
 
         const definition = this.definitions [ asset.type ];
-        if ( !definition ) return;
+        if ( !definition ) return false;
 
         for ( let fieldName in definition.fields ) {
 
@@ -176,11 +158,19 @@ export class Schema {
                 };
             }
         }
+
+        if ( !asset.svg ) {
+            const layout = new AssetLayout ( this, asset );
+            asset.svg = layout.svg;
+        }
+
+        asset.isExpanded = true;
         return asset;
     }
 
     //----------------------------------------------------------------//
     async fetchFontAsync ( url ) {
+
         if ( !url ) return false;
 
         const fetchOptions = {
@@ -218,25 +208,6 @@ export class Schema {
         // TODO: report missing font
 
         return false;
-    }
-
-    //----------------------------------------------------------------//
-    async fetchFontsAsync ( fonts ) {
-
-        this.fonts = this.fonts || {};
-
-        // get all the fonts
-        for ( let name in fonts ) {
-
-            const fontDesc = fonts [ name ];
-            const faces = {};
-
-            for ( let face in fontDesc ) {
-                const url = fontDesc [ face ];
-                faces [ face ] = await this.fetchFontAsync ( url );
-            }
-            this.fonts [ name ] = faces;
-        }
     }
 
     //----------------------------------------------------------------//
@@ -370,6 +341,42 @@ export class Schema {
     }
 
     //----------------------------------------------------------------//
+    @ computed get
+    methods () {
+
+        const methods = {};
+
+        if ( this.json && this.json.methods ) {
+            for ( let methodName in this.json.methods ) {
+
+                const method = _.cloneDeep ( this.json.methods [ methodName ]);
+
+                method.name = methodName;
+
+                for ( let argname in method.assetArgs ) {
+                    method.assetArgs [ argname ].qualifier = squap.makeSquap ( method.assetArgs [ argname ].qualifier );
+                }
+
+                for ( let argname in method.constArgs ) {
+                    console.log ( 'CONST ARG SQUAP:', JSON.stringify ( method.constArgs [ argname ].qualifier, null, 4 ));
+                    method.constArgs [ argname ].qualifier = squap.makeSquap ( method.constArgs [ argname ].qualifier );
+                }
+
+                for ( let i in method.constraints ) {
+                    method.constraints [ i ] = squap.makeSquap ( method.constraints [ i ]);
+                }
+
+                method.totalAssetsArgs = _.size ( method.assetArgs );
+                method.totalConstArgs = _.size ( method.constArgs );
+
+                methods [ methodName ] = method;
+            }
+        }
+
+        return methods;
+    }
+
+    //----------------------------------------------------------------//
     newAsset ( assetID, typeName ) {
 
         let definition = this.definitions [ typeName ];
@@ -390,6 +397,39 @@ export class Schema {
             }
         }
         return asset;
+    }
+
+    //----------------------------------------------------------------//
+    @computed get
+    templates () {
+
+        const templates = {};
+
+        const COMPILE_OPTIONS = {
+            noEscape: true,
+        }
+
+        for ( let layoutName in this.layouts ) {
+            
+            const layout = _.cloneDeep ( this.layouts [ layoutName ]);
+
+            for ( let command of layout.commands ) {
+                if ( command.type === LAYOUT_COMMAND.DRAW_TEXT_BOX ) {
+                    for ( let segment of command.segments ) {
+                        segment.template = handlebars.compile ( segment.template, COMPILE_OPTIONS );
+                    }
+                }
+                else {
+                    command.template = handlebars.compile ( command.template, COMPILE_OPTIONS );
+                }
+                command.wrap = command.wrap && handlebars.compile ( command.wrap, COMPILE_OPTIONS );
+            }
+            layout.wrap = layout.wrap && handlebars.compile ( layout.wrap, COMPILE_OPTIONS );
+
+            templates [ layoutName ] = layout;
+        }
+
+        return templates;
     }
 
     //----------------------------------------------------------------//

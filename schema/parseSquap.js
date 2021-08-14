@@ -1,5 +1,5 @@
 /* eslint-disable no-whitespace-before-property */
-import { assert }   from 'fgc';
+import { assert }   from 'fgc-core';
 import ohm          from 'ohm-js';
 
 // Schema QUAlifier oPerator

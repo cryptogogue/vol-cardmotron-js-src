@@ -85,6 +85,7 @@ export class Inventory {
         if ( asset && this.schema.hasLayoutsForAsset ( asset )) {
             this.assets [ asset.assetID ] = asset;
         }
+        return asset;
     }
 
     //----------------------------------------------------------------//

@@ -17,7 +17,7 @@ export const AssetView = ( props ) => {
 
     const asset         = _.has ( inventory.assets, assetID ) ? inventory.assets [ assetID ] : schema.newAsset ( assetID, assetID );
 
-    const [ layout ]    = useState ( new AssetLayout ( schema, asset ));
+    // const [ layout ]    = useState ( new AssetLayout ( schema, asset ));
     const [ metrics ]   = useState ( schema.getAssetDocSize ( asset ));
 
     const dpi           = props.dpi || 300;
@@ -42,7 +42,7 @@ export const AssetView = ( props ) => {
             viewBox = { `0 0 ${ assetWidth } ${ assetHeight }` }
             preserveAspectRatio = 'xMidYMid meet'
         >
-            <g transform = { `scale ( ${ dpiScale } ${ dpiScale })` } dangerouslySetInnerHTML = {{ __html: layout.svg }}></g>
+            <g transform = { `scale ( ${ dpiScale } ${ dpiScale })` } dangerouslySetInnerHTML = {{ __html: asset.svg }}></g>
         </svg>   
     );
 }
