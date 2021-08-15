@@ -358,7 +358,6 @@ export class Schema {
                 }
 
                 for ( let argname in method.constArgs ) {
-                    console.log ( 'CONST ARG SQUAP:', JSON.stringify ( method.constArgs [ argname ].qualifier, null, 4 ));
                     method.constArgs [ argname ].qualifier = squap.makeSquap ( method.constArgs [ argname ].qualifier );
                 }
 
