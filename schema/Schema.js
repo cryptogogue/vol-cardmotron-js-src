@@ -2,6 +2,7 @@
 
 import { AssetLayout }                  from '../AssetLayout';
 import { Binding }                      from './Binding';
+import * as consts                      from '../consts';
 import { LAYOUT_COMMAND }               from './SchemaBuilder';
 import * as squap                       from './Squap';
 import { assert, RevocableContext }     from 'fgc-core';
@@ -160,8 +161,7 @@ export class Schema {
         }
 
         if ( !asset.svg ) {
-            const layout = new AssetLayout ( this, asset );
-            asset.svg = layout.svg;
+            asset.svg = this.renderAssetSVG ( asset );
         }
 
         asset.isExpanded = true;
@@ -396,6 +396,13 @@ export class Schema {
             }
         }
         return asset;
+    }
+
+    //----------------------------------------------------------------//
+    renderAssetSVG ( asset ) {
+
+        const layout = new AssetLayout ( this, asset );
+        return layout.svg;
     }
 
     //----------------------------------------------------------------//

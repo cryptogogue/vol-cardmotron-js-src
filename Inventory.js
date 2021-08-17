@@ -17,8 +17,8 @@ import * as opentype                            from 'opentype.js';
 //================================================================//
 export class Inventory {
 
-    @observable schema              = new Schema (); // empty schema
-    @observable assets              = {};
+    @observable.ref schema      = new Schema (); // empty schema
+    @observable.shallow assets  = {};
 
     //----------------------------------------------------------------//
     @computed get
