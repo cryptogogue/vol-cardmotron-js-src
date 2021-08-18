@@ -1,21 +1,7 @@
 // Copyright (c) 2019 Cryptogogue, Inc. All Rights Reserved.
 
-import { assert, util } from 'fgc';
-
-import * as consts                                          from './consts';
-import { VectorToImageView }                                from './VectorToImageView';
 import * as changedpi                                       from 'changedpi';
-import { RevocableContext }                                 from 'fgc';
-import FileSaver                                            from 'file-saver';
-import JSZip                                                from 'jszip';
-import { action, computed, extendObservable, observable, observe, reaction, runInAction } from 'mobx';
-import { observer }                                         from 'mobx-react';
-import React, { useState }                                  from 'react';
 import ReactDomServer                                       from 'react-dom/server';
-import { Link }                                             from 'react-router-dom';
-import { Dropdown, Grid, Icon, List, Menu, Card, Group, Modal, Divider } from 'semantic-ui-react';
-
-const DPI = 300;
 
 //================================================================//
 // XML helpers
@@ -168,7 +154,7 @@ export async function renderSVGAsync ( svgOrElement, width, height, dpi ) {
         const ctx = canvas.getContext ( '2d' );
         ctx.drawImage ( image, 0, 0 );
 
-        return changedpi.changeDpiDataUrl ( canvas.toDataURL (), dpi );
+        return changedpi.changeDpiDataUrl ( canvas.toDataURL ( 'image/jpeg', 0.5 ), dpi );
     }
     catch ( error ) {
 

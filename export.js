@@ -7,6 +7,7 @@ module.exports = {
         SVGtoPNGScreen:             require ( './debug/SVGtoPNGScreen.js' ).SVGtoPNGScreen,
     },
     parseSquap:                     require ( './schema/parseSquap.js' ).parseSquap,
+    renderSVGAsync:                 require ( './rendering.js' ).renderSVGAsync,
 
     AssetCardView:                  require ( './AssetCardView.js' ).AssetCardView,
     AssetLayout:                    require ( './AssetLayout.js' ).AssetLayout,

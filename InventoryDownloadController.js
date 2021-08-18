@@ -4,7 +4,7 @@ import { assert, util } from 'fgc';
 
 import * as consts                                          from './consts';
 import { AssetView }                                        from './AssetView';
-import * as rendering                                       from './rendering'
+import { renderSVGAsync }                                   from './rendering'
 import { VectorToImageView }                                from './VectorToImageView';
 import * as changedpi                                       from 'changedpi';
 import { RevocableContext }                                 from 'fgc';
@@ -48,7 +48,7 @@ export class InventoryDownloadController {
 
             total = options.assets.length;
             getPage = ( i ) => {
-                return this.getAssetPage ( options.inventory, options.assets, i );
+                return InventoryDownloadController.getAssetPage ( options.inventory, options.assets, i );
             }
             this.filename = 'assets.zip';
         }
@@ -67,7 +67,7 @@ export class InventoryDownloadController {
     }
 
     //----------------------------------------------------------------//
-    getAssetPage ( inventory, assets, i ) {
+    static getAssetPage ( inventory, assets, i ) {
 
         const asset     = assets [ i ];
         const assetID   = asset.assetID;
@@ -142,7 +142,7 @@ export class InventoryDownloadController {
             try {
 
                 const page = getPage ( i );
-                const dataURL = await rendering.renderSVGAsync ( page.svg, page.width, page.height, page.dpi );
+                const dataURL = await renderSVGAsync ( page.svg, page.width, page.height, page.dpi );
 
                 runInAction (() => {
                     this.pages.push ({
