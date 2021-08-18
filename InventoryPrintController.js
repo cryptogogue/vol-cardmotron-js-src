@@ -42,7 +42,9 @@ export class InventoryPrintController {
     @observable pages       = [];
 
     //----------------------------------------------------------------//
-    constructor ( inventoryViewController ) {
+    constructor ( inventoryViewController, renderAsync ) {
+
+        this.renderAsync = renderAsync || false;
 
         this.revocable = new RevocableContext ();
 
@@ -118,7 +120,7 @@ export class InventoryPrintController {
 
     //----------------------------------------------------------------//
     @action
-    nextPage () {
+    async nextPageAsync () {
 
         if ( this.queue.length === 0 ) return;
 
@@ -162,12 +164,20 @@ export class InventoryPrintController {
                 let x = xOff + ( col * assetWidthInPoints );
                 let y = yOff + ( row * assetHeightInPoints );
 
+                const assetID = assetIDs [ i ];
+                const assetSVG = this.renderAsync ? await this.renderAsync ( inventory.schema, inventory.assets [ assetID ]) : false;
+
                 assets.push (
                     <g
                         key = { i }
                         transform = { `translate ( ${ x }, ${ y }) scale ( ${ assetScale } ${ assetScale })` } 
                     >
-                        <AssetView inventory = { inventory } assetID = { assetIDs [ i ]} dpi = { DPI }/>
+                        <AssetView
+                            inventory       = { inventory }
+                            assetID         = { assetID }
+                            dpi             = { DPI }
+                            svg             = { assetSVG }
+                        />
                         <rect width = { assetMetrics.width * DPI } height = { assetMetrics.height * DPI } style = { ASSET_FRAME_STYLE }/>
                     </g>
                 );
@@ -209,8 +219,10 @@ export class InventoryPrintController {
             svg:        svg,
         }
 
-        this.pages.push ( page );
-        this.revocable.timeout (() => { this.nextPage ()}, 1 );
+        runInAction (() => {
+            this.pages.push ( page );
+        });
+        this.revocable.timeout (() => { this.nextPageAsync ()}, 1 );
     }
 
     //----------------------------------------------------------------//
@@ -281,6 +293,6 @@ export class InventoryPrintController {
         }
 
         this.queue = queue;
-        this.revocable.timeout (() => { this.nextPage ()}, 1 );
+        this.revocable.timeout (() => { this.nextPageAsync ()}, 1 );
     }
 }

@@ -63,10 +63,11 @@ export const AssetCardView = observer (( props ) => {
             
                 <div style = {{ opacity: disabled ? 0.2 : 1.0 }}>
                     <AssetView
-                        assetID = { assetID }
-                        inventory = { inventory }
-                        inches = { true }
-                        scale = { zoom }
+                        assetID         = { assetID }
+                        inventory       = { inventory }
+                        inches          = { true }
+                        scale           = { zoom }
+                        renderAsync     = { props.renderAsync }
                     />
                 </div>
 

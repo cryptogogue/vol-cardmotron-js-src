@@ -78,7 +78,9 @@ export class InventoryViewController {
     }
 
     //----------------------------------------------------------------//
-    constructor ( inventory, hideDuplicates, persist ) {
+    constructor ( inventory, hideDuplicates, persist, renderAsync ) {
+
+        this.renderAsync = renderAsync || false;
 
         const prefs = {
             hideDuplicates:     hideDuplicates === undefined ? true : hideDuplicates,

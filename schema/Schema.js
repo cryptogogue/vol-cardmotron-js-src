@@ -160,10 +160,6 @@ export class Schema {
             }
         }
 
-        if ( !asset.svg ) {
-            asset.svg = this.renderAssetSVG ( asset );
-        }
-
         asset.isExpanded = true;
         return asset;
     }

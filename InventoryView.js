@@ -26,6 +26,7 @@ const ControlledAssetCardView = observer (( props ) => {
     const inventory             = controller.inventory;
     const assetArray            = controller.sortedAssets || inventory.assetsArray;
     const zoom                  = controller.zoom || 1;
+    const renderAsync           = props.renderAsync || controller.renderAsync || false;
 
     return (
         <AssetCardView
@@ -39,6 +40,8 @@ const ControlledAssetCardView = observer (( props ) => {
 
             isSelected      = { props.isSelected ? props.isSelected ( assetID ) : controller.isSelected ( assetID )}
             disabled        = { props.isDisabled ? props.isDisabled ( assetID ) : controller.isDisabled ( assetID )}
+
+            renderAsync     = { renderAsync }
         />
     );
 });
@@ -98,6 +101,7 @@ export const InventoryView = observer (( props ) => {
                 assetID         = { assetID }
                 controller      = { controller }
                 zoom            = { zoom }
+                renderAsync     = { props.renderAsync }
             />
         );
     }
