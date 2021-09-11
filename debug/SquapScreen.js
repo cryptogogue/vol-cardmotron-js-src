@@ -7,7 +7,7 @@ import { parseSquap }                   from '../schema/parseSquap.js';
 import { observer }                     from 'mobx-react';
 import React, { useState }              from 'react';
 import JSONTree                         from 'react-json-tree';
-import { Button, Divider, Dropdown, Form, Grid, Header, Icon, Input, Modal, Segment } from 'semantic-ui-react';
+import { Button, Divider, Dropdown, Form, Grid, Header, Icon, Input, Message, Modal, Segment } from 'semantic-ui-react';
 
 //================================================================//
 // SquapScreen
@@ -45,15 +45,21 @@ export const SquapScreen = observer (( props ) => {
                         onKeyPress      = {( event ) => { onTagInputKey ( event.key )}}
                     />
                 </Segment>
+            
+
+                <If condition = { squap }>
+                    <Message
+                        header  = 'JSON String'
+                        content = { JSON.stringify ( squap )}
+                      />
+                    <JSONTree hideRoot data = { squap } theme = 'bright'/>
+                </If>
+
+                <If condition = { error }>
+                    <h3>{ error }</h3>
+                </If>
+
             </SingleColumnContainerView>
-
-            <If condition = { squap }>
-                <JSONTree hideRoot data = { squap } theme = 'bright'/>
-            </If>
-
-            <If condition = { error }>
-                <h3>{ error }</h3>
-            </If>
 
         </React.Fragment>
     );
