@@ -17,6 +17,7 @@ module.exports = {
     AssetView:                      require ( './AssetView.js' ).AssetView,
     Binding:                        require ( './schema/Binding.js' ).Binding,
     EditorScreen:                   require ( './EditorScreen.js' ).EditorScreen,
+    HashUtilScreen:                 require ( './HashUtilScreen.js' ).HashUtilScreen,
     Inventory:                      require ( './Inventory.js' ).Inventory,
     InventoryDownloadController:    require ( './InventoryDownloadController.js' ).InventoryDownloadController,
     InventoryDownloadModal:         require ( './InventoryDownloadModal.js' ).InventoryDownloadModal,
