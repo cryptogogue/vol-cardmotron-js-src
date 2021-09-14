@@ -27,14 +27,8 @@ class HashUtilController {
 
         try {
             const result = await this.revocable.fetch ( nodeURL );
-            console.log ( '@HASH: fetch', result );
-
             const arrayBuffer = await result.arrayBuffer ();
-            console.log ( '@HASH: buffer', arrayBuffer );
-
             const hash = CryptoJS.SHA256 ( CryptoJS.lib.WordArray.create ( arrayBuffer )).toString ( CryptoJS.enc.Hex );
-
-            console.log ( '@HASH:', hash );
             this.setHash ( hash );
         }
         catch ( error ) {

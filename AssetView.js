@@ -2,6 +2,7 @@
 
 import { AssetLayout }                          from './AssetLayout';
 import { LAYOUT_COMMAND }                       from './schema/SchemaBuilder';
+import * as rendering                           from './rendering';
 import handlebars                               from 'handlebars';
 import { observer }                             from 'mobx-react';
 import React, { useEffect, useRef, useState }   from 'react';
@@ -43,8 +44,8 @@ export const AssetView = ( props ) => {
     const affirmSVG = async () => {
 
         const renderedSVG = props.svg || asset.svg || ( renderAsync && await renderAsync ( schema, asset )) || false;
-        if ( componentIsMounted.current) {
-            setSVG ( renderedSVG || schema.renderAssetSVG ( asset ));
+        if ( componentIsMounted.current ) {
+            setSVG ( renderedSVG || await rendering.verifyImagesAsync ( schema.renderAssetSVG ( asset )));
         }
     }
 

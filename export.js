@@ -9,6 +9,7 @@ module.exports = {
     makeSquap:                      require ( './schema/Squap.js' ).makeSquap,
     parseSquap:                     require ( './schema/parseSquap.js' ).parseSquap,
     renderSVGAsync:                 require ( './rendering.js' ).renderSVGAsync,
+    verifyImagesAsync:              require ( './rendering.js' ).verifyImagesAsync,
 
     AssetCardView:                  require ( './AssetCardView.js' ).AssetCardView,
     AssetLayout:                    require ( './AssetLayout.js' ).AssetLayout,

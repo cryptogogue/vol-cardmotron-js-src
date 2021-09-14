@@ -54,9 +54,10 @@ export const AssetModal = observer (( props ) => {
                     <h3>Card Info</h3>
                     <Divider/>
                     <AssetView
-                        assetID = { assetID }
-                        inventory = { inventory }
-                        inches = 'true'
+                        assetID         = { assetID }
+                        inventory       = { inventory }
+                        inches          = 'true'
+                        renderAsync     = { props.renderAsync }
                     />
                     <p>{ footer }</p>
                 </center>

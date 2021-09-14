@@ -1,7 +1,11 @@
 // Copyright (c) 2019 Cryptogogue, Inc. All Rights Reserved.
 
-import * as changedpi                                       from 'changedpi';
-import ReactDomServer                                       from 'react-dom/server';
+import * as changedpi                   from 'changedpi';
+import CryptoJS                         from 'crypto-js';
+import ReactDomServer                   from 'react-dom/server';
+
+//const debugLog = function () {}
+const debugLog = function ( ...args ) { console.log ( '@RENDERING:', ...args ); }
 
 //================================================================//
 // XML helpers
@@ -55,6 +59,28 @@ function stringifyXML ( xmlDoc ) {
 //================================================================//
 
 //----------------------------------------------------------------//
+function findAllNodesByName ( xmlDoc, name ) {
+
+    const results = [];
+
+    const recurse = ( element ) => {
+
+        if ( element.nodeName == name ) {
+            results.push ( element );
+            return;
+        }
+
+        const l = element.childNodes.length;
+        for ( let i = 0; i < l; i++ ) {
+            recurse ( element.childNodes [ i ]);
+        }
+    }
+
+    recurse ( xmlDoc.firstChild );
+    return results;
+}
+
+//----------------------------------------------------------------//
 async function loadImageAsync ( image, src ) {
 
     return new Promise (( resolve, reject ) => {
@@ -74,22 +100,7 @@ async function loadImageAsync ( image, src ) {
 //----------------------------------------------------------------//
 async function embedImagesAsync ( xmlDoc ) {
 
-    const queue = [];
-
-    const embedRecurse = ( element ) => {
-
-        if ( element.nodeName == 'image' ) {
-            queue.push ( element );
-            return;
-        }
-
-        const l = element.childNodes.length;
-        for ( let i = 0; i < l; i++ ) {
-            embedRecurse ( element.childNodes [ i ]);
-        }
-    }
-
-    embedRecurse ( xmlDoc.firstChild );
+    const queue = findAllNodesByName ( xmlDoc, 'image' );
 
     for ( let element of queue ) {
 
@@ -97,7 +108,7 @@ async function embedImagesAsync ( xmlDoc ) {
 
         const width         = attributes.getNamedItem ( 'width' ).value;
         const height        = attributes.getNamedItem ( 'height' ).value;
-        const href          = attributes.getNamedItem ( 'xlink:href' ).value;
+        const href          = attributes.getNamedItem ( 'href' ).value;
 
         const image         = new Image ();
         image.width         = width;
@@ -114,10 +125,10 @@ async function embedImagesAsync ( xmlDoc ) {
             const ctx = canvas.getContext ( '2d' );
             ctx.drawImage ( image, 0, 0 );
 
-            const hrefAttr = xmlDoc.createAttribute( 'href' );
+            const hrefAttr = xmlDoc.createAttribute ( 'href' );
             hrefAttr.value = canvas.toDataURL ();
 
-            attributes.removeNamedItem ( 'xlink:href' );
+            attributes.removeNamedItem ( 'href' );
             attributes.setNamedItem ( hrefAttr );
         }
         catch {
@@ -135,7 +146,12 @@ export async function renderSVGAsync ( svgOrElement, width, height, dpi ) {
     try {
 
         const markup    = typeof ( svgOrElement ) === 'string' ? svgOrElement : ReactDomServer.renderToStaticMarkup ( svgOrElement );
-        const svg       = stringifyXML ( await embedImagesAsync ( parseXML ( markup )));
+        const xmlDoc    = parseXML ( markup );
+
+        await verifyXMLDocImagesAsync ( xmlDoc );
+        await embedImagesAsync ( xmlDoc );
+
+        const svg       = stringifyXML ( xmlDoc );
         const svgBlob   = new Blob ([ svg ], { type: 'image/svg+xml' });
         svgURL          = URL.createObjectURL ( svgBlob );
         
@@ -163,4 +179,52 @@ export async function renderSVGAsync ( svgOrElement, width, height, dpi ) {
         }
         throw error;
     }
+}
+
+//----------------------------------------------------------------//
+export async function verifyImagesAsync ( svg, searchPaths ) {
+
+    const xmlDoc = parseXML ( svg );
+    await verifyXMLDocImagesAsync ( xmlDoc, searchPaths );
+    return stringifyXML ( xmlDoc );
+}
+
+//----------------------------------------------------------------//
+export async function verifyXMLDocImagesAsync ( xmlDoc, searchPaths ) {
+
+    const queue = findAllNodesByName ( xmlDoc, 'image' );
+
+    for ( let element of queue ) {
+
+        const attributes    = element.attributes;
+        const sha256Attr    = attributes.getNamedItem ( 'data-sha256' );
+
+        if ( !sha256Attr ) continue;
+
+        const sha256        = sha256Attr.value;
+        const href          = attributes.getNamedItem ( 'href' ).value;
+
+        debugLog ( 'found an image element with data-sha256; checking hash against resource at URL.' );
+        debugLog ( 'href', href );
+        debugLog ( 'data-sha256', sha256 );
+
+        try {
+            const result        = await fetch ( href );
+            const arrayBuffer   = await result.arrayBuffer ();
+            const hash          = CryptoJS.SHA256 ( CryptoJS.lib.WordArray.create ( arrayBuffer )).toString ( CryptoJS.enc.Hex );
+
+            debugLog ( '---------->', hash );
+
+            if ( hash !== sha256 ) {
+                debugLog ( 'svg image element hash did not match data-sha256; removing element.' );
+                element.parentNode.removeChild ( element );
+            }
+        }
+        catch ( error ) {
+            console.log ( error );
+            element.parentNode.removeChild ( element );
+        }
+    }
+
+    return xmlDoc;
 }
