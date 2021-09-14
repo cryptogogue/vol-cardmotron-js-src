@@ -64,7 +64,6 @@ export const InventoryPrintView = observer (( props ) => {
                                 version         = "1.1"
                                 baseProfile     = "basic"
                                 xmlns           = "http://www.w3.org/2000/svg"
-                                xmlnsXlink      = "http://www.w3.org/1999/xlink"
                                 width           = { `${ page.width / page.dpi }in` }
                                 height          = { `${ page.height / page.dpi }in` }
                                 viewBox         = { `0 0 ${ page.width } ${ page.height }` }
