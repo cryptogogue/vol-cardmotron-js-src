@@ -5,6 +5,7 @@ import { Binding }                      from './Binding';
 import * as consts                      from '../consts';
 import { LAYOUT_COMMAND }               from './SchemaBuilder';
 import * as squap                       from './Squap';
+import CryptoJS                         from 'crypto-js';
 import { assert, RevocableContext }     from 'fgc-core';
 import handlebars                       from 'handlebars';
 import _                                from 'lodash';
@@ -52,8 +53,9 @@ export class Schema {
             const faces = {};
 
             for ( let face in fontDesc ) {
-                const url = fontDesc [ face ];
-                faces [ face ] = await this.fetchFontAsync ( url );
+                const url       = fontDesc [ face ].url;
+                const sha256    = fontDesc [ face ].sha256;
+                faces [ face ]  = await this.fetchFontAsync ( url, sha256 );
             }
             this.fonts [ name ] = faces;
         }
@@ -165,19 +167,34 @@ export class Schema {
     }
 
     //----------------------------------------------------------------//
-    async fetchFontAsync ( url ) {
+    async fetchFontAsync ( url, sha256 ) {
 
         if ( !url ) return false;
+
+        if ( sha256 ) {
+
+            let hash = false;
+
+            try {
+                const result        = await fetch ( url );
+                const arrayBuffer   = await result.arrayBuffer ();
+                hash                = CryptoJS.SHA256 ( CryptoJS.lib.WordArray.create ( arrayBuffer )).toString ( CryptoJS.enc.Hex );
+            }
+            catch ( error ) {
+                console.log ( error );
+            }
+
+            if ( hash !== sha256 ) {
+                console.log ( 'FONT FETCH FAILED: hash mismatch', error );
+                return false;
+            }
+        }
 
         const fetchOptions = {
             headers: {
                 'Content-Type': 'text/plain',
             },
         };
-
-        // TODO: all this can be a bit smarter.
-        // TODO: handle non-CORS HTTP error responses (400, 500)
-        // TODO: use HEAD/OPTIONS to check for CORS?
 
         try {
             const response  = await this.revocable.fetch ( url, fetchOptions );
@@ -186,22 +203,7 @@ export class Schema {
         }
         catch ( error ) {
             console.log ( 'FONT FETCH FAILED!', error );
-            console.log ( 'Retrying with CORS proxy...' );
         }
-
-        try {
-
-            // TODO: warn if CORS proxy used (and worked)
-
-            const response  = await this.revocable.fetch ( consts.CORS_PROXY + url, fetchOptions );
-            const buffer    = await response.arrayBuffer ();
-            return opentype.parse ( buffer );
-        }
-        catch ( error ) {
-            console.log ( 'FONT FETCH FAILED AGAIN!', error );
-        }
-
-        // TODO: report missing font
 
         return false;
     }

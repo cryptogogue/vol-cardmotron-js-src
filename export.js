@@ -6,9 +6,11 @@ module.exports = {
         SquapScreen:                require ( './debug/SquapScreen.js' ).SquapScreen,
         SVGtoPNGScreen:             require ( './debug/SVGtoPNGScreen.js' ).SVGtoPNGScreen,
     },
+    
     makeSquap:                      require ( './schema/Squap.js' ).makeSquap,
     parseSquap:                     require ( './schema/parseSquap.js' ).parseSquap,
     renderSVGAsync:                 require ( './rendering.js' ).renderSVGAsync,
+    scanXLSXSchemaAsync:            require ( './schema/SchemaScannerXLSX.js' ).scanXLSXSchemaAsync,
     verifyImagesAsync:              require ( './rendering.js' ).verifyImagesAsync,
 
     AssetCardView:                  require ( './AssetCardView.js' ).AssetCardView,
@@ -32,7 +34,6 @@ module.exports = {
     ScannerReportMessages:          require ( './ScannerReportMessages.js' ).ScannerReportMessages,
     ScannerReportModal:             require ( './ScannerReportModal.js' ).ScannerReportModal,
     Schema:                         require ( './schema/Schema.js' ).Schema,
-    SchemaScannerXLSX:              require ( './schema/SchemaScannerXLSX.js' ).SchemaScannerXLSX,
 
     INVENTORY_FILTER_STATUS:        require ( './InventoryWithFilter.js' ).INVENTORY_FILTER_STATUS,
     LAYOUT_COMMAND:                 require ( './schema/SchemaBuilder.js' ).LAYOUT_COMMAND,

@@ -4,7 +4,6 @@ import './EditorScreen.css';
 
 import { EditorMenu }                                       from './EditorMenu';
 import { ScannerReportMessages }                            from './ScannerReportMessages';
-import { SchemaScannerXLSX }                                from './schema/SchemaScannerXLSX';
 import _                                                    from 'lodash';
 import { action, computed, extendObservable, observable }   from "mobx";
 import { observer }                                         from 'mobx-react';
@@ -18,21 +17,19 @@ import { assert, excel, hooks, RevocableContext, SingleColumnContainerView, util
 //================================================================//
 export const ScannerReportModal = observer (( props ) => {
 
-    const { setScanner } = props;
+    const { onClose } = props;
     const scanner = props.scanner || false;
 
     if ( !scanner ) {
         return (<Fragment/>);
     }
 
-    let count = scanner.errors.length + scanner.warnings.length;
-
     return (
         <Modal
             closeIcon
             size = 'small'
-            open = { messages.length > 0 }
-            onClose = {() => { setScanner ( false )}}
+            open = { scanner.hasMessages }
+            onClose = {() => { onClose ()}}
         >
             <Modal.Header>Found Schema Issues</Modal.Header>
             <Modal.Content>

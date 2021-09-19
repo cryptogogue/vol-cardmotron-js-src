@@ -3,7 +3,7 @@
 import { assert, pdf417, qrcode, textLayout, util } from 'fgc-core';
 import fs                       from 'fs';
 
-const { FONT_FACE, JUSTIFY } = textLayout;
+const { JUSTIFY }       = textLayout;
 
 const TYPE_BOOLEAN      = 'BOOLEAN';
 const TYPE_NUMERIC      = 'NUMERIC';
@@ -65,6 +65,16 @@ function makeAssetFieldValue ( value, mutable ) {
     }
 }
 
+//----------------------------------------------------------------//
+function makeFontFace ( url, sha256 ) {
+
+    const face = { url: url };
+    if ( sha256 ) {
+        face.sha256 = sha256;
+    }
+    return face;
+}
+
 //================================================================//
 // SchemaBuilder
 //================================================================//
@@ -86,22 +96,6 @@ class SchemaBuilder {
             qualifier:  qualifier,
             isSubject:  isSubject,
         }
-        return this;
-    }
-
-    //----------------------------------------------------------------//
-    bold ( url ) {
-
-        assert ( this.popTo ( SCHEMA_BUILDER_ADDING_FONT ));
-        this.top ()[ FONT_FACE.BOLD ] = url;
-        return this;
-    }
-
-    //----------------------------------------------------------------//
-    boldItalic ( url ) {
-
-        assert ( this.popTo ( SCHEMA_BUILDER_ADDING_FONT ));
-        this.top ()[ FONT_FACE.BOLD_ITALIC ] = url;
         return this;
     }
 
@@ -348,19 +342,25 @@ class SchemaBuilder {
     }
 
     //----------------------------------------------------------------//
-    font ( name, url ) {
+    font ( name, url, sha256 ) {
 
         assert ( this.popTo ( SCHEMA_BUILDER_ADDING_SCHEMA ));
 
         this.push (
             SCHEMA_BUILDER_ADDING_FONT,
-            {
-                [ FONT_FACE.REGULAR ]:  url,
-            },
+            {},
             ( schema, font ) => {
                 schema.fonts [ name ] = font;
             }
         );
+        return this;
+    }
+
+    //----------------------------------------------------------------//
+    fontFace ( faceName, url, sha256 ) {
+
+        assert ( this.popTo ( SCHEMA_BUILDER_ADDING_FONT ));
+        this.top ()[ faceName ] = makeFontFace ( url, sha256 );
         return this;
     }
 
@@ -386,14 +386,6 @@ class SchemaBuilder {
                 schema.icons [ name ] = icon;
             }
         );
-        return this;
-    }
-
-    //----------------------------------------------------------------//
-    italic ( url ) {
-
-        assert ( this.popTo ( SCHEMA_BUILDER_ADDING_FONT ));
-        this.top ()[ FONT_FACE.ITALIC ] = url;
         return this;
     }
 

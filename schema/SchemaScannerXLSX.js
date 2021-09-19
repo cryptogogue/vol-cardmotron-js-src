@@ -3,11 +3,12 @@
 import { assert, excel, hooks, RevocableContext, SingleColumnContainerView, textLayout, util } from 'fgc';
 import { buildSchema, op }      from './SchemaBuilder';
 import { parseSquap }           from './parseSquap.js';
+import CryptoJS                 from 'crypto-js';
 import fs                       from 'fs';
 import handlebars               from 'handlebars';
 import _                        from 'lodash';
 
-const { TextFitter, JUSTIFY } = textLayout;
+const { FONT_FACE, JUSTIFY } = textLayout;
 
 const COMPILE_OPTIONS = {
     noEscape: true,
@@ -79,10 +80,46 @@ export function writeTransactionToFile ( schema, filename ) {
 //================================================================//
 // SchemaScannerXLSX
 //================================================================//
-export class SchemaScannerXLSX {
+class SchemaScannerXLSX {
 
     //----------------------------------------------------------------//
-    constructor ( book ) {
+    constructor () {
+    }
+
+    //----------------------------------------------------------------//
+    escapeDefinitionType ( name ) {
+
+        const baseName = ( name || '' ).replace ( /[^a-zA-Z0-9]+/g, '-' );
+
+        let postfix = 0;
+        name = baseName;
+        
+        while ( _.has ( this.inventory, name )) {
+            name = `${ baseName }-${ postfix++ }`;
+        }
+        return name;
+    }
+
+    //----------------------------------------------------------------//
+    hasErrors () {
+
+        return ( this.errors.length > 0 );
+    }
+
+    //----------------------------------------------------------------//
+    hasMessages () {
+
+        return (( this.errors.length + this.warnings.length ) > 0 );
+    }
+
+    //----------------------------------------------------------------//
+    hasWarnings () {
+
+        return ( this.warnings.length > 0 );
+    }
+
+    //----------------------------------------------------------------//
+    async readBookAsync ( book ) {
 
         this.schemaBuilder          = buildSchema ();
         this.decks                  = {};
@@ -95,7 +132,7 @@ export class SchemaScannerXLSX {
         this.version                = {};
 
         this.book = book;
-        this.readSheet ( 0 );
+        await this.readSheetAsync ( 0 );
         delete ( this.book );
 
         for ( let deckName in this.decks ) {
@@ -130,38 +167,6 @@ export class SchemaScannerXLSX {
         );
 
         this.schema = this.schemaBuilder.done ();
-    }
-
-    //----------------------------------------------------------------//
-    escapeDefinitionType ( name ) {
-
-        const baseName = ( name || '' ).replace ( /[^a-zA-Z0-9]+/g, '-' );
-
-        let postfix = 0;
-        name = baseName;
-        
-        while ( _.has ( this.inventory, name )) {
-            name = `${ baseName }-${ postfix++ }`;
-        }
-        return name;
-    }
-
-    //----------------------------------------------------------------//
-    hasErrors () {
-
-        return ( this.errors.length > 0 );
-    }
-
-    //----------------------------------------------------------------//
-    hasMessages () {
-
-        return (( this.errors.length + this.warnings.length ) > 0 );
-    }
-
-    //----------------------------------------------------------------//
-    hasWarnings () {
-
-        return ( this.warnings.length > 0 );
     }
 
     //----------------------------------------------------------------//
@@ -342,7 +347,7 @@ export class SchemaScannerXLSX {
     }
 
     //----------------------------------------------------------------//
-    readFonts ( sheet, row ) {
+    async readFontsAsync ( sheet, row ) {
 
         const paramNames = this.readParamNames ( sheet, row++ );
 
@@ -359,18 +364,49 @@ export class SchemaScannerXLSX {
                 stringParam ( 'boldItalic', false ),
             ]);
 
-            this.schemaBuilder.font ( name, params.regular );
+            const fontFaces = {};
 
-            if ( params.bold ) {
-                this.schemaBuilder.bold ( params.bold );
+            const fetchSha256Async = async ( url ) => {
+                try {
+                    const result        = await fetch ( url );
+                    const arrayBuffer   = await result.arrayBuffer ();
+                    return CryptoJS.SHA256 ( CryptoJS.lib.WordArray.create ( arrayBuffer )).toString ( CryptoJS.enc.Hex );
+                }
+                catch ( error ) {
+                    console.log ( error );
+                    this.reportError ( `Problem retrieving font resource hash in font ${ params.name }` )
+                }
+                return false;
             }
 
-            if ( params.italic ) {
-                this.schemaBuilder.italic ( params.italic );
+            const makeFontFaceAsync = async ( faceName, url ) => {
+                const sha256 = await fetchSha256Async ( url );
+                if ( sha256 ) {
+                    fontFaces [ faceName ] = {
+                        url:        url,
+                        sha256:     sha256,
+                    }
+                }
             }
 
-            if ( params.boldItalic ) {
-                this.schemaBuilder.boldItalic ( params.boldItalic );
+            await makeFontFaceAsync ( FONT_FACE.REGULAR,      params.regular );
+            await makeFontFaceAsync ( FONT_FACE.BOLD,         params.bold );
+            await makeFontFaceAsync ( FONT_FACE.ITALIC,       params.italic );
+            await makeFontFaceAsync ( FONT_FACE.BOLD_ITALIC,  params.boldItalic );
+
+            const regularSha256         = await fetchSha256Async ( params.regular );
+            const boldSha256            = await fetchSha256Async ( params.bold );
+            const italicSha256          = await fetchSha256Async ( params.regular );
+            const boldItalicSha256      = await fetchSha256Async ( params.regular );
+
+            if ( fontFaces [ FONT_FACE.REGULAR ]) {
+
+                this.schemaBuilder.font ( name );
+
+                for ( let faceName in fontFaces ) {
+                    const face = fontFaces [ faceName ];
+                    this.schemaBuilder.fontFace ( faceName, face.url, face.sha256 );
+                }
             }
         }
     }
@@ -397,7 +433,7 @@ export class SchemaScannerXLSX {
     }
 
     //----------------------------------------------------------------//
-    readIncludes ( sheet, row ) {
+    async readIncludesAsync ( sheet, row ) {
 
         const paramNames = this.readParamNames ( sheet, row++ );
 
@@ -406,7 +442,7 @@ export class SchemaScannerXLSX {
             const sheetName = util.toStringOrFalse ( sheet.getValueByCoord ( paramNames.sheet, row ));
             if ( !sheetName ) continue;
 
-            this.readSheet ( sheetName );
+            await this.readSheetAsync ( sheetName );
         }
     }
 
@@ -685,6 +721,18 @@ export class SchemaScannerXLSX {
                     case 'text':
                         this.schemaBuilder.constArg ( params.param, squap, { type: 'STRING', value: '' }, 'text' );
                         break;
+
+                    case 'integer':
+                        this.schemaBuilder.constArg ( params.param, squap, { type: 'NUMERIC', value: 0 }, 'integer' );
+                        break;
+
+                    case 'decimal':
+                        this.schemaBuilder.constArg ( params.param, squap, { type: 'NUMERIC', value: 0 }, 'decimal' );
+                        break;
+
+                    case 'vol':
+                        this.schemaBuilder.constArg ( params.param, squap, { type: 'NUMERIC', value: 0 }, 'vol' );
+                        break;
                 }
                 continue;
             }
@@ -792,29 +840,29 @@ export class SchemaScannerXLSX {
     }
 
     //----------------------------------------------------------------//
-    readSheet ( sheetName ) {
+    async readSheetAsync ( sheetName ) {
 
         const sheet = this.book.getSheet ( sheetName );
         if ( !sheet ) return;
 
         let handlers = {
-            DEFINITIONS:    ( name, row ) => { this.readDefinitions     ( sheet, row )},
-            FONTS:          ( name, row ) => { this.readFonts           ( sheet, row )},
-            ICONS:          ( name, row ) => { this.readIcons           ( sheet, row )},
-            INCLUDES:       ( name, row ) => { this.readIncludes        ( sheet, row )},
-            LAYOUTS:        ( name, row ) => { this.readLayouts         ( sheet, row )},
-            MACROS:         ( name, row ) => { this.readMacros          ( sheet, row )},
-            METHODS:        ( name, row ) => { this.readMethods         ( sheet, row )},
-            REWARDS:        ( name, row ) => { this.readRewards         ( sheet, row )},
-            UPGRADES:       ( name, row ) => { this.readUpgrades        ( sheet, row )},
-            VERSION:        ( name, row ) => { this.readVersion         ( sheet, row )},
+            DEFINITIONS:    async ( name, row ) => { this.readDefinitions           ( sheet, row )},
+            FONTS:          async ( name, row ) => { await this.readFontsAsync      ( sheet, row )},
+            ICONS:          async ( name, row ) => { this.readIcons                 ( sheet, row )},
+            INCLUDES:       async ( name, row ) => { await this.readIncludesAsync   ( sheet, row )},
+            LAYOUTS:        async ( name, row ) => { this.readLayouts               ( sheet, row )},
+            MACROS:         async ( name, row ) => { this.readMacros                ( sheet, row )},
+            METHODS:        async ( name, row ) => { this.readMethods               ( sheet, row )},
+            REWARDS:        async ( name, row ) => { this.readRewards               ( sheet, row )},
+            UPGRADES:       async ( name, row ) => { this.readUpgrades              ( sheet, row )},
+            VERSION:        async ( name, row ) => { this.readVersion               ( sheet, row )},
         }
 
         for ( let row = 0; row < sheet.height; ++row ) {
 
             const directive = util.toStringOrFalse ( sheet.getValueByCoord ( 0, row ));
             if ( directive && _.has ( handlers, directive )) {
-                handlers [ directive ]( sheet, row );
+                await handlers [ directive ]( sheet, row );
             }
         }
     }
@@ -885,3 +933,11 @@ export class SchemaScannerXLSX {
         });
     }
 };
+
+//----------------------------------------------------------------//
+export async function scanXLSXSchemaAsync ( book ) {
+
+    const scanner = new SchemaScannerXLSX ();
+    await ( scanner.readBookAsync ( book ));
+    return scanner;
+}

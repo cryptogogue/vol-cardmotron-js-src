@@ -11,7 +11,7 @@ import { InventoryPrintView }                               from './InventoryPri
 import { InventoryView }                                    from './InventoryView';
 import { InventoryViewController }                          from './InventoryViewController';
 import { ScannerReportModal }                               from './ScannerReportModal';
-import { SchemaScannerXLSX }                                from './schema/SchemaScannerXLSX';
+import { scanXLSXSchemaAsync }                              from './schema/SchemaScannerXLSX';
 import KeyboardEventHandler                                 from 'react-keyboard-event-handler';
 import _                                                    from 'lodash';
 import { action, computed, extendObservable, observable }   from 'mobx';
@@ -36,11 +36,11 @@ export const EditorScreen = observer (( props ) => {
     const [ batchSelect, setBatchSelect ]           = useState ( false );
     const [ zoomedAssetID, setZoomedAssetID ]       = useState ( false );
 
-    const loadFile = ( binary ) => {
+    const loadFile = async ( binary ) => {
 
         const book = new excel.Workbook ( binary, { type: 'binary' });
         if ( book ) {
-            const scanner = new SchemaScannerXLSX ( book );
+            const scanner = await scanXLSXSchemaAsync ( book );
             const schema = scanner.schema;
             inventory.reset ( schema, {}, scanner.inventory );
             controller.setRankDefinitions ( scanner.rankDefinitions );

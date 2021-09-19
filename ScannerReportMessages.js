@@ -3,7 +3,6 @@
 import './EditorScreen.css';
 
 import { EditorMenu }                                       from './EditorMenu';
-import { SchemaScannerXLSX }                                from './schema/SchemaScannerXLSX';
 import _                                                    from 'lodash';
 import { action, computed, extendObservable, observable }   from "mobx";
 import { observer }                                         from 'mobx-react';
@@ -19,8 +18,6 @@ export const ScannerReportMessages = observer (( props ) => {
 
     const errors        = props.errors || [];
     const warnings      = props.warnings || [];
-
-
 
     const messages = [];
     let count = 0;

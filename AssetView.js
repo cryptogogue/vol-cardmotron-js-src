@@ -45,7 +45,7 @@ export const AssetView = ( props ) => {
 
         const renderedSVG = props.svg || asset.svg || ( renderAsync && await renderAsync ( schema, asset )) || false;
         if ( componentIsMounted.current ) {
-            setSVG ( renderedSVG || await rendering.verifyImagesAsync ( schema.renderAssetSVG ( asset )));
+            setSVG ( renderedSVG || await rendering.verifyImagesAsync ( await schema.renderAssetSVG ( asset )));
         }
     }
 
@@ -55,10 +55,10 @@ export const AssetView = ( props ) => {
 
     return (
         <svg
-            x = { docX }
-            y = { docY }
-            width = { inches ? `${ docWidthInInches }in` : ( docWidthInInches * dpi )}
-            height = { inches ? `${ docHeightInInches }in` : ( docHeightInInches * dpi )}
+            x       = { docX }
+            y       = { docY }
+            width   = { inches ? `${ docWidthInInches }in` : ( docWidthInInches * dpi )}
+            height  = { inches ? `${ docHeightInInches }in` : ( docHeightInInches * dpi )}
             viewBox = { `0 0 ${ assetWidth } ${ assetHeight }` }
             preserveAspectRatio = 'xMidYMid meet'
         >

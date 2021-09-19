@@ -1,5 +1,6 @@
 // Copyright (c) 2019 Cryptogogue, Inc. All Rights Reserved.
 
+import sanitizeSVG                      from '@mattkrick/sanitize-svg'
 import * as changedpi                   from 'changedpi';
 import CryptoJS                         from 'crypto-js';
 import ReactDomServer                   from 'react-dom/server';
@@ -184,6 +185,7 @@ export async function renderSVGAsync ( svgOrElement, width, height, dpi ) {
 //----------------------------------------------------------------//
 export async function verifyImagesAsync ( svg, searchPaths ) {
 
+    svg = await sanitizeSVG ( svg );
     const xmlDoc = parseXML ( svg );
     await verifyXMLDocImagesAsync ( xmlDoc, searchPaths );
     return stringifyXML ( xmlDoc );
@@ -198,12 +200,18 @@ export async function verifyXMLDocImagesAsync ( xmlDoc, searchPaths ) {
 
         const attributes    = element.attributes;
         const sha256Attr    = attributes.getNamedItem ( 'data-sha256' );
+        const href          = attributes.getNamedItem ( 'href' ).value;
+
+        if ( !href ) {
+            debugLog ( 'Image is missing href; removing from SVG.' );
+            element.parentNode.removeChild ( element );
+            continue;
+        }
 
         if ( !sha256Attr ) continue;
 
         const sha256        = sha256Attr.value;
-        const href          = attributes.getNamedItem ( 'href' ).value;
-
+        
         debugLog ( 'found an image element with data-sha256; checking hash against resource at URL.' );
         debugLog ( 'href', href );
         debugLog ( 'data-sha256', sha256 );
