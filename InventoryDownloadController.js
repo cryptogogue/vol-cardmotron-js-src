@@ -4,7 +4,7 @@ import { assert, util } from 'fgc';
 
 import * as consts                                          from './consts';
 import { AssetView }                                        from './AssetView';
-import { renderSVGAsync }                                   from './rendering'
+import * as rendering                                       from './rendering';
 import { VectorToImageView }                                from './VectorToImageView';
 import * as changedpi                                       from 'changedpi';
 import { RevocableContext }                                 from 'fgc';
@@ -41,39 +41,41 @@ export class InventoryDownloadController {
 
         this.revocable = new RevocableContext ();
 
-        let getPage = false;
-        let total = 0;
+        let getPageAsync    = false;
+        let total           = 0;
 
         if ( options.assets && options.inventory ) {
 
             total = options.assets.length;
-            getPage = ( i ) => {
-                return InventoryDownloadController.getAssetPage ( options.inventory, options.assets, i );
+            getPageAsync = async ( i ) => {
+                return await InventoryDownloadController.getAssetPage ( options.inventory, options.assets, i );
             }
             this.filename = 'assets.zip';
         }
         else if ( options.pages ) {
 
             total = options.pages.length;
-            getPage = ( i ) => {
+            getPageAsync = async ( i ) => {
                 return options.pages [ i ];
             }
             this.filename = 'pages.zip';
         }
 
-        if ( getPage && ( total > 0 )) {
-            this.renderAsync ( getPage, total );
+        if ( getPageAsync && ( total > 0 )) {
+            this.renderAsync ( getPageAsync, total );
         }
     }
 
     //----------------------------------------------------------------//
-    static getAssetPage ( inventory, assets, i ) {
+    static async getAssetPage ( inventory, assets, i ) {
 
         const asset     = assets [ i ];
         const assetID   = asset.assetID;
         const docSize   = inventory.schema.getAssetDocSize ( asset );
         const width     = docSize.widthInInches * DPI;
         const height    = docSize.heightInInches * DPI;
+
+        const assetSVG = await rendering.verifyImagesAsync ( await inventory.schema.renderAssetSVG ( asset ));
 
         const svg = ReactDomServer.renderToStaticMarkup (
             <svg
@@ -86,7 +88,7 @@ export class InventoryDownloadController {
                 preserveAspectRatio = "xMidYMid meet"
             >
                 <rect width = { width } height = { height } style = {{ fill: '#ffffff' }}/>
-                <AssetView inventory = { inventory } assetID = { assetID } dpi = { DPI }/>
+                <AssetView inventory = { inventory } assetID = { assetID } dpi = { DPI } svg = { assetSVG }/>
             </svg>
         );
 
@@ -130,7 +132,7 @@ export class InventoryDownloadController {
 
     //----------------------------------------------------------------//
     @action
-    async renderAsync ( getPage, total ) {
+    async renderAsync ( getPageAsync, total ) {
 
         this.total = total;
 
@@ -140,8 +142,8 @@ export class InventoryDownloadController {
 
             try {
 
-                const page = getPage ( i );
-                const dataURL = await renderSVGAsync ( page.svg, page.width, page.height, page.dpi );
+                const page = await getPageAsync ( i );
+                const dataURL = await rendering.renderSVGAsync ( page.svg, page.width, page.height, page.dpi );
 
                 runInAction (() => {
                     this.pages.push ({
