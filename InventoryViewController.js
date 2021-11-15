@@ -183,12 +183,6 @@ export class InventoryViewController {
     }
 
     //----------------------------------------------------------------//
-    finalize () {
-
-        this.storage.finalize ();
-    }
-
-    //----------------------------------------------------------------//
     getDuplicateAssets ( assetID ) {
 
         const report = this.duplicatesReport;

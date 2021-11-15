@@ -40,13 +40,7 @@ export class Inventory {
 
         delete this.assets [ assetID ];
     }
-
-    //----------------------------------------------------------------//
-    finalize () {
-
-        this.revocable.finalize ();
-    }
-
+    
     //----------------------------------------------------------------//
     isDisabled ( assetID ) {
 

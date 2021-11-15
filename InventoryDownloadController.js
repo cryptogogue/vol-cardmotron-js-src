@@ -104,8 +104,6 @@ export class InventoryDownloadController {
     //----------------------------------------------------------------//
     finalize () {
 
-        this.revocable.finalize ();
-
         for ( let page of this.pages ) {
             URL.revokeObjectURL ( page.dataURL );
         }
