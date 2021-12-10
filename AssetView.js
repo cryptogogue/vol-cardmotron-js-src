@@ -12,7 +12,7 @@ import React, { useEffect, useRef, useState }   from 'react';
 //================================================================//
 export const AssetView = ( props ) => {
 
-    const { inventory, assetID, inches, renderAsync } = props;
+    const { inches, renderAsync } = props;
 
     const componentIsMounted = useRef ( true );
     useEffect (() => {
@@ -23,8 +23,8 @@ export const AssetView = ( props ) => {
 
     const [ svg, setSVG ] = useState ( '' );
 
-    const schema        = inventory.schema;
-    const asset         = _.has ( inventory.assets, assetID ) ? inventory.assets [ assetID ] : schema.newAsset ( assetID, assetID );
+    const schema        = props.schema || props.inventory.schema;
+    const asset         = props.asset || ( _.has ( props.inventory.assets, props.assetID ) ? props.inventory.assets [ props.assetID ] : schema.newAsset ( assetID, props.assetID ));
 
     const [ metrics ]   = useState ( schema.getAssetDocSize ( asset ));
 
@@ -63,6 +63,6 @@ export const AssetView = ( props ) => {
             preserveAspectRatio = 'xMidYMid meet'
         >
             <g transform = { `scale ( ${ dpiScale } ${ dpiScale })` } dangerouslySetInnerHTML = {{ __html: svg }}></g>
-        </svg>   
+        </svg>
     );
 }

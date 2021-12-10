@@ -15,7 +15,6 @@ import './InventoryView.css';
 export const AssetCardView = observer (( props ) => {
 
     const [ toggle, setToggle ] = useState ( false );
-    const { assetID, inventory } = props;
 
     const onSelect      = props.onSelect || false;
     const onMagnify     = props.onMagnify || false;
@@ -25,7 +24,8 @@ export const AssetCardView = observer (( props ) => {
     const disabled      = props.disabled || false;
     const count         = props.count || 1;
 
-    const asset         = inventory.assets [ assetID ];
+    const asset         = props.asset || props.inventory.assets [ props.assetID ];
+    const assetID       = asset.assetID;
 
     const isSelected    = props.isSelected; // because mobX
     const color         = isSelected ? 'cyan' : 'white';
@@ -52,9 +52,8 @@ export const AssetCardView = observer (( props ) => {
                 border:             `2px solid ${ color }`,
                 margin:             '1em',
                 padding:            '5px',
-                width:              'auto',
+                width:              'fit-content',
                 backgroundColor:    color,
-                
                 overflow:           'visible',
             }}
             onClick = { props.disabled ? undefined : onClickCard }
@@ -63,8 +62,8 @@ export const AssetCardView = observer (( props ) => {
             
                 <div style = {{ opacity: disabled ? 0.2 : 1.0 }}>
                     <AssetView
-                        assetID         = { assetID }
-                        inventory       = { inventory }
+                        asset           = { asset }
+                        schema          = { props.schema || props.inventory.schema }
                         inches          = { true }
                         scale           = { zoom }
                         renderAsync     = { props.renderAsync }
