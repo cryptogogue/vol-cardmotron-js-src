@@ -16,6 +16,7 @@ export const AssetCardView = observer (( props ) => {
 
     const [ toggle, setToggle ] = useState ( false );
 
+    const onClick       = props.onClick || false;
     const onSelect      = props.onSelect || false;
     const onMagnify     = props.onMagnify || false;
     const onEllipsis    = props.onEllipsis || false;
@@ -31,10 +32,17 @@ export const AssetCardView = observer (( props ) => {
     const color         = isSelected ? 'cyan' : 'white';
 
     const onClickCard = ( event ) => {
+
         event.stopPropagation ();
-        setToggle ( !toggle );
-        if ( onSelect ) {
-            onSelect ( asset, !isSelected );
+
+        if ( onClick ) {
+            onClick ( event );
+        }
+        else {
+            setToggle ( !toggle );
+            if ( onSelect ) {
+                onSelect ( asset, !isSelected );
+            }
         }
     }
 

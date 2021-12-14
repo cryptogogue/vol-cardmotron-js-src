@@ -241,8 +241,10 @@ export class Schema {
             if ( visited [ layoutName ]) return;
             visited [ layoutName ] = true;
             
-            const layout = this.templates [ layoutName ]; 
-            if ( !layout ) return;
+            const layout = this.templates [ layoutName ];
+            if ( !layout ) {
+                return;
+            }
 
             widthInInches   = Math.max ( widthInInches, layout.width ) / layout.dpi;
             heightInInches  = Math.max ( heightInInches, layout.height ) / layout.dpi;

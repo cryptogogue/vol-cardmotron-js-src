@@ -15,16 +15,17 @@ import zoom from './assets/zoom.png';
 export const AssetModal = observer (( props ) => {
 
     const controller    = props.controller;
-    const inventory     = controller.inventory;
-    const assetID       = props.assetID;
-    const onClose       = props.onClose || false;
+    const inventory     = props.inventory || controller && controller.inventory || false;
+    const schema        = props.schema || inventory && inventory.schema || false;
+    const asset         = props.asset || inventory && inventory.assets [ props.assetID ] || false;
+    const assetID       = asset && asset.assetID;
 
-    const isOpen = (( typeof ( assetID ) === 'string' ) && ( assetID.length > 0 ));
+    const isOpen        = (( typeof ( assetID ) === 'string' ) && ( assetID.length > 0 ));
 
-    let formatAssetID = props.formatAssetID || (( assetID ) => { return assetID; });
+    let formatAssetID   = props.formatAssetID || (( assetID ) => { return assetID; });
 
     let footer = formatAssetID ( assetID );
-    if (( assetID !== false ) && controller.hideDuplicates ) {
+    if (( assetID !== false ) && controller && controller.hideDuplicates ) {
 
         footer = [];
 
@@ -44,19 +45,19 @@ export const AssetModal = observer (( props ) => {
 
     return (
         <Modal
-            style = {{ height : 'auto' }}
-            size = 'small'
-            open = { isOpen }
-            onClose = { onClose }
+            size        = 'small'
+            style       = {{ height : 'auto' }}
+            open        = { isOpen }
+            onClose     = { props.onClose || false }
         >
             <Modal.Content>
                 <center>
                     <h3>Card Info</h3>
                     <Divider/>
                     <AssetView
-                        assetID         = { assetID }
-                        inventory       = { inventory }
-                        inches          = 'true'
+                        inches
+                        schema          = { schema }
+                        asset           = { asset }
                         renderAsync     = { props.renderAsync }
                     />
                     <p>{ footer }</p>

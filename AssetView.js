@@ -3,6 +3,7 @@
 import { AssetLayout }                          from './AssetLayout';
 import { LAYOUT_COMMAND }                       from './schema/SchemaBuilder';
 import * as rendering                           from './rendering';
+import * as fgc                                 from 'fgc';
 import handlebars                               from 'handlebars';
 import { observer }                             from 'mobx-react';
 import React, { useEffect, useRef, useState }   from 'react';
@@ -26,7 +27,12 @@ export const AssetView = ( props ) => {
     const schema        = props.schema || props.inventory.schema;
     const asset         = props.asset || ( _.has ( props.inventory.assets, props.assetID ) ? props.inventory.assets [ props.assetID ] : schema.newAsset ( assetID, props.assetID ));
 
+    fgc.assert ( schema );
+    fgc.assert ( asset );
+
     const [ metrics ]   = useState ( schema.getAssetDocSize ( asset ));
+
+    fgc.assert ( metrics );
 
     const dpi           = props.dpi || 300;
     const dpiScale      = dpi / metrics.dpi;
