@@ -124,7 +124,7 @@ async function embedImagesAsync ( xmlDoc ) {
             canvas.height   = height;
 
             const ctx = canvas.getContext ( '2d' );
-            ctx.drawImage ( image, 0, 0 );
+            ctx.drawImage ( image, 0, 0 , canvas.width, canvas.height);
 
             const hrefAttr = xmlDoc.createAttribute ( 'href' );
             hrefAttr.value = canvas.toDataURL ();
@@ -169,7 +169,7 @@ export async function renderSVGAsync ( svgOrElement, width, height, dpi ) {
         canvas.height   = height;
 
         const ctx = canvas.getContext ( '2d' );
-        ctx.drawImage ( image, 0, 0 );
+        ctx.drawImage ( image, 0, 0 , canvas.width, canvas.height);
 
         return changedpi.changeDpiDataUrl ( canvas.toDataURL ( 'image/jpeg', 0.5 ), dpi );
     }
