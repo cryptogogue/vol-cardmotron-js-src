@@ -25,7 +25,7 @@ const InventoryDownloadModalBody = observer (( props ) => {
 
     const singular = options.assets ? 'Asset' : 'Page';
     const plural = options.assets ? 'Assets' : 'Pages';
-
+    const [ backCover, setBackCover ] = useState ( '' );
     return (
         <UI.Modal
             size = 'small'
@@ -61,12 +61,22 @@ const InventoryDownloadModalBody = observer (( props ) => {
             </UI.Modal.Content>
 
             <UI.Modal.Actions>
+            <UI.Input placeholder='backcover_750_1050.png' 
+                onChange = {( event ) => { setBackCover ( event.target.value )}}
+            />
+            <UI.Button
+                    positive
+                    disabled = { controller.saving || !controller.isDone }
+                    onClick = {() => { controller.print (backCover)}}
+                >
+                    Print
+                </UI.Button>
                 <UI.Button
                     positive
                     disabled = { controller.saving || !controller.isDone }
                     onClick = {() => { controller.saveAsZip ()}}
                 >
-                    Download
+                    Download Images
                 </UI.Button>
             </UI.Modal.Actions>
 
