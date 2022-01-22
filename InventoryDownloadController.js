@@ -186,4 +186,34 @@ export class InventoryDownloadController {
             this.saving = false;
         });
     }
+
+    @action
+    async print (backCover) {
+
+        if ( this.saving || ( this.pages.length === 0 )) return;
+
+        this.saving = true;
+        await new Promise ( r => setTimeout ( r, 1 ));
+
+        try {
+
+            var myWindow = window.open("", "Images");
+            for ( let i in this.pages ) {
+                const page = this.pages [ i ];
+                myWindow.document.write("<img src='"+page.dataURL+"''>");
+                if (backCover) {
+                    myWindow.document.write("<img src='"+backCover+"''>");
+                }
+            }
+            await new Promise ( r => setTimeout ( r, 4 ));
+            myWindow.print();
+        }
+        catch ( error ) {
+            console.log ( error );
+        }
+
+        runInAction (() => {
+            this.saving = false;
+        });
+    }
 }
