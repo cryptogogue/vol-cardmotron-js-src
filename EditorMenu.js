@@ -4,7 +4,7 @@ import * as consts                                          from './consts';
 import { InventoryDownloadModal }                           from './InventoryDownloadModal';
 import * as inventoryMenuItems                              from './inventoryMenuItems';
 import _                                                    from 'lodash';
-import { action, computed, extendObservable, observable }   from "mobx";
+import { action, computed, extendObservable, observable }   from 'mobx';
 import { observer }                                         from 'mobx-react';
 import React, { useState, useRef }                          from 'react';
 import { Link }                                             from 'react-router-dom';

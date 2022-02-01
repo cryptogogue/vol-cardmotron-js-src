@@ -5,7 +5,7 @@ import './EditorScreen.css';
 import { EditorMenu }                                       from './EditorMenu';
 import { ScannerReportMessages }                            from './ScannerReportMessages';
 import _                                                    from 'lodash';
-import { action, computed, extendObservable, observable }   from "mobx";
+import { action, computed, extendObservable, observable }   from 'mobx';
 import { observer }                                         from 'mobx-react';
 import React, { Fragment, useState }                        from 'react';
 import { Link }                                             from 'react-router-dom';

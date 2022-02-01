@@ -5,6 +5,7 @@ import { Binding }                      from './Binding';
 import * as consts                      from '../consts';
 import { LAYOUT_COMMAND }               from './SchemaBuilder';
 import * as squap                       from './Squap';
+import fetch                            from 'cross-fetch';
 import CryptoJS                         from 'crypto-js';
 import { assert, RevocableContext }     from 'fgc-core';
 import handlebars                       from 'handlebars';
